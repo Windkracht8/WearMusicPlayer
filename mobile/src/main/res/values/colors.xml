@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#FFF</color>
+    <color name="text">#000</color>
+    <color name="error">@android:color/holo_red_dark</color>
+</resources>

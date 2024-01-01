@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name" translatable="false">Music Player</string>
+
+    <string name="albums">Albums</string>
+    <string name="artists">Artists</string>
+    <string name="various_artists">Various artists</string>
+
+    <!-- main screen -->
+    <string name="main_timer_text">0:00</string>
+    <string name="main_volume_down_desc">volume down</string>
+    <string name="main_volume_up_desc">volume up</string>
+    <string name="main_back_desc">previous song</string>
+    <string name="main_play_pause_desc">play or pause</string>
+    <string name="main_forward_desc">next song</string>
+    <string name="library">library</string>
+    <string name="file_received">received new song from phone</string>
+
+    <!-- progress -->
+    <string name="progress_label_text">Receiving file</string>
+
+    <!-- menu library -->
+    <string name="menu_library_label">Library</string>
+    <string name="rescan">Rescan</string>
+
+    <!-- fail -->
+    <string name="fail_oops">Oops</string>
+    <string name="fail_bluetooth">Bluetooth connection failed</string>
+    <string name="fail_BT_denied">No Bluetooth permission</string>
+    <string name="fail_show_menu">Failed to show Menu</string>
+    <string name="fail_show_progress">Failed to show Progress</string>
+
+</resources>

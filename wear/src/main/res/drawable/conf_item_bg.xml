@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" >
+    <stroke
+        android:width="@dimen/conf_item_padding"
+        android:color="@color/black" />
+    <solid
+        android:color="@color/bgConfItem" />
+    <corners
+        android:radius="20dp" />
+    <padding
+        android:left="@dimen/conf_item_padding"
+        android:right="@dimen/conf_item_padding"
+        android:bottom="@dimen/conf_item_padding"
+        android:top="@dimen/conf_item_padding" />
+</shape>
