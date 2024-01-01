@@ -4,6 +4,7 @@
 .idea
 build
 gradle
+gradle.properties
 gradlew*
 mobile/build
 mobile/debug
