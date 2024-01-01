@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name" translatable="false">Music Player</string>
+
+    <!-- filenames -->
+    <string name="matches_filename" translatable="false">matches.json</string>
+
+    <!-- main ui -->
+    <string name="main_icon_desc">icon</string>
+
+    <string name="explainDoubleBack">Press back twice to close</string>
+
+    <!-- status -->
+    <string name="status_STARTING">Starting</string>
+    <string name="status_LISTENING">Looking for watch</string>
+    <string name="status_CONNECTED">Connected</string>
+    <string name="status_DISCONNECTED">Disconnected</string>
+    <string name="status_ERROR">error</string>
+    <string name="first_connect">First connect with watch</string>
+
+    <!-- fail -->
+    <string name="fail_oops">Oops</string>
+    <string name="fail_BT_denied">No Bluetooth permission</string>
+    <string name="fail_BT_off">Bluetooth turned off</string>
+    <string name="fail_sync">Failed to synchronise with watch</string>
+    <string name="fail_send_message">Failed to send message to watch</string>
+    <string name="fail_response">Problem with response from watch</string>
+
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="pure_white">#FFF</color>
+    <color name="icon_disabled">#666</color>
+    <color name="w8blue">#2BD2E3</color>
+    <color name="bgConfItem">#111</color>
+
+    <color name="black">#000</color>
+    <color name="blue">#00F</color>
+    <color name="brown">#623412</color>
+    <color name="gold">#FFD700</color>
+    <color name="green">#080</color>
+    <color name="orange">#FE5000</color>
+    <color name="pink">#FFC0CB</color>
+    <color name="purple">#808</color>
+    <color name="red">#F00</color>
+    <color name="white">#D3D3D3</color>
+</resources>

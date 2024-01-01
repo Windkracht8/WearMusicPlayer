@@ -1,0 +1,33 @@
+apply plugin: 'com.android.application'
+
+android {
+    defaultConfig {
+        applicationId 'com.windkracht8.musicplayer'
+        minSdk 30
+        //Wear OS, we have to target SDK 33 and not latest
+        //noinspection OldTargetApi
+        targetSdk 33
+        compileSdk 33
+        versionCode 201
+        versionName '0.1'
+    }
+    buildTypes {
+        release {
+            shrinkResources true
+            minifyEnabled true
+        }
+    }
+    namespace 'com.windkracht8.musicplayer'
+}
+
+dependencies {
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
+    implementation 'androidx.wear:wear-ongoing:1.0.0'
+    implementation 'androidx.wear:wear:1.3.0'
+    //We need to hold these back because latest version requires compileSdk 34, which is not allowed for Wear OS
+    //noinspection GradleDependency
+    implementation 'androidx.core:core:1.9.0'
+    //noinspection GradleDependency
+    implementation 'com.google.android.material:material:1.9.0'
+}

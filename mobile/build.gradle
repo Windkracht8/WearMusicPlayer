@@ -1,0 +1,24 @@
+apply plugin: 'com.android.application'
+
+android {
+    defaultConfig {
+        applicationId "com.windkracht8.musicplayer"
+        minSdk 24
+        targetSdk 34
+        compileSdk 34
+        versionCode 101
+        versionName "0.1"
+    }
+    buildTypes {
+        release {
+            shrinkResources true
+            minifyEnabled true
+        }
+    }
+    namespace 'com.windkracht8.musicplayer'
+}
+
+dependencies {
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}

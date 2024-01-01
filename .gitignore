@@ -1,0 +1,15 @@
+*.diff
+
+.gradle
+.idea
+build
+gradle
+gradlew*
+mobile/build
+mobile/debug
+mobile/release
+wear/build
+wear/debug
+wear/release
+*.jks
+local.properties

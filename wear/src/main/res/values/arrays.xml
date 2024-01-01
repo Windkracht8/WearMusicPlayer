@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="matchTypes_system">
+        <item>15s</item>
+        <item>10s</item>
+        <item>7s</item>
+        <item>beach 7s</item>
+        <item>beach 5s</item>
+        <item>custom</item>
+    </string-array>
+    <string-array name="teamColors_system">
+        <item>black</item>
+        <item>blue</item>
+        <item>brown</item>
+        <item>gold</item>
+        <item>green</item>
+        <item>orange</item>
+        <item>pink</item>
+        <item>purple</item>
+        <item>red</item>
+        <item>white</item>
+    </string-array>
+    <string-array name="eventTypes_system">
+        <item>TRY</item>
+        <item>CONVERSION</item>
+        <item>PENALTY TRY</item>
+        <item>GOAL</item>
+        <item>PENALTY GOAL</item>
+        <item>DROP GOAL</item>
+        <item>YELLOW CARD</item>
+        <item>RED CARD</item>
+        <item>PENALTY</item>
+    </string-array>
+</resources>
