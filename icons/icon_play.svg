@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="512"
-   height="512"
-   viewBox="0 0 512 512"
+   width="200"
+   height="200"
+   viewBox="0 0 200 200"
    version="1.1"
    id="svg1"
    sodipodi:docname="icon_play.svg"
@@ -27,9 +27,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="0.7939453"
-     inkscape:cx="183.89176"
-     inkscape:cy="339.44404"
+     inkscape:zoom="1.5878906"
+     inkscape:cx="59.827799"
+     inkscape:cy="132.56581"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
@@ -75,22 +75,22 @@
        fy="255.99998"
        r="254.69539"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.0461987,0,0,1.0461987,-11.826854,-11.826854)" />
+       gradientTransform="matrix(0.40867137,0,0,0.40867137,-4.6198648,-4.6198648)" />
   </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
     <circle
-       style="mix-blend-mode:normal;fill:url(#radialGradient33);fill-opacity:1;stroke:none;stroke-width:20.924;stroke-dasharray:none"
+       style="mix-blend-mode:normal;fill:url(#radialGradient33);fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
        id="path1"
-       cx="256"
-       cy="256"
-       r="256" />
+       cx="100"
+       cy="100"
+       r="100" />
     <path
        id="rect1"
-       style="fill:none;stroke:#000000;stroke-width:45.8296;stroke-dasharray:none"
-       d="M 159.90245,132.12621 405.53311,255.30645 159.90245,378.48669 Z"
+       style="fill:none;stroke:#000000;stroke-width:17.9022;stroke-dasharray:none"
+       d="M 62.461895,51.611801 158.41137,99.729082 62.461895,147.84636 Z"
        sodipodi:nodetypes="cccc" />
   </g>
 </svg>

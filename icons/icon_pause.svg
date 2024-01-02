@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="512"
-   height="512"
-   viewBox="0 0 512 512"
+   width="200"
+   height="200"
+   viewBox="0 0 200 200"
    version="1.1"
    id="svg1"
    sodipodi:docname="icon_pause.svg"
@@ -27,9 +27,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="1.1228082"
-     inkscape:cx="290.78875"
-     inkscape:cy="322.85121"
+     inkscape:zoom="2.2456164"
+     inkscape:cx="124.24206"
+     inkscape:cy="58.558532"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
@@ -75,31 +75,31 @@
        fy="255.99998"
        r="254.69539"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.0461987,0,0,1.0461987,-11.826854,-11.826854)" />
+       gradientTransform="matrix(0.40867137,0,0,0.40867137,-4.6198649,-4.6198648)" />
   </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
     <circle
-       style="mix-blend-mode:normal;fill:url(#radialGradient33);fill-opacity:1;stroke:none;stroke-width:20.924;stroke-dasharray:none"
+       style="mix-blend-mode:normal;fill:url(#radialGradient33);fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
        id="path1"
-       cx="256"
-       cy="256"
-       r="256" />
+       cx="100"
+       cy="100"
+       r="100" />
     <rect
-       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:22.1791;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none;stroke-opacity:1"
        id="rect36"
-       width="78"
-       height="260"
-       x="160"
-       y="126" />
+       width="30.46875"
+       height="101.5625"
+       x="62.5"
+       y="49.21875" />
     <rect
-       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:22.1791;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none;stroke-opacity:1"
        id="rect36-1"
-       width="78"
-       height="260"
-       x="274"
-       y="126" />
+       width="30.46875"
+       height="101.5625"
+       x="107.03125"
+       y="49.21875" />
   </g>
 </svg>
