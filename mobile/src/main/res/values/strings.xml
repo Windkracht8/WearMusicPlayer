@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Music Player</string>
+    <string name="app_name" translatable="false">Wear Music Player</string>
 
     <!-- main ui -->
     <string name="main_icon_desc">icon</string>
