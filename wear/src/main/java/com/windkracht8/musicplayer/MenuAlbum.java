@@ -12,7 +12,7 @@ public class MenuAlbum extends Menu{
 
     public void show(Main main, int index){
         try{
-            album = main.library.albums.get(index);
+            album = Main.library.albums.get(index);
             super.show(main, album.album_tracks.size(), album.name);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "MenuAlbum.show album not found");

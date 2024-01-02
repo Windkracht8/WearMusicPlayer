@@ -22,7 +22,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.splashscreen.SplashScreen;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,7 +45,7 @@ public class Main extends Activity{
     private View touchView;
 
     private ExecutorService executorService;
-    AudioManager audioManager;
+    private AudioManager audioManager;
     public final static int MESSAGE_TOAST = 101;
     public final static int MESSAGE_PLAYER_COMPLETION = 201;
     public final static int MESSAGE_PLAYER_POSITION = 202;
@@ -60,16 +59,14 @@ public class Main extends Activity{
     public static int heightPixels;
     public static int widthPixels;
     public static int vh25;
-    public static int vh50;
     public static int vh75;
 
     private static float onTouchStartY = -1;
     private static float onTouchStartX = 0;
-    public static long draggingEnded;
     private static int SWIPE_THRESHOLD = 100;
     private static final int SWIPE_VELOCITY_THRESHOLD = 50;
 
-    public static Library library = new Library();
+    public final static Library library = new Library();
     private final Player player = new Player();
     private CommsBT commsBT = null;
     private ArrayList<Library.Track> current_tracks;
@@ -86,7 +83,6 @@ public class Main extends Activity{
         widthPixels = getWindowManager().getMaximumWindowMetrics().getBounds().width();
         SWIPE_THRESHOLD = widthPixels / 3;
         vh25 = (int) (heightPixels * .25);
-        vh50 = (int) (heightPixels * .5);
         vh75 = (int) (heightPixels * .75);
 
         executorService = Executors.newFixedThreadPool(4);
@@ -128,10 +124,10 @@ public class Main extends Activity{
         }
         findViewById(R.id.main).setOnClickListener(v -> onMainClick());
 
-        showSplash = false;
-
-        requestPermissions();
         executorService.submit(() -> library.scanMediaStore(this));
+
+        showSplash = false;
+        requestPermissions();
         if(hasBTPermission) initBT();
     }
     private void requestPermissions(){
@@ -209,7 +205,7 @@ public class Main extends Activity{
 
     private void initBT(){
         if(!hasBTPermission) return;
-        if(commsBT == null) commsBT = new CommsBT(this, handler_message);
+        if(commsBT == null) commsBT = new CommsBT(this);
         commsBT.connect();
     }
 
@@ -252,7 +248,6 @@ public class Main extends Activity{
                     if(msg.obj instanceof String){
                         commsNewFile((String) msg.obj);
                     }
-                    //TODO: wait for 2 secs before hiding
                     runOnUiThread(() -> main_progress.setVisibility(View.GONE));
                     break;
                 case MESSAGE_LIBRARY_READY:
@@ -296,12 +291,12 @@ public class Main extends Activity{
         if(current_index == 0){
             main_back.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
         }else{
-            main_back.setColorFilter(getColor(R.color.pure_white), android.graphics.PorterDuff.Mode.SRC_IN);
+            main_back.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
         }
         if(current_index >= current_tracks.size()-1){
             main_forward.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
         }else{
-            main_forward.setColorFilter(getColor(R.color.pure_white), android.graphics.PorterDuff.Mode.SRC_IN);
+            main_forward.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
         }
     }
     private void bBackPressed(){
@@ -321,7 +316,7 @@ public class Main extends Activity{
         }
     }
     private void bForwardPressed(){
-        if(current_tracks.size() <= current_index) return;
+        if(current_tracks.size() <= current_index+1) return;
         if(isPlaying){
             play(current_index+1);
         }else{
@@ -395,7 +390,6 @@ public class Main extends Activity{
                 float velocity2 = getBackSwipeVelocity(event, diffX2);
                 onTouchStartY = -1;
                 if(diffX2 > SWIPE_THRESHOLD && velocity2 > SWIPE_VELOCITY_THRESHOLD){
-                    draggingEnded = new Date().getTime();
                     onBackPressed();
                     return true;
                 }

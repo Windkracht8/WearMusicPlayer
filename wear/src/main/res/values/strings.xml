@@ -25,8 +25,13 @@
     <!-- fail -->
     <string name="fail_oops">Oops</string>
     <string name="fail_bluetooth">Bluetooth connection failed</string>
-    <string name="fail_BT_denied">No Bluetooth permission</string>
     <string name="fail_show_menu">Failed to show Menu</string>
     <string name="fail_show_progress">Failed to show Progress</string>
+    <string name="fail_request">Problem with request from phone</string>
+    <string name="fail_respond">Failed to respond to phone</string>
+    <string name="fail_wifi">Wifi connection failed</string>
+    <string name="fail_create_file">Failed to create file</string>
+    <string name="fail_delete_file">Failed to delete file</string>
+    <string name="fail_scan_media">Problem with finding tracks</string>
 
 </resources>

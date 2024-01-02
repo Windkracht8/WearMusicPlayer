@@ -15,6 +15,7 @@ import android.os.ParcelUuid;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -24,28 +25,26 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
-@SuppressLint("MissingPermission") //Permissions are handled in connect, no further need to complain
+@SuppressLint("MissingPermission") //Permissions are handled in Main, no further need to complain
 public class CommsBT{
     final String MP_UUID = "6f34da3f-188a-4c8c-989c-2baacf8ea6e1";
     final BluetoothAdapter bluetoothAdapter;
     BluetoothSocket bluetoothSocket;
     final JSONArray responseQueue;
     final Handler handler;
-    final Context context;
-    final Handler handler_message;
+    final Main main;
 
     boolean connect = false;
     public final ArrayList<String> connect_failed_addresses = new ArrayList<>();
     public final ArrayList<String> queried_addresses = new ArrayList<>();
 
-    public CommsBT(Context context, Handler handler_message){
-        this.context = context;
-        this.handler_message = handler_message;
+    public CommsBT(Main main){
+        this.main = main;
         responseQueue = new JSONArray();
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothManager bluetoothManager = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         handler = new Handler(Looper.getMainLooper());
-        context.registerReceiver(btStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+        main.registerReceiver(btStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
     }
 
     private final BroadcastReceiver btStateReceiver = new BroadcastReceiver(){
@@ -72,7 +71,7 @@ public class CommsBT{
 
         if(bondedDevices == null){
             Log.e(Main.LOG_TAG, "bondedDevices == null");
-            handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_bluetooth));
+            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_bluetooth));
             return;
         }
 
@@ -98,11 +97,10 @@ public class CommsBT{
     }
 
     void stop(){
-        Log.d(Main.LOG_TAG, "Comms.stop");
         connect = false;
         handler.removeCallbacksAndMessages(null);
         try{
-            context.unregisterReceiver(btStateReceiver);
+            main.unregisterReceiver(btStateReceiver);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Comms.stop unregisterReceiver: " + e.getMessage());
         }
@@ -112,17 +110,16 @@ public class CommsBT{
         private final BluetoothDevice device;
 
         public CommsConnect(BluetoothDevice device){
-            Log.d(Main.LOG_TAG, "CommsConnect");
             this.device = device;
             try{
                 bluetoothSocket = device.createRfcommSocketToServiceRecord(UUID.fromString(MP_UUID));
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsConnect Exception: " + e.getMessage());
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_bluetooth));
             }
         }
 
         public void run(){
-            Log.d(Main.LOG_TAG, "CommsConnect.run");
             bluetoothAdapter.cancelDiscovery();
             try{
                 bluetoothSocket.connect();
@@ -141,16 +138,17 @@ public class CommsBT{
         private OutputStream outputStream;
 
         public CommsConnected(){
-            Log.d(Main.LOG_TAG, "CommsConnected");
             try{
                 inputStream = bluetoothSocket.getInputStream();
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsConnected getInputStream Exception: " + e.getMessage());
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_bluetooth));
             }
             try{
                 outputStream = bluetoothSocket.getOutputStream();
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsConnected getOutputStream Exception: " + e.getMessage());
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_bluetooth));
             }
         }
 
@@ -202,29 +200,42 @@ public class CommsBT{
                     return false;
                 }
                 Log.e(Main.LOG_TAG, "CommsConnected.sendNextResponse Exception: " + e.getMessage());
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_respond));
             }
             return true;
         }
 
         private void read(){
             try{
-                int available = inputStream.available();
-                if(available == 0) return;
-                byte[] buffer = new byte[available];
-                int numBytes = inputStream.read(buffer);
-                //TODO: keep reading until valid json
-                if(numBytes > 3){
-                    String request = new String(buffer);
-                    JSONObject requestMessage = new JSONObject(request);
-                    gotRequest(requestMessage);
+                if(inputStream.available() == 0) return;
+                String request = "";
+
+                while(inputStream.available() > 0){
+                    byte[] buffer = new byte[1024];
+                    int numBytes = inputStream.read(buffer);
+                    if(numBytes < 0){
+                        Log.e(Main.LOG_TAG, "CommsConnected.read read error, request: " + request);
+                        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_request));
+                        return;
+                    }
+                    String temp = new String(buffer);
+                    request += temp;
+                    if(isValidJSON(request)){
+                        JSONObject requestMessage = new JSONObject(request);
+                        gotRequest(requestMessage);
+                        return;
+                    }
+                    if(inputStream.available() == 0) sleep100();
                 }
+                Log.e(Main.LOG_TAG, "CommsConnected.read no more bytes to read, no valid json, request: " + request);
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_request));
             }catch(Exception e){
-                Log.e(Main.LOG_TAG, "CommsConnected.read: Input stream read exception: " + e.getMessage());
+                Log.e(Main.LOG_TAG, "CommsConnected.read Exception: " + e.getMessage());
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_request));
             }
         }
 
         private void gotRequest(final JSONObject requestMessage){
-            Log.d(Main.LOG_TAG, "CommsConnected.gotRequest: " + requestMessage.toString());
             try{
                 String requestType = requestMessage.getString("requestType");
                 switch(requestType){
@@ -234,7 +245,7 @@ public class CommsBT{
                     case "fileDetails":
                         JSONObject requestData = requestMessage.getJSONObject("requestData");
                         String path = requestData.getString("path");
-                        if(!Main.library.ensurePath(path)){
+                        if(!Main.library.ensurePath(main.handler_message, path)){
                             Log.e(Main.LOG_TAG, "failed to create directory");
                             sendResponse("fileDetails", "failed to create directory");
                             return;
@@ -243,28 +254,27 @@ public class CommsBT{
                         String ip = requestData.getString("ip");
                         int port = requestData.getInt("port");
 
-                        handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_START, path));
-                        CommsWifi.receiveFile(handler_message, path, length, ip, port);
+                        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_START, path));
+                        CommsWifi.receiveFile(main.handler_message, path, length, ip, port);
                         break;
                     case "deleteFile":
-                        //TODO: would be better in other thread
                         String delPath = requestMessage.getString("requestData");
-                        sendResponse("deleteFile", Main.library.deleteFile(delPath));
+                        sendResponse("deleteFile", Main.library.deleteFile(main, delPath));
                         break;
                     default:
                         Log.e(Main.LOG_TAG, "CommsConnected.gotRequest Unknown requestType: " + requestType);
                 }
 
             }catch(Exception e){
-                Log.e(Main.LOG_TAG, "CommsConnected.gotRequest Exception: " + e);
                 Log.e(Main.LOG_TAG, "CommsConnected.gotRequest Exception: " + e.getMessage());
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_request));
             }
         }
     }
 
     private void onReceiveSync(){
         try{
-            JSONArray tracks = Main.library.getTracks();
+            JSONArray tracks = Main.library.getTracks(main.handler_message);
             sendResponse("sync", tracks);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Comms.onReceiveSync Exception: " + e.getMessage());
@@ -280,8 +290,8 @@ public class CommsBT{
             Log.i(Main.LOG_TAG, "sendResponse: " + response);
             responseQueue.put(response);
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Comms.sendResponse String Exception: " + e);
             Log.e(Main.LOG_TAG, "Comms.sendResponse String Exception: " + e.getMessage());
+            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_respond));
         }
     }
     public void sendResponse(final String requestType, final JSONArray responseData){
@@ -291,8 +301,16 @@ public class CommsBT{
             response.put("responseData", responseData);
             responseQueue.put(response);
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Comms.sendResponse JSONObject Exception: " + e);
             Log.e(Main.LOG_TAG, "Comms.sendResponse JSONObject Exception: " + e.getMessage());
+            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_respond));
         }
+    }
+    private static boolean isValidJSON(String json){
+        try{
+            new JSONObject(json);
+        }catch(JSONException e){
+            return false;
+        }
+        return true;
     }
 }

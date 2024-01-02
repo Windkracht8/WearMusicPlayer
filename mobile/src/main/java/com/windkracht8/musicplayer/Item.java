@@ -15,8 +15,6 @@ import java.util.ArrayList;
 
 public class Item extends ConstraintLayout{
     public boolean isDir;
-    public Library.LibDir libDir;
-    public Library.LibTrack libTrack;
     public Library.LibItem libItem;
 
     TextView item_status;
@@ -28,7 +26,6 @@ public class Item extends ConstraintLayout{
     public Item(Context context, AttributeSet attrs){super(context, attrs);}
     public Item(Main main, Library.LibDir libDir){
         super(main);
-        this.libDir = libDir;
         this.libItem = libDir;
         isDir = true;
         show(main);
@@ -48,7 +45,6 @@ public class Item extends ConstraintLayout{
     }
     public Item(Main main, Library.LibTrack libTrack){
         super(main);
-        this.libTrack = libTrack;
         this.libItem = libTrack;
         isDir = false;
         show(main);

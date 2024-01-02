@@ -13,7 +13,7 @@ public class MenuArtist extends Menu{
     public void show(Main main, int index){
         //TODO: first show albums, than tracks
         try{
-            artist = main.library.artists.get(index);
+            artist = Main.library.artists.get(index);
             super.show(main, artist.artist_tracks.size(), artist.name);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "MenuArtist.show artist not found");

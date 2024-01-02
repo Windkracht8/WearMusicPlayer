@@ -13,7 +13,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 
-//TODO: toast on error
 public class Library{
     private static String exStorageDir;
     public LibDir dir_music;
@@ -83,9 +82,9 @@ public class Library{
     }
 
     public static class LibItem implements Comparable<LibItem>{
-        public URI uri;
+        public final URI uri;
         public String path;
-        public String name;
+        public final String name;
         public int depth = -1;
         public Main.Status status = Main.Status.UNKNOWN;
         public long length = 1;

@@ -2,7 +2,6 @@ package com.windkracht8.musicplayer;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -61,7 +60,7 @@ public abstract class Menu extends ConstraintLayout{
             main.addOnTouch(menu_sv);
             menu_sv.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> scaleMenuItems(scrollY));
         }
-        //this.labelText = labelText == null ? "No album" : labelText;//TODO: no happen no more?
+        this.labelText = labelText;
         menu_label.setText(this.labelText);
         libraryScanVersion = Library.libraryScanVersion;
         for (int i = menu_items.getChildCount(); i > 0; i--) {

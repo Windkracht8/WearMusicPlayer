@@ -9,7 +9,7 @@ public class MenuAlbums extends Menu{
     }
 
     public void show(Main main){
-        super.show(main, main.library.albums.size(), main.getString(R.string.albums));
+        super.show(main, Main.library.albums.size(), main.getString(R.string.albums));
     }
     @Override
     protected void onItemClick(Main main, MenuItem menuItem){
@@ -17,10 +17,10 @@ public class MenuAlbums extends Menu{
     }
     @Override
     public String getItemPrimary(Main main, int index){
-        return main.library.albums.get(index).name;
+        return Main.library.albums.get(index).name;
     }
     @Override
     public String getItemSecondary(Main main, int index){
-        return main.library.albums.get(index).artist;
+        return Main.library.albums.get(index).artist;
     }
 }

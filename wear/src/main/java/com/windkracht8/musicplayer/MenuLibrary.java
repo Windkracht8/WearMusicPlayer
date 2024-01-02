@@ -22,7 +22,7 @@ public class MenuLibrary extends Menu{
                 main.main_menu_artists.show(main);
                 break;
             case 2:
-                main.library.scanFiles(main);
+                Main.library.scanFiles(main, "");
                 break;
         }
     }
@@ -43,9 +43,9 @@ public class MenuLibrary extends Menu{
     public String getItemSecondary(Main main, int index){
         switch(index){
             case 0:
-                return String.valueOf(main.library.albums.size());
+                return String.valueOf(Main.library.albums.size());
             case 1:
-                return String.valueOf(main.library.artists.size());
+                return String.valueOf(Main.library.artists.size());
             case 2:
                 return null;
         }
