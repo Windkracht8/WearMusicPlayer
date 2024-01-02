@@ -2,7 +2,7 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android" >
     <stroke
         android:width="@dimen/conf_item_padding"
-        android:color="@color/black" />
+        android:color="#000" />
     <solid
         android:color="@color/bgConfItem" />
     <corners

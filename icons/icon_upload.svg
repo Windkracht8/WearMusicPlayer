@@ -26,9 +26,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#1e1e1e"
      inkscape:document-units="px"
-     inkscape:zoom="0.5614041"
-     inkscape:cx="-10.687489"
-     inkscape:cy="293.01532"
+     inkscape:zoom="2.2456164"
+     inkscape:cx="98.859271"
+     inkscape:cy="118.23034"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
@@ -89,23 +89,23 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#ffffff;stroke:#ffffff;stroke-width:16.8948;stroke-linecap:square"
+       style="fill:#ffffff;stroke:none;stroke-width:13.3576;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1"
        id="rect1"
-       width="183.10529"
-       height="13.105245"
-       x="8.44736"
-       y="8.44736" />
+       width="100"
+       height="15"
+       x="50"
+       y="50" />
     <rect
-       style="fill:#ffffff;stroke:#ffffff;stroke-width:13.1797;stroke-linecap:square"
+       style="fill:#ffffff;stroke:none;stroke-width:8.00848;stroke-linecap:square;stroke-dasharray:none"
        id="rect1-9"
-       width="16.820333"
-       height="86.820305"
-       x="91.589844"
-       y="106.58985" />
+       width="15"
+       height="35.944649"
+       x="92.5"
+       y="114.05535" />
     <path
        id="rect2"
-       style="fill:#ffffff;stroke:#ffffff;stroke-width:18.8736;stroke-linecap:square"
-       d="m 100.18246,46.555852 52.15068,75.174668 H 48.031795 Z"
+       style="fill:#ffffff;stroke:none;stroke-width:12.61;stroke-linecap:square;stroke-dasharray:none"
+       d="M 99.99999,65.000001 135,115 H 65 Z"
        sodipodi:nodetypes="cccc" />
   </g>
 </svg>

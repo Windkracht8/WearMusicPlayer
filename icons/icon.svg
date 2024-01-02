@@ -65,7 +65,7 @@
        d="M 177.72029,395.61321 V 146.81922 L 413.37416,81.292359 V 330.1297"
        sodipodi:nodetypes="cccc" />
     <circle
-       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:40.863"
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
        id="path1-7"
        cx="374.12759"
        cy="330.12973"
