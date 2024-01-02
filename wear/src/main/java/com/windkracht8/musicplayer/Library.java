@@ -3,8 +3,10 @@ package com.windkracht8.musicplayer;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -15,7 +17,6 @@ import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Objects;
 
 public class Library{
     public static String exStorageDir;
@@ -25,16 +26,13 @@ public class Library{
 
     public static int libraryScanVersion = 0;
 
-    private final Player player = new Player();
-
-    //TODO: toast errors
     public Library(){
         exStorageDir = Environment.getExternalStorageDirectory().toString();
     }
-    public JSONArray getTracks(){
+    public JSONArray getTracks(Handler handler_message){
         JSONArray array = new JSONArray();
         for(Track track : tracks){
-            array.put(track.toJson());
+            array.put(track.toJson(handler_message));
         }
         return array;
     }
@@ -62,7 +60,8 @@ public class Library{
                 null
         )) {
             if(cursor == null){
-                Log.e(Main.LOG_TAG, "Library.rescan: Cursor is null");
+                Log.e(Main.LOG_TAG, "Library.scanMediaStore: Cursor is null");
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_scan_media));
                 return;
             }
             int ID = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID);
@@ -86,41 +85,37 @@ public class Library{
                 );
             }
         }
-        Collections.sort(tracks);
-        Collections.sort(artists);
-        Collections.sort(albums);
-        for(Artist artist : artists) artist.sort();
-        for(Album album : albums) album.sort();
+        try{
+            Collections.sort(tracks);
+            Collections.sort(artists);
+            Collections.sort(albums);
+            for(Artist artist : artists) artist.sort();
+            for(Album album : albums) album.sort();
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "Library.scanMediaStore sort exception: " + e.getMessage());
+            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_scan_media));
+        }
 
         libraryScanVersion++;
         if(libraryScanVersion == 1){
             main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_READY));
-            scanFiles(main);
+            scanFiles(main, "");
         }
     }
-    public void scanFiles(Main main){
-        if(scanFiles(main, "")){
-            scanMediaStore(main);
-        }
-    }
-    public boolean scanFiles(Main main, String subdir){
-        boolean addedTracks = false;
+    public void scanFiles(Main main, String subdir){
         String path = exStorageDir+"/Music"+subdir;
         File directory = new File(path);
         File[] files = directory.listFiles();
-        if(files == null) return false;
+        if(files == null) return;
         for(File file : files){
             if(file.isDirectory()){
-                if(scanFiles(main, subdir+"/"+file.getName()))
-                    addedTracks = true;
+                scanFiles(main, subdir+"/"+file.getName());
             }
             if(!file.getName().endsWith(".mp3")) continue;
             if(!trackExists(file.toURI())){
-                player.load(main, Uri.fromFile(file));
-                addedTracks = true;
+                scanFile(main, file);
             }
         }
-        return addedTracks;
     }
     private boolean trackExists(URI uri){
         String path = uri.getPath().substring(exStorageDir.length()+1);
@@ -129,65 +124,77 @@ public class Library{
         }
         return false;
     }
-    public boolean ensurePath(String path){
+    public boolean ensurePath(Handler handler_message, String path){
         File file = new File(exStorageDir + "/" + path);
         try{
             if(file.exists()){
-                Log.e(Main.LOG_TAG, "Library.ensurePath: path exists");
+                Log.i(Main.LOG_TAG, "Library.ensurePath: path exists");
                 return false;
             }
 
             File parent = file.getParentFile();
             if(parent == null){
                 Log.e(Main.LOG_TAG, "Library.ensurePath: getParentFile == null");
+                handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
                 return false;
             }
             if(!parent.exists()){
                 if(!parent.mkdirs()){
                     Log.e(Main.LOG_TAG, "Library.ensurePath: mkdirs");
+                    handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
                     return false;
                 }
             }
             if(!file.createNewFile()){
                 Log.e(Main.LOG_TAG, "Library.ensurePath: createNewFile");
+                handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
                 return false;
             }
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Library.ensurePath exception: " + e.getMessage());
+            handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
             return false;
         }
         return true;
     }
     public void addFile(Main main, String path){
         File file = new File(exStorageDir + "/" + path);
-        player.load(main, Uri.fromFile(file));
-        scanMediaStore(main);
+        scanFile(main, file);
     }
-    public String deleteFile(String path){
+    private void scanFile(Main main, File file){
+        MediaScannerConnection.scanFile(main,
+                new String[]{file.toString()},
+                null,
+                (path1, uri) -> scanMediaStore(main)
+        );
+    }
+    public String deleteFile(Main main, String path){
         File file = new File(exStorageDir + "/" + path);
         try{
             if(!file.exists()){
-                Log.e(Main.LOG_TAG, "Library.deleteFile: path does not exists");
+                Log.i(Main.LOG_TAG, "Library.deleteFile: path does not exists");
                 return "OK";
             }
             if(!file.delete()){
                 Log.e(Main.LOG_TAG, "Library.deleteFile: delete");
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_delete_file));
                 return "delete failed";
             }
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Library.deleteFile exception: " + e.getMessage());
+            Log.e(Main.LOG_TAG, "Library.deleteFile Exception: " + e.getMessage());
+            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_delete_file));
             return e.getMessage();
         }
-        //TODO: remove from tracks, albums, artists, and reload MediaStore
+        scanFile(main, file);
         return "OK";
     }
     public class Track implements Comparable<Track>{
-        public Uri uri;//content://media/external/audio/media/32
-        public String path;//Music/Austrian Death Machine - Jingle Bells.mp3
-        public String title;//Jingle Bells
-        public Artist artist;
-        public Album album;
-        public String track_no;
+        public final Uri uri;//content://media/external/audio/media/32
+        public final String path;//Music/Austrian Death Machine - Jingle Bells.mp3
+        public final String title;//Jingle Bells
+        public final Artist artist;
+        public final Album album;
+        public final String track_no;
         public Track(Context context, Uri uri, String path, String title, String artistName, String albumName, String albumArtist, String track_no){
             this.uri = uri;
             this.path = path.substring(exStorageDir.length()+1);
@@ -199,13 +206,13 @@ public class Library{
             artist.addAlbum(album);
             tracks.add(this);
         }
-        public JSONObject toJson(){
+        public JSONObject toJson(Handler handler_message){
             JSONObject object = new JSONObject();
             try{
                 object.put("path", path);
             }catch(Exception e){
-                Log.e(Main.LOG_TAG, "Library.Track.toJson: " + e.getMessage());
-                //TODO: toast
+                Log.e(Main.LOG_TAG, "Library.Track.toJson Exception: " + e.getMessage());
+                handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_respond));
             }
             return object;
         }
@@ -213,13 +220,15 @@ public class Library{
         public int compareTo(Track track){
             int album = this.album.name.compareTo(track.album.name);
             if(album != 0) return album;
-            int track_no = this.track_no.compareTo(track.track_no);
-            if(track_no != 0) return track_no;
+            if(this.track_no != null && track.track_no != null){
+                int track_no = this.track_no.compareTo(track.track_no);
+                if(track_no != 0) return track_no;
+            }
             return this.title.compareTo(track.title);
         }
     }
     public class Artist implements Comparable<Artist>{
-        public String name;
+        public final String name;
         public final ArrayList<Track> artist_tracks = new ArrayList<>();
         public final ArrayList<Album> artist_albums = new ArrayList<>();
         public Artist(Track track, String artistName){
@@ -250,7 +259,7 @@ public class Library{
         return new Artist(track, artistName);
     }
     public class Album implements Comparable<Album>{
-        public String name;
+        public final String name;
         public String artist;
         public final ArrayList<Track> album_tracks = new ArrayList<>();
         public Album(Track track, String albumName, String albumArtist){

@@ -39,9 +39,11 @@ public class CommsWifi{
                 }
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsWifi.receiveFile FileOutputStream exception: " + e.getMessage());
+                handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
             }
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "CommsWifi.receiveFile Socket exception: " + e.getMessage());
+            handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_wifi));
         }
     }
     private static void sleep100(){

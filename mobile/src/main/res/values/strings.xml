@@ -1,9 +1,6 @@
 <resources>
     <string name="app_name" translatable="false">Music Player</string>
 
-    <!-- filenames -->
-    <string name="matches_filename" translatable="false">matches.json</string>
-
     <!-- main ui -->
     <string name="main_icon_desc">icon</string>
 
@@ -18,7 +15,6 @@
     <string name="first_connect">First connect with watch</string>
 
     <!-- fail -->
-    <string name="fail_oops">Oops</string>
     <string name="fail_BT_denied">No Bluetooth permission</string>
     <string name="fail_BT_off">Bluetooth turned off</string>
     <string name="fail_sync">Failed to synchronise with watch</string>

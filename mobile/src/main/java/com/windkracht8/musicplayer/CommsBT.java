@@ -254,12 +254,12 @@ public class CommsBT{
                         gotResponse(response);
                         return;
                     }
-                    sleep100();
+                    if(inputStream.available() == 0) sleep100();
                 }
                 Log.e(Main.LOG_TAG, "CommsConnected.read no more bytes to read, no valid json, response: " + response);
                 main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_response));
             }catch(Exception e){
-                Log.e(Main.LOG_TAG, "CommsConnected.read: " + e.getMessage());
+                Log.e(Main.LOG_TAG, "CommsConnected.read Exception: " + e.getMessage());
                 main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_response));
             }
         }
@@ -274,15 +274,13 @@ public class CommsBT{
                 main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_response));
             }
         }
-
-        private boolean isValidJSON(String json){
-            try{
-                new JSONObject(json);
-            }catch(JSONException e){
-                return false;
-            }
-            return true;
+    }
+    private static boolean isValidJSON(String json){
+        try{
+            new JSONObject(json);
+        }catch(JSONException e){
+            return false;
         }
-
+        return true;
     }
 }

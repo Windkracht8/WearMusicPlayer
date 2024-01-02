@@ -4,6 +4,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 public class Player{
     Handler handler;
@@ -19,11 +20,15 @@ public class Player{
         handler = new Handler(Looper.getMainLooper());
     }
     private void update(Handler handler_message){
+        try{
         if(mediaPlayer.isPlaying()){
             handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_PLAYER_POSITION, mediaPlayer.getCurrentPosition()));
             handler.postDelayed(() -> update(handler_message), 1000);
         }else{
             handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_PLAYER_STOP));
+        }
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "Player.update Exception: " + e.getMessage());
         }
     }
     public void playPause(Handler handler_message){
