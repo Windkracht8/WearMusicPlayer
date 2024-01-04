@@ -12,8 +12,13 @@
     <string name="main_back_desc">previous song</string>
     <string name="main_play_pause_desc">play or pause</string>
     <string name="main_forward_desc">next song</string>
+    <string name="loading">loading</string>
     <string name="library">library</string>
-    <string name="file_received">received new song from phone</string>
+    <string name="confirm_close">Stop playing and close?</string>
+    <string name="yes">yes</string>
+    <string name="back">back</string>
+    <string name="open_mp">Open Music Player</string>
+    <string name="playing_track">Playing track</string>
 
     <!-- progress -->
     <string name="progress_label_text">Receiving file</string>
@@ -33,5 +38,6 @@
     <string name="fail_create_file">Failed to create file</string>
     <string name="fail_delete_file">Failed to delete file</string>
     <string name="fail_scan_media">Problem with finding tracks</string>
+    <string name="fail_prepare">Failed to load track</string>
 
 </resources>

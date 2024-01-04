@@ -37,14 +37,18 @@ public abstract class Menu extends ConstraintLayout{
         inflater.inflate(R.layout.menu, this, true);
         menu_sv = findViewById(R.id.menu_sv);
         menu_label = findViewById(R.id.menu_label);
-        menu_label.getLayoutParams().height = Main.vh25;
+        menu_label.setMinimumHeight(Main.vh25);
         menu_items = findViewById(R.id.menu_items);
         ((LinearLayout.LayoutParams) menu_items.getLayoutParams()).bottomMargin += Main.vh25;
     }
 
+    public void requestSVFocus(){
+        menu_sv.requestFocus();
+    }
     private void show(){
         setVisibility(View.VISIBLE);
         menu_sv.fullScroll(View.FOCUS_UP);
+        if(isItemHeightInitialized) scaleMenuItems(0);
         menu_sv.requestFocus();
     }
     public void show(Main main, int size, String labelText){
@@ -62,6 +66,10 @@ public abstract class Menu extends ConstraintLayout{
         }
         this.labelText = labelText;
         menu_label.setText(this.labelText);
+        if(Main.isScreenRound){
+            ((LinearLayout.LayoutParams) menu_label.getLayoutParams()).leftMargin = Main.vw20;
+            ((LinearLayout.LayoutParams) menu_label.getLayoutParams()).rightMargin = Main.vw20;
+        }
         libraryScanVersion = Library.libraryScanVersion;
         for (int i = menu_items.getChildCount(); i > 0; i--) {
             menu_items.removeViewAt(i - 1);

@@ -9,6 +9,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -28,9 +30,11 @@ public class CommsBT{
     BluetoothServerSocket bluetoothServerSocket;
     BluetoothSocket bluetoothSocket;
     final Main main;
+    final Handler handler;
 
     public CommsBT(Main main){
         this.main = main;
+        handler = new Handler(Looper.getMainLooper());
         requestQueue = new JSONArray();
         BluetoothManager bluetoothManager = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
@@ -196,8 +200,7 @@ public class CommsBT{
                 return;
             }
             read();
-            sleep100();
-            process();
+            handler.postDelayed(this::process, 100);
         }
 
         private void close(){
