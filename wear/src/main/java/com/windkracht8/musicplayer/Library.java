@@ -99,7 +99,6 @@ public class Library{
         libraryScanVersion++;
         if(libraryScanVersion == 1){
             main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_READY));
-            scanFiles(main, "");
         }
     }
     public void scanFiles(Main main, String subdir){
@@ -116,6 +115,17 @@ public class Library{
                 scanFile(main, file);
             }
         }
+        if(subdir.length()>0) return;
+        //2nd step, ask MediaStore to check if all files in the store still exist
+        ArrayList<String> paths = new ArrayList<>();
+        for(Track track : tracks){
+            paths.add(exStorageDir+"/"+track.path);
+        }
+        MediaScannerConnection.scanFile(main,
+                paths.toArray(new String[0]),
+                null,
+                (path1, uri) -> scanMediaStore(main)
+        );
     }
     private boolean trackExists(URI uri){
         String path = uri.getPath().substring(exStorageDir.length()+1);

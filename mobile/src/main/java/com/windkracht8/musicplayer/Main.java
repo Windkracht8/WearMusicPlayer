@@ -52,6 +52,7 @@ public class Main extends AppCompatActivity{
     private TextView main_error;
     private LinearLayout main_ll;
     private final ArrayList<Item> items = new ArrayList<>();
+    private Item itemDelete;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -102,11 +103,8 @@ public class Main extends AppCompatActivity{
                     gotResponse((JSONObject) msg.obj);
                     break;
                 case MESSAGE_COMMS_PROGRESS:
-                    Log.d(LOG_TAG, "Main.MESSAGE_COMMS_PROGRESS 1");
                     if(!(msg.obj instanceof Item)) return;
-                    Log.d(LOG_TAG, "Main.MESSAGE_COMMS_PROGRESS 2");
                     ((Item) msg.obj).updateProgress();
-                    Log.d(LOG_TAG, "Main.MESSAGE_COMMS_PROGRESS 3");
                     break;
             }
         }
@@ -199,39 +197,34 @@ public class Main extends AppCompatActivity{
         back_press_time = date.getTime();
     }
     private void explainDoubleBack(){
-        Toast.makeText(getApplicationContext(), R.string.explainDoubleBack, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.explainDoubleBack, Toast.LENGTH_SHORT).show();
     }
 
     public void onItemStatusPressed(Item item){
-        Log.i(LOG_TAG, "Main.onItemStatusPressed: " + item.libItem.path + " " + item.libItem.status);
         switch(item.libItem.status){
             case FULL:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Confirm");
                 builder.setMessage("Delete on watch?");
                 builder.setPositiveButton("delete", (dialog, which) -> {
-                    Log.i(LOG_TAG, "confirm: delete");
+                    itemDelete = item;
                     executorService.submit(() -> commsBT.sendRequest("deleteFile", item.libItem.path));
                     dialog.dismiss();
                 });
-                builder.setNegativeButton("cancel", (dialog, which) -> {
-                    Log.i(LOG_TAG, "confirm: cancel");
-                    dialog.dismiss();
-                });
+                builder.setNegativeButton("cancel", (dialog, which) -> dialog.dismiss());
                 builder.create().show();
                 break;
             case PARTIAL:
-                //TODO: ask what to do
                 break;
             case NOT:
-                if(CommsWifi.sendingFile){
-                    Log.e(LOG_TAG, "Main.onItemStatusPressed: Can't send file, other in progress");
+                if(CommsWifi.sendingFile){//TODO: test if we can start sending next file while one is still in progress
+                    Toast.makeText(this, R.string.fail_sending_file, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if(cantSendRequest()){
-                    Log.e(LOG_TAG, "Main.onItemStatusPressed: Can't send file, other in progress");
                     return;
                 }
+                item.updateProgress();
                 executorService.submit(() -> commsWifi.sendFile(handler_message, item));
                 String ipAddress = commsWifi.getIpAddress(this);
                 executorService.submit(() -> commsBT.sendFileDetails(item.libItem, ipAddress));
@@ -272,9 +265,8 @@ public class Main extends AppCompatActivity{
                 }
                 break;
             default:
-                main_status.setText(status);//TODO: replace this with generic, should not happen
+                main_status.setText(status);
                 main_status.setVisibility(View.VISIBLE);
-                //main_status.setVisibility(View.GONE);
                 main_error.setText(getString(R.string.status_ERROR));
         }
     }
@@ -286,7 +278,7 @@ public class Main extends AppCompatActivity{
             commsBT.sendRequest("sync", requestData);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Main.sendSyncRequest Exception: " + e.getMessage());
-            Toast.makeText(getApplicationContext(), R.string.fail_sync, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.fail_sync, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -299,20 +291,31 @@ public class Main extends AppCompatActivity{
                     executorService.submit(() -> library.updateLibWithFilesOnWatch(handler_message, filesOnWatch));
                     break;
                 case "fileDetails":
-                    //executorService.submit(() -> commsBT.sendFileBinary());
                     commsWifi.stopSendFile();
                     String responseData = response.getString("responseData");
                     Log.e(Main.LOG_TAG, "Main.gotResponse fileDetails responseData: " + responseData);
-                    Toast.makeText(getApplicationContext(), R.string.fail_response, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.fail_response, Toast.LENGTH_SHORT).show();
+                    break;
+                case "fileBinary":
+                    String path_done = response.getString("responseData");
+                    for(Item item : items){
+                        item.updateProgressDone(this, path_done);
+                    }
                     break;
                 case "deleteFile":
-                    //TODO: update the status in the library and UI
-
+                    if(response.getString("responseData").equals("OK")){
+                        itemDelete.libItem.status = Status.NOT;
+                        itemDelete.newStatus();
+                        break;
+                    }else{
+                        Log.e(Main.LOG_TAG, "Main.gotResponse deleteFile");
+                        Toast.makeText(this, R.string.fail_delete_file, Toast.LENGTH_SHORT).show();
+                    }
                     break;
             }
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Main.gotResponse: " + e.getMessage());
-            Toast.makeText(getApplicationContext(), R.string.fail_response, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.fail_response, Toast.LENGTH_SHORT).show();
         }
     }
     private void gotError(String error){

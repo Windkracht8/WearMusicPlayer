@@ -20,5 +20,7 @@
     <string name="fail_sync">Failed to synchronise with watch</string>
     <string name="fail_send_message">Failed to send message to watch</string>
     <string name="fail_response">Problem with response from watch</string>
+    <string name="fail_sending_file">Wait for other file to be finished</string>
+    <string name="fail_delete_file">Failed to delete the file on the watch</string>
 
 </resources>

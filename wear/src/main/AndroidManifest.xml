@@ -16,15 +16,16 @@
         android:icon="@mipmap/icon"
         android:label="@string/app_name"
         android:supportsRtl="false"
-        android:theme="@style/rrw_splash" >
+        android:theme="@style/w8mp_splash" >
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
         <activity
             android:name=".Main"
             android:taskAffinity="com.windkracht8.musicplayer.Main"
+            android:launchMode="singleTop"
             android:exported="true"
-            android:theme="@style/rrw_splash" >
+            android:theme="@style/w8mp_splash" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

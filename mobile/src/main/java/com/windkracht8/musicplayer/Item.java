@@ -2,7 +2,6 @@ package com.windkracht8.musicplayer;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -56,7 +55,7 @@ public class Item extends ConstraintLayout{
 
         item_status = findViewById(R.id.item_status);
         item_label = findViewById(R.id.item_label);
-        item_status.setOnClickListener(v -> main.onItemStatusPressed(this));
+        if(!isDir) item_status.setOnClickListener(v -> main.onItemStatusPressed(this));
         item_label.setOnClickListener(v -> onLabelPressed());
 
         newStatus();
@@ -81,15 +80,19 @@ public class Item extends ConstraintLayout{
         switch(libItem.status){
             case FULL:
                 item_status.setText("V");
+                if(!isDir) item_status.setBackgroundResource(R.drawable.icon_delete);
                 break;
             case PARTIAL:
                 item_status.setText("/");
+                item_status.setBackgroundResource(0);
                 break;
             case NOT:
-                item_status.setText("X");
+                item_status.setText("");
+                if(!isDir) item_status.setBackgroundResource(R.drawable.icon_upload);
                 break;
             case UNKNOWN:
                 item_status.setText("");
+                item_status.setBackgroundResource(0);
                 break;
         }
         for(Item item : items){
@@ -97,9 +100,19 @@ public class Item extends ConstraintLayout{
         }
     }
     public void updateProgress(){
-        long perc = (libItem.progress / libItem.length) * 100;
-        Log.d(Main.LOG_TAG, "Item.updateProgress: " + perc);
+        long perc = (libItem.progress * 100) / libItem.length;
         item_status.setText(String.valueOf(perc));
+        item_status.setBackgroundResource(0);
+    }
+    public void updateProgressDone(Main main, String path){
+        if(libItem.path.equals(path)){
+            libItem.status = Main.Status.FULL;
+            main.runOnUiThread(this::newStatus);
+            return;
+        }
+        for(Item item : items){
+            item.updateProgressDone(main, path);
+        }
     }
     public void onLabelPressed(){
         if(!isDir) return;
