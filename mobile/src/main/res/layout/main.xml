@@ -11,7 +11,7 @@
         android:contentDescription="@string/main_icon_desc"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/icon" />
+        app:srcCompat="@drawable/icon_watch" />
     <TextView
         android:id="@+id/main_status"
         android:layout_width="wrap_content"

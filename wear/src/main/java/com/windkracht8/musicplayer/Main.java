@@ -52,7 +52,7 @@ public class Main extends Activity{
     public MenuArtist main_menu_artist;
     public MenuAlbums main_menu_albums;
     public MenuAlbum main_menu_album;
-    private Menu currentVisibleMenu;
+    private View currentVisibleView;
 
     private ExecutorService executorService;
     private AudioManager audioManager;
@@ -139,6 +139,11 @@ public class Main extends Activity{
         executorService.submit(() -> library.scanMediaStore(this));
         executorService.submit(() -> requestPermissions());
     }
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        stopOngoingNotification();
+    }
     private void requestPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH) &&
@@ -212,6 +217,7 @@ public class Main extends Activity{
             initBT();
         }
     }
+
 
     private void initBT(){
         if(!hasBTPermission) return;
@@ -341,8 +347,14 @@ public class Main extends Activity{
     }
     @Override
     public void onBackPressed(){
-        Menu menu = getCurrentVisibleMenu();
-        if(menu == null){
+        View view = getCurrentVisibleView();
+        if(view != null){
+            view.setVisibility(View.GONE);
+            Menu menu = getCurrentVisibleMenu();
+            if(menu != null){
+                menu.requestSVFocus();
+            }
+        }else{
             if(isPlaying){
                 AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.w8mp_alert));
                 builder.setMessage(R.string.confirm_close);
@@ -351,12 +363,6 @@ public class Main extends Activity{
                 builder.create().show();
             }else{
                 System.exit(0);
-            }
-        }else{
-            menu.setVisibility(View.GONE);
-            menu = getCurrentVisibleMenu();
-            if(menu != null){
-                menu.requestSVFocus();
             }
         }
     }
@@ -383,11 +389,11 @@ public class Main extends Activity{
                 break;
             case MotionEvent.ACTION_MOVE:
                 if(onTouchStartY == -1) onTouchInit(event);
-                if(currentVisibleMenu == null) return false;
+                if(currentVisibleView == null) return false;
 
                 int diffX1 = getBackSwipeDiffX(event);
                 if(getBackSwipeVelocity(event, diffX1) < SWIPE_VELOCITY_THRESHOLD){
-                    currentVisibleMenu.animate()
+                    currentVisibleView.animate()
                             .x(0)
                             .scaleX(1f).scaleY(1f)
                             .setDuration(300).start();
@@ -395,23 +401,23 @@ public class Main extends Activity{
                     float move = event.getRawX() - onTouchStartX;
                     float scale = 1 - move/widthPixels;
                     if(isScreenRound){
-                        currentVisibleMenu.setBackgroundResource(R.drawable.round_bg);
+                        currentVisibleView.setBackgroundResource(R.drawable.round_bg);
                     }
-                    currentVisibleMenu.animate().x(move)
+                    currentVisibleView.animate().x(move)
                             .scaleX(scale).scaleY(scale)
                             .setDuration(0).start();
                 }
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                if(currentVisibleMenu != null){
-                    currentVisibleMenu.animate()
+                if(currentVisibleView != null){
+                    currentVisibleView.animate()
                             .x(0)
                             .scaleX(1f).scaleY(1f)
                             .setDuration(150).start();
                     if(isScreenRound){
-                        currentVisibleMenu.setBackgroundResource(0);
-                        currentVisibleMenu.setBackgroundColor(getResources().getColor(R.color.black, null));
+                        currentVisibleView.setBackgroundResource(0);
+                        currentVisibleView.setBackgroundColor(getResources().getColor(R.color.black, null));
                     }
                 }
                 int diffX2 = getBackSwipeDiffX(event);
@@ -427,7 +433,13 @@ public class Main extends Activity{
     private void onTouchInit(MotionEvent event){
         onTouchStartY = event.getRawY();
         onTouchStartX = event.getRawX();
-        currentVisibleMenu = getCurrentVisibleMenu();
+        currentVisibleView = getCurrentVisibleView();
+    }
+    private View getCurrentVisibleView(){
+        if(main_progress.getVisibility() == View.VISIBLE){
+            return main_progress;
+        }
+        return getCurrentVisibleMenu();
     }
     private Menu getCurrentVisibleMenu(){
         if(main_menu_album.getVisibility() == View.VISIBLE){

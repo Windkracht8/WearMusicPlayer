@@ -6,7 +6,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +16,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,6 +51,7 @@ public class Main extends AppCompatActivity{
     private Handler handler_main;
     private ExecutorService executorService;
 
+    private ImageView main_icon;
     private TextView main_status;
     private TextView main_error;
     private LinearLayout main_ll;
@@ -63,6 +67,7 @@ public class Main extends AppCompatActivity{
         handler_main = new Handler(Looper.getMainLooper());
         commsWifi = new CommsWifi();
 
+        main_icon = findViewById(R.id.main_icon);
         main_status = findViewById(R.id.main_status);
         main_error = findViewById(R.id.main_error);
         main_ll = findViewById(R.id.main_ll);
@@ -243,20 +248,29 @@ public class Main extends AppCompatActivity{
     public void updateStatus(final String status){
         switch(status){
             case "FATAL":
+                main_icon.setBackgroundResource(R.drawable.icon_watch);
+                main_icon.setColorFilter(getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
                 main_status.setVisibility(View.GONE);
                 return;
             case "LISTENING":
+                main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
+                main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                ((AnimatedVectorDrawable) main_icon.getBackground()).start();
                 main_status.setText(getString(R.string.status_LISTENING));
                 main_status.setVisibility(View.VISIBLE);
                 main_error.setText("");
                 break;
             case "CONNECTED":
+                main_icon.setBackgroundResource(R.drawable.icon_watch);
+                main_icon.setColorFilter(getColor(R.color.text), android.graphics.PorterDuff.Mode.SRC_IN);
                 main_status.setText(getString(R.string.status_CONNECTED));
                 main_status.setVisibility(View.VISIBLE);
                 main_error.setText("");
                 sendSyncRequest();
                 break;
             case "DISCONNECTED":
+                main_icon.setBackgroundResource(R.drawable.icon_watch);
+                main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
                 main_status.setText(getString(R.string.status_DISCONNECTED));
                 main_status.setVisibility(View.VISIBLE);
                 main_error.setText("");
@@ -265,6 +279,8 @@ public class Main extends AppCompatActivity{
                 }
                 break;
             default:
+                main_icon.setBackgroundResource(R.drawable.icon_watch);
+                main_icon.setColorFilter(getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
                 main_status.setText(status);
                 main_status.setVisibility(View.VISIBLE);
                 main_error.setText(getString(R.string.status_ERROR));
@@ -287,13 +303,18 @@ public class Main extends AppCompatActivity{
             String requestType = response.getString("requestType");
             switch(requestType){
                 case "sync":
-                    JSONArray filesOnWatch = response.getJSONArray("responseData");
-                    executorService.submit(() -> library.updateLibWithFilesOnWatch(handler_message, filesOnWatch));
+                    JSONObject responseDataSync = response.getJSONObject("responseData");
+                    JSONArray tracks = responseDataSync.getJSONArray("tracks");
+                    long freeSpace = responseDataSync.getLong("freeSpace");
+                    Log.i(LOG_TAG, "freeSpace: " + freeSpace);
+                    String line = "Available: " + bytesToHuman(freeSpace);
+                    main_status.setText(line);
+                    executorService.submit(() -> library.updateLibWithFilesOnWatch(handler_message, tracks));
                     break;
                 case "fileDetails":
                     commsWifi.stopSendFile();
-                    String responseData = response.getString("responseData");
-                    Log.e(Main.LOG_TAG, "Main.gotResponse fileDetails responseData: " + responseData);
+                    String responseDataFileDetails = response.getString("responseData");
+                    Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + responseDataFileDetails);
                     Toast.makeText(this, R.string.fail_response, Toast.LENGTH_SHORT).show();
                     break;
                 case "fileBinary":
@@ -308,17 +329,37 @@ public class Main extends AppCompatActivity{
                         itemDelete.newStatus();
                         break;
                     }else{
-                        Log.e(Main.LOG_TAG, "Main.gotResponse deleteFile");
+                        Log.e(LOG_TAG, "Main.gotResponse deleteFile");
                         Toast.makeText(this, R.string.fail_delete_file, Toast.LENGTH_SHORT).show();
                     }
                     break;
             }
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Main.gotResponse: " + e.getMessage());
+            Log.e(LOG_TAG, "Main.gotResponse: " + e.getMessage());
             Toast.makeText(this, R.string.fail_response, Toast.LENGTH_SHORT).show();
         }
     }
     private void gotError(String error){
         main_error.setText(error);
+    }
+    @SuppressLint("DefaultLocale")
+    private String bytesToHuman(long bytes){
+        long GB = 1073741824;
+        long MB = 1048576;
+        long KB = 1024;
+        if(bytes > GB*10){
+            double gbs = (double) bytes / GB;
+            return String.format("%.0f GB", gbs);
+        }else if(bytes > GB*5){
+            double gbs = (double) bytes/GB;
+            return String.format("%.3f GB", gbs);
+        }else if(bytes > MB){
+            double gbs = (double) bytes/MB;
+            return String.format("%.0f MB", gbs);
+        }else if(bytes > KB){
+            double gbs = (double) bytes/KB;
+            return String.format("%.0f KB", gbs);
+        }
+        return bytes + "B";
     }
 }
