@@ -2,5 +2,6 @@
 <resources>
     <color name="background">#000</color>
     <color name="text">#FFF</color>
+    <color name="icon_disabled">#666</color>
     <color name="error">@android:color/holo_red_light</color>
 </resources>

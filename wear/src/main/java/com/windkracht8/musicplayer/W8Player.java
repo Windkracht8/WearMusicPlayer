@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.media.session.MediaSession;
 import android.media.session.MediaSession.Callback;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -44,24 +45,30 @@ public class W8Player{
         MediaSession mediaSession = new MediaSession(main, Main.LOG_TAG);
         mediaSession.setCallback(new Callback() {
             @Override
-            public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent) {
-                KeyEvent keyEvent = mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent){
+                KeyEvent keyEvent;
+                if(Build.VERSION.SDK_INT >= 33){
+                    keyEvent = mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent.class);
+                }else{
+                    keyEvent = mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+                }
                 if(keyEvent == null) return false;
-                if(keyEvent.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PREVIOUS){
-                    main.bPreviousPressed();
-                    return true;
-                }else if(keyEvent.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PLAY){
-                    exoPlayer.play();
-                    return true;
-                }else if(keyEvent.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PAUSE){
-                    exoPlayer.pause();
-                    return true;
-                }else if(keyEvent.getKeyCode() == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE){
-                    playPause();
-                    return true;
-                }else if(keyEvent.getKeyCode() == KeyEvent.KEYCODE_MEDIA_NEXT){
-                    main.bNextPressed();
-                    return true;
+                switch(keyEvent.getKeyCode()){
+                    case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                        main.bPreviousPressed();
+                        return true;
+                    case KeyEvent.KEYCODE_MEDIA_PLAY:
+                        exoPlayer.play();
+                        return true;
+                    case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                        exoPlayer.pause();
+                        return true;
+                    case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                        playPause();
+                        return true;
+                    case KeyEvent.KEYCODE_MEDIA_NEXT:
+                        main.bNextPressed();
+                        return true;
                 }
                 return false;
             }

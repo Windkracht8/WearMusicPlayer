@@ -18,6 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -275,7 +276,11 @@ public class CommsBT{
     private void onReceiveSync(){
         try{
             JSONArray tracks = Main.library.getTracks(main.handler_message);
-            sendResponse("sync", tracks);
+            long freeSpace = new File(Library.exStorageDir).getFreeSpace();
+            JSONObject responseData = new JSONObject();
+            responseData.put("tracks", tracks);
+            responseData.put("freeSpace", freeSpace);
+            sendResponse("sync", responseData);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Comms.onReceiveSync Exception: " + e.getMessage());
             sendResponse("sync", "unexpected error");
@@ -294,7 +299,7 @@ public class CommsBT{
             main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_respond));
         }
     }
-    public void sendResponse(final String requestType, final JSONArray responseData){
+    public void sendResponse(final String requestType, final JSONObject responseData){
         try{
             JSONObject response = new JSONObject();
             response.put("requestType", requestType);

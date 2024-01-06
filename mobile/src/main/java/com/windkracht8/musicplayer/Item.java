@@ -2,6 +2,7 @@ package com.windkracht8.musicplayer;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -29,6 +30,7 @@ public class Item extends ConstraintLayout{
         isDir = true;
         show(main);
         item_label.setTextAppearance(R.style.w8TextViewStyleBold);
+        item_label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
 
         LinearLayout item_items = findViewById(R.id.item_items);
         for(Library.LibDir libDirSub : libDir.libDirs){
@@ -79,20 +81,32 @@ public class Item extends ConstraintLayout{
     public void newStatus(){
         switch(libItem.status){
             case FULL:
-                item_status.setText("V");
-                if(!isDir) item_status.setBackgroundResource(R.drawable.icon_delete);
+                if(isDir){
+                    item_status.setText("V");
+                }else{
+                    item_status.setBackgroundResource(R.drawable.icon_delete);
+                }
                 break;
             case PARTIAL:
-                item_status.setText("/");
-                item_status.setBackgroundResource(0);
+                if(isDir){
+                    item_status.setText("/");
+                }else{
+                    item_status.setBackgroundResource(0);
+                }
                 break;
             case NOT:
-                item_status.setText("");
-                if(!isDir) item_status.setBackgroundResource(R.drawable.icon_upload);
+                if(isDir){
+                    item_status.setText("");
+                }else{
+                    item_status.setBackgroundResource(R.drawable.icon_upload);
+                }
                 break;
             case UNKNOWN:
-                item_status.setText("");
-                item_status.setBackgroundResource(0);
+                if(isDir){
+                    item_status.setText("");
+                }else{
+                    item_status.setBackgroundResource(0);
+                }
                 break;
         }
         for(Item item : items){
