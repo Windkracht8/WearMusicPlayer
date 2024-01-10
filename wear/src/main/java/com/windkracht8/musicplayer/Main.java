@@ -61,6 +61,7 @@ public class Main extends Activity{
     public final static int MESSAGE_COMMS_FILE_START = 301;
     public final static int MESSAGE_COMMS_FILE_PROGRESS = 302;
     public final static int MESSAGE_COMMS_FILE_DONE = 303;
+    public final static int MESSAGE_COMMS_FILE_ERROR = 304;
     private final static int REQUEST_PERMISSION_CODE = 100;
 
     public static int heightPixels;
@@ -218,7 +219,6 @@ public class Main extends Activity{
         }
     }
 
-
     private void initBT(){
         if(!hasBTPermission) return;
         if(commsBT == null) commsBT = new CommsBT(this);
@@ -252,6 +252,9 @@ public class Main extends Activity{
                     if(msg.obj instanceof Integer){
                         main_progress.setProgress((Integer) msg.obj);
                     }
+                    break;
+                case MESSAGE_COMMS_FILE_ERROR:
+                    main_progress.setVisibility(View.GONE);
                     break;
                 case MESSAGE_COMMS_FILE_DONE:
                     if(msg.obj instanceof String){
