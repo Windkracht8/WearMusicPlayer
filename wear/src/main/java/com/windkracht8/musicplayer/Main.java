@@ -315,6 +315,14 @@ public class Main extends Activity{
             main_next.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
         }
     }
+    public void onRescanClick(){
+        main_song_title.setText("");
+        main_song_artist.setText("");
+        main_library.setText(R.string.scanning);
+        main_menu_library.setVisibility(View.GONE);
+        current_tracks = null;
+        executorService.submit(() -> library.scanFiles(this, ""));
+    }
     public void bPreviousPressed(){
         loadTrack(current_index-1);
     }

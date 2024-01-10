@@ -126,6 +126,7 @@ public class Library{
                 null,
                 (path1, uri) -> scanMediaStore(main)
         );
+        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_READY));
     }
     private boolean trackExists(URI uri){
         String path = uri.getPath().substring(exStorageDir.length()+1);
