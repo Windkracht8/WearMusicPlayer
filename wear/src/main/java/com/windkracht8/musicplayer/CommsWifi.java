@@ -25,6 +25,7 @@ public class CommsWifi{
                     int numBytes = inputStream.read(buffer);
                     if(numBytes < 0){
                         Log.e(Main.LOG_TAG, "CommsWifi.receiveFile read error");
+                        handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_ERROR));
                         return;
                     }
                     fileOutputStream.write(buffer, 0, numBytes);
@@ -34,9 +35,10 @@ public class CommsWifi{
                     handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_PROGRESS, (int) progress));
                     if(bytesDone >= length){
                         handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_DONE, path));
-                        break;
+                        return;
                     }
                 }
+                handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_ERROR));
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsWifi.receiveFile FileOutputStream exception: " + e.getMessage());
                 handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
