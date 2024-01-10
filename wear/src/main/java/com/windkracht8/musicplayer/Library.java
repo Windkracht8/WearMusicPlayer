@@ -37,6 +37,9 @@ public class Library{
         return array;
     }
     public void scanMediaStore(Main main){
+        if(libraryScanVersion > 0){
+            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_SCANNING));
+        }
         tracks.clear();
         artists.clear();
         albums.clear();
@@ -97,9 +100,7 @@ public class Library{
         }
 
         libraryScanVersion++;
-        if(libraryScanVersion == 1){
-            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_READY));
-        }
+        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_READY));
     }
     public void scanFiles(Main main, String subdir){
         String path = exStorageDir+"/Music"+subdir;
@@ -126,7 +127,6 @@ public class Library{
                 null,
                 (path1, uri) -> scanMediaStore(main)
         );
-        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_READY));
     }
     private boolean trackExists(URI uri){
         String path = uri.getPath().substring(exStorageDir.length()+1);

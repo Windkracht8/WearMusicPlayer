@@ -58,6 +58,7 @@ public class Main extends Activity{
     private AudioManager audioManager;
     public final static int MESSAGE_TOAST = 101;
     public final static int MESSAGE_LIBRARY_READY = 201;
+    public final static int MESSAGE_LIBRARY_SCANNING = 202;
     public final static int MESSAGE_COMMS_FILE_START = 301;
     public final static int MESSAGE_COMMS_FILE_PROGRESS = 302;
     public final static int MESSAGE_COMMS_FILE_DONE = 303;
@@ -236,6 +237,9 @@ public class Main extends Activity{
                         runOnUiThread(() -> Toast.makeText(getBaseContext(), msg_str, Toast.LENGTH_SHORT).show());
                     }
                     break;
+                case MESSAGE_LIBRARY_SCANNING:
+                    setScanning();
+                    break;
                 case MESSAGE_LIBRARY_READY:
                     main_library.setText(R.string.library);
                     if(current_tracks == null){
@@ -291,7 +295,7 @@ public class Main extends Activity{
     private void loadTrack(int index){
         if(current_tracks == null ||
                 current_tracks.size() == 0 ||
-                current_tracks.size() < index ||
+                current_tracks.size() <= index ||
                 index < 0) return;
         loadTrackUi(index);
         player.loadTrack(this, current_tracks.get(index).uri);
@@ -300,6 +304,10 @@ public class Main extends Activity{
         loadTrack(0);
     }
     private void loadTrackUi(int index){
+        if(current_tracks == null ||
+                current_tracks.size() == 0 ||
+                current_tracks.size() <= index ||
+                index < 0) return;
         current_index = index;
         Library.Track track = current_tracks.get(current_index);
         main_song_title.setText(track.title);
@@ -316,12 +324,17 @@ public class Main extends Activity{
         }
     }
     public void onRescanClick(){
-        main_song_title.setText("");
-        main_song_artist.setText("");
-        main_library.setText(R.string.scanning);
+        setScanning();
         main_menu_library.setVisibility(View.GONE);
-        current_tracks = null;
         executorService.submit(() -> library.scanFiles(this, ""));
+    }
+    private void setScanning(){
+        if(!isPlaying){
+            main_song_title.setText("");
+            main_song_artist.setText("");
+            main_library.setText(R.string.scanning);
+            current_tracks = null;
+        }
     }
     public void bPreviousPressed(){
         loadTrack(current_index-1);
