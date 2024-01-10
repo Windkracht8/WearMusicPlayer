@@ -2,6 +2,7 @@ package com.windkracht8.musicplayer;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
 
 public class MenuLibrary extends Menu{
 
@@ -22,7 +23,7 @@ public class MenuLibrary extends Menu{
                 main.main_menu_artists.show(main);
                 break;
             case 2:
-                Main.library.scanFiles(main, "");
+                main.onRescanClick();
                 break;
         }
     }

@@ -13,6 +13,7 @@
     <string name="main_play_pause_desc">play or pause</string>
     <string name="main_forward_desc">next song</string>
     <string name="loading">loading</string>
+    <string name="scanning">scanning</string>
     <string name="library">library</string>
     <string name="confirm_close">Stop playing and close?</string>
     <string name="yes">yes</string>
