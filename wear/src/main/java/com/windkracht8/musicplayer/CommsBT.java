@@ -168,8 +168,7 @@ public class CommsBT{
                 return;
             }
             read();
-            sleep100();
-            process();
+            handler.postDelayed(this::process, 100);
         }
 
         private void close(){

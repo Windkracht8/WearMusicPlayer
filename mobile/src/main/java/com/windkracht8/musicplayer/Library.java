@@ -68,6 +68,16 @@ public class Library{
                 full = false;
             }
         }
+        for(LibDir libDir : directory.libDirs){
+            if(libDir.status == Main.Status.FULL){
+                partial = true;
+            }else if(libDir.status == Main.Status.PARTIAL){
+                partial = true;
+                full = false;
+            }else{
+                full = false;
+            }
+        }
         if(full){
             directory.status = Main.Status.FULL;
         }else if(partial){
