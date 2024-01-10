@@ -1,10 +1,20 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">Wear Music Player</string>
 
     <!-- main ui -->
     <string name="main_icon_desc">icon</string>
+    <string name="main_loading_text">loading file list</string>
+    <string name="available">Available: </string>
 
-    <string name="explainDoubleBack">Press back twice to close</string>
+    <string name="alert_exit_title">Upload in progress</string>
+    <string name="alert_exit_message">Stop sending file and close?</string>
+    <string name="alert_exit_positive">Stop and close</string>
+    <string name="alert_exit_negative">Continue</string>
+
+    <string name="alert_delete_title">Confirm</string>
+    <string name="alert_delete_message">Delete on watch?</string>
+    <string name="alert_delete_positive">Delete</string>
+    <string name="alert_delete_negative">Cancel</string>
 
     <!-- status -->
     <string name="status_STARTING">Starting</string>
@@ -22,5 +32,5 @@
     <string name="fail_response">Problem with response from watch</string>
     <string name="fail_sending_file">Wait for other file to be finished</string>
     <string name="fail_delete_file">Failed to delete the file on the watch</string>
-
+    <string name="fail_show_item">Failed to show item</string>
 </resources>

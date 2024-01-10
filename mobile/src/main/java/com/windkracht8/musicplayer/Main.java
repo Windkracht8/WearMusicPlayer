@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Build;
@@ -25,7 +24,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -47,8 +46,6 @@ public class Main extends AppCompatActivity{
     private CommsWifi commsWifi = null;
     private final Library library = new Library();
 
-    private long back_press_time;
-    private Handler handler_main;
     private ExecutorService executorService;
 
     private ImageView main_icon;
@@ -64,7 +61,6 @@ public class Main extends AppCompatActivity{
         setContentView(R.layout.main);
 
         executorService = Executors.newFixedThreadPool(4);
-        handler_main = new Handler(Looper.getMainLooper());
         commsWifi = new CommsWifi();
 
         main_icon = findViewById(R.id.main_icon);
@@ -116,6 +112,7 @@ public class Main extends AppCompatActivity{
     };
 
     private void loadFileList(){
+        findViewById(R.id.main_loading).setVisibility(View.GONE);
         for(Library.LibDir libDir : library.dir_music.libDirs){
             Item item = new Item(this, libDir);
             items.add(item);
@@ -191,38 +188,40 @@ public class Main extends AppCompatActivity{
 
     @Override
     public void onBackPressed(){
-        handler_main.removeCallbacks(this::explainDoubleBack);
-        Date date = new Date();
-        if(date.getTime() - back_press_time < 1000){
+        if(CommsWifi.sendingFile){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.alert_exit_title);
+            builder.setMessage(R.string.alert_exit_message);
+            builder.setPositiveButton(R.string.alert_exit_positive, (dialog, which) -> {
+                finish();
+                System.exit(0);
+            });
+            builder.setNegativeButton(R.string.alert_exit_negative, (dialog, which) -> dialog.dismiss());
+            builder.create().show();
+        }else{
             finish();
             System.exit(0);
-        }else{
-            handler_main.postDelayed(this::explainDoubleBack, 1000);
         }
-        back_press_time = date.getTime();
-    }
-    private void explainDoubleBack(){
-        Toast.makeText(this, R.string.explainDoubleBack, Toast.LENGTH_SHORT).show();
     }
 
     public void onItemStatusPressed(Item item){
         switch(item.libItem.status){
             case FULL:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Confirm");
-                builder.setMessage("Delete on watch?");
-                builder.setPositiveButton("delete", (dialog, which) -> {
+                builder.setTitle(R.string.alert_delete_title);
+                builder.setMessage(R.string.alert_delete_message);
+                builder.setPositiveButton(R.string.alert_delete_positive, (dialog, which) -> {
                     itemDelete = item;
                     executorService.submit(() -> commsBT.sendRequest("deleteFile", item.libItem.path));
                     dialog.dismiss();
                 });
-                builder.setNegativeButton("cancel", (dialog, which) -> dialog.dismiss());
+                builder.setNegativeButton(R.string.alert_delete_negative, (dialog, which) -> dialog.dismiss());
                 builder.create().show();
                 break;
             case PARTIAL:
                 break;
             case NOT:
-                if(CommsWifi.sendingFile){//TODO: test if we can start sending next file while one is still in progress
+                if(CommsWifi.sendingFile){
                     Toast.makeText(this, R.string.fail_sending_file, Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -306,8 +305,7 @@ public class Main extends AppCompatActivity{
                     JSONObject responseDataSync = response.getJSONObject("responseData");
                     JSONArray tracks = responseDataSync.getJSONArray("tracks");
                     long freeSpace = responseDataSync.getLong("freeSpace");
-                    Log.i(LOG_TAG, "freeSpace: " + freeSpace);
-                    String line = "Available: " + bytesToHuman(freeSpace);
+                    String line = getString(R.string.available) + bytesToHuman(freeSpace);
                     main_status.setText(line);
                     executorService.submit(() -> library.updateLibWithFilesOnWatch(handler_message, tracks));
                     break;
@@ -342,23 +340,22 @@ public class Main extends AppCompatActivity{
     private void gotError(String error){
         main_error.setText(error);
     }
-    @SuppressLint("DefaultLocale")
     private String bytesToHuman(long bytes){
         long GB = 1073741824;
         long MB = 1048576;
         long KB = 1024;
         if(bytes > GB*10){
             double gbs = (double) bytes / GB;
-            return String.format("%.0f GB", gbs);
+            return String.format(Locale.getDefault(), "%.0f GB", gbs);
         }else if(bytes > GB*5){
             double gbs = (double) bytes/GB;
-            return String.format("%.3f GB", gbs);
+            return String.format(Locale.getDefault(), "%.3f GB", gbs);
         }else if(bytes > MB){
             double gbs = (double) bytes/MB;
-            return String.format("%.0f MB", gbs);
+            return String.format(Locale.getDefault(), "%.0f MB", gbs);
         }else if(bytes > KB){
             double gbs = (double) bytes/KB;
-            return String.format("%.0f KB", gbs);
+            return String.format(Locale.getDefault(), "%.0f KB", gbs);
         }
         return bytes + "B";
     }

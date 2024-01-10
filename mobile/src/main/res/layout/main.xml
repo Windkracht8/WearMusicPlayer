@@ -34,6 +34,16 @@
         app:layout_constraintStart_toEndOf="@id/main_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_status" />
+    <TextView
+        android:id="@+id/main_loading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center|top"
+        android:textSize="24sp"
+        android:text="@string/main_loading_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/main_icon" />
     <ScrollView
         android:id="@+id/main_sv"
         android:layout_width="match_parent"
@@ -41,7 +51,7 @@
         android:orientation="vertical"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_icon"
+        app:layout_constraintTop_toBottomOf="@id/main_loading"
         app:layout_constraintBottom_toBottomOf="parent" >
         <LinearLayout
             android:id="@+id/main_ll"

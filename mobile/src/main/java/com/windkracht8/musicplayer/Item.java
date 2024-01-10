@@ -52,7 +52,7 @@ public class Item extends ConstraintLayout{
     }
     private void show(Main main){
         LayoutInflater inflater = (LayoutInflater) main.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if(inflater == null){Toast.makeText(main, "Failed to show item", Toast.LENGTH_SHORT).show();return;}
+        if(inflater == null){Toast.makeText(main, R.string.fail_show_item, Toast.LENGTH_SHORT).show();return;}
         inflater.inflate(R.layout.item, this, true);
 
         item_status = findViewById(R.id.item_status);
