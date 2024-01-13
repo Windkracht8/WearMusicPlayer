@@ -6,7 +6,7 @@
     android:layout_marginStart="5dp"
     android:layout_marginEnd="5dp"
     android:orientation="vertical"
-    android:background="@drawable/item_background">
+    android:background="@drawable/background_underline">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
