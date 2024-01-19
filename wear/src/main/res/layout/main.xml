@@ -28,7 +28,6 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/main_volume_up"
-        app:layout_constraintTop_tTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/main_play_pause"
         android:contentDescription="@string/main_volume_down_desc" />
     <ImageView
@@ -39,7 +38,6 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@id/main_volume_down"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_tTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/main_play_pause"
         android:contentDescription="@string/main_volume_up_desc" />
     <ImageView
