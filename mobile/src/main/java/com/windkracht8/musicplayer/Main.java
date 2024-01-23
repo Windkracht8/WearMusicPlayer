@@ -68,7 +68,7 @@ public class Main extends AppCompatActivity{
         main_error = findViewById(R.id.main_error);
         main_ll = findViewById(R.id.main_ll);
 
-        executorService.submit(this::initBT);
+        initBT();
         executorService.submit(() -> library.scanFiles(this));
         requestPermissions();
     }
@@ -137,7 +137,7 @@ public class Main extends AppCompatActivity{
             }
         }
         if(commsBT == null) commsBT = new CommsBT(this);
-        commsBT.startListening();
+        executorService.submit(() -> commsBT.connect());
     }
 
     private void requestPermissions(){
@@ -251,7 +251,7 @@ public class Main extends AppCompatActivity{
                 main_icon.setColorFilter(getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
                 main_status.setVisibility(View.GONE);
                 return;
-            case "LISTENING":
+            case "SEARCHING":
                 main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
                 main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
                 ((AnimatedVectorDrawable) main_icon.getBackground()).start();
@@ -286,7 +286,7 @@ public class Main extends AppCompatActivity{
         }
     }
     private void sendSyncRequest(){
-        gotError("");
+        Log.d(Main.LOG_TAG, "Main.sendSyncRequest");
         if(cantSendRequest()){return;}
         try {
             JSONObject requestData = new JSONObject();

@@ -30,7 +30,6 @@
 
     <!-- fail -->
     <string name="fail_oops">Oops</string>
-    <string name="fail_bluetooth">Bluetooth connection failed</string>
     <string name="fail_show_menu">Failed to show Menu</string>
     <string name="fail_show_progress">Failed to show Progress</string>
     <string name="fail_request">Problem with request from phone</string>

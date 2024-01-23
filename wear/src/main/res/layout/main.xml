@@ -98,13 +98,11 @@
         android:maxLines="1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_song_title"
         app:layout_constraintBottom_toTopOf="@id/main_library" />
     <TextView
         android:id="@+id/main_library"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:minHeight="48dp"
         android:gravity="center"
         android:text="@string/loading"
         android:textSize="20sp"

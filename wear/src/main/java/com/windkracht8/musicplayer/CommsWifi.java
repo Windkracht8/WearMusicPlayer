@@ -1,6 +1,5 @@
 package com.windkracht8.musicplayer;
 
-import android.os.Handler;
 import android.util.Log;
 
 import java.io.FileOutputStream;
@@ -8,8 +7,12 @@ import java.io.InputStream;
 import java.net.Socket;
 
 public class CommsWifi{
-    public static void receiveFile(Handler handler_message, String path, long length, String ip, int port){
+    public static void receiveFile(Main main, String path, long length, String ip, int port){
         long bytesDone = 0;
+        Log.d(Main.LOG_TAG, "CommsWifi.receiveFile path: " + path);
+        Log.d(Main.LOG_TAG, "CommsWifi.receiveFile length: " + length);
+        Log.d(Main.LOG_TAG, "CommsWifi.receiveFile ip: " + ip);
+        Log.d(Main.LOG_TAG, "CommsWifi.receiveFile port: " + port);
         try(Socket socket = new Socket(ip, port)){
             InputStream inputStream = socket.getInputStream();
             try(FileOutputStream fileOutputStream = new FileOutputStream(Library.exStorageDir + "/" + path)){
@@ -25,34 +28,37 @@ public class CommsWifi{
                     int numBytes = inputStream.read(buffer);
                     if(numBytes < 0){
                         Log.e(Main.LOG_TAG, "CommsWifi.receiveFile read error");
-                        handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_ERROR));
+                        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_ERROR));
                         return;
                     }
                     fileOutputStream.write(buffer, 0, numBytes);
                     bytesDone += numBytes;
 
                     long progress = (bytesDone * 100) / length;
-                    handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_PROGRESS, (int) progress));
+                    main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_PROGRESS, (int) progress));
                     if(bytesDone >= length){
-                        handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_DONE, path));
+                        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_DONE, path));
                         return;
                     }
                 }
-                handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_ERROR));
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_ERROR));
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsWifi.receiveFile FileOutputStream exception: " + e.getMessage());
-                handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
+                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
             }
         }catch(Exception e){
+            Log.e(Main.LOG_TAG, "CommsWifi.receiveFile Socket exception: " + e);
             Log.e(Main.LOG_TAG, "CommsWifi.receiveFile Socket exception: " + e.getMessage());
-            handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_wifi));
+            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_wifi));
         }
+        //if we get here it failed
+        main.commsFileFailed(path);
     }
     private static void sleep100(){
         try{
             Thread.sleep(100);
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "CommsConnected.sleep100 exception: " + e.getMessage());
+            Log.e(Main.LOG_TAG, "CommsWifi.sleep100 exception: " + e.getMessage());
         }
     }
 }

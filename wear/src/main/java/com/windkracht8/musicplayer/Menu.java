@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -19,11 +20,11 @@ public abstract class Menu extends ConstraintLayout{
     private LinearLayout menu_items;
     private final ArrayList<MenuItem> menuItems = new ArrayList<>();
     private boolean isInitialized;
-    private int itemHeight;
-    private boolean isItemHeightInitialized;
-    private float scalePerPixel;
-    private float bottom_quarter;
-    private float below_screen;
+    private static boolean isItemHeightInitialized;
+    private static int itemHeight;
+    private static float scalePerPixel;
+    private static float bottom_quarter;
+    private static float below_screen;
     private String labelText = "";
     private int libraryScanVersion = 0;
 
@@ -48,7 +49,6 @@ public abstract class Menu extends ConstraintLayout{
     private void show(){
         setVisibility(View.VISIBLE);
         menu_sv.fullScroll(View.FOCUS_UP);
-        if(isItemHeightInitialized) scaleMenuItems(0);
         menu_sv.requestFocus();
     }
     public void show(Main main, int size, String labelText){
@@ -86,18 +86,30 @@ public abstract class Menu extends ConstraintLayout{
             menuItem.setOnClickListener(v -> onItemClick(main, menuItem));
         }
 
-        getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            if(!Main.isScreenRound || isItemHeightInitialized) return;
-            isItemHeightInitialized = true;
-            itemHeight = menuItems.get(0).getHeight();
-            bottom_quarter = Main.vh75-itemHeight;
-            below_screen = Main.heightPixels-itemHeight;
-            scalePerPixel = 0.5f / Main.vh25;
-            scaleMenuItems(0);
-        });
-
         setVisibility(View.VISIBLE);
         menu_sv.fullScroll(View.FOCUS_UP);
+        if(Main.isScreenRound && isItemHeightInitialized){
+            getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    scaleMenuItems(0);
+                }
+            });
+        }else if(Main.isScreenRound){
+            getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    isItemHeightInitialized = true;
+                    itemHeight = menuItems.get(0).getHeight();
+                    bottom_quarter = Main.vh75-itemHeight;
+                    below_screen = Main.heightPixels-itemHeight;
+                    scalePerPixel = 0.5f / Main.vh25;
+                    scaleMenuItems(0);
+                }
+            });
+        }
     }
 
     private void scaleMenuItems(int scrollY){
