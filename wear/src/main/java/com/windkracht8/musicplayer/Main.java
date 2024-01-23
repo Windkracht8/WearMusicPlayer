@@ -54,7 +54,7 @@ public class Main extends Activity{
     public MenuAlbum main_menu_album;
     private View currentVisibleView;
 
-    private ExecutorService executorService;
+    public ExecutorService executorService;
     private AudioManager audioManager;
     public final static int MESSAGE_TOAST = 101;
     public final static int MESSAGE_LIBRARY_READY = 201;
@@ -223,7 +223,7 @@ public class Main extends Activity{
     private void initBT(){
         if(!hasBTPermission) return;
         if(commsBT == null) commsBT = new CommsBT(this);
-        executorService.submit(() -> commsBT.connect());
+        executorService.submit(() -> commsBT.startListening());
     }
 
     public final Handler handler_message = new Handler(Looper.getMainLooper()){
@@ -272,6 +272,10 @@ public class Main extends Activity{
     private void commsFileDone(String path){
         executorService.submit(() -> library.addFile(this, path));
         executorService.submit(() -> commsBT.sendResponse("fileBinary", path));
+    }
+    public void commsFileFailed(String path){
+        executorService.submit(() -> library.addFile(this, path));
+        executorService.submit(() -> commsBT.sendResponse("fileBinary", "failed"));
     }
 
     public void openTrackList(ArrayList<Library.Track> tracks, int index){

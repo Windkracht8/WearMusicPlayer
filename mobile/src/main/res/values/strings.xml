@@ -27,6 +27,7 @@
     <!-- fail -->
     <string name="fail_BT_denied">No Bluetooth permission</string>
     <string name="fail_BT_off">Bluetooth turned off</string>
+    <string name="fail_BT_connect">Bluetooth connection failed</string>
     <string name="fail_sync">Failed to synchronise with watch</string>
     <string name="fail_send_message">Failed to send message to watch</string>
     <string name="fail_response">Problem with response from watch</string>

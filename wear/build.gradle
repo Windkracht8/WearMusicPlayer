@@ -9,7 +9,7 @@ android {
         targetSdk 33
         compileSdk 33
         versionCode 202
-        versionName '0.1'
+        versionName '1.0'
     }
     buildTypes {
         release {
