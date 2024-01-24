@@ -220,10 +220,10 @@ public class Main extends Activity{
         }
     }
 
-    private void initBT(){
+    public void initBT(){
         if(!hasBTPermission) return;
-        if(commsBT == null) commsBT = new CommsBT(this);
-        executorService.submit(() -> commsBT.startListening());
+        commsBT = new CommsBT(this);
+        executorService.submit(() -> commsBT.startComms());
     }
 
     public final Handler handler_message = new Handler(Looper.getMainLooper()){
