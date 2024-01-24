@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
-@SuppressLint("MissingPermission") //Permissions are handled in Main, no further need to complain
+@SuppressLint("MissingPermission") //Permissions are handled in initBT
 public class CommsBT{
     final String MP_UUID = "6f34da3f-188a-4c8c-989c-2baacf8ea6e1";
     final BluetoothAdapter bluetoothAdapter;
