@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     defaultConfig {
-        applicationId 'com.windkracht8.musicplayer'
+        applicationId 'com.windkracht8.wearmusicplayer'
         minSdk 30
         //Wear OS, we have to target SDK 33 and not latest
         //noinspection OldTargetApi
@@ -17,7 +17,7 @@ android {
             minifyEnabled true
         }
     }
-    namespace 'com.windkracht8.musicplayer'
+    namespace 'com.windkracht8.wearmusicplayer'
 }
 
 dependencies {

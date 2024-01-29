@@ -1,4 +1,4 @@
-package com.windkracht8.musicplayer;
+package com.windkracht8.wearmusicplayer;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -27,7 +27,7 @@ import java.util.UUID;
 
 @SuppressLint("MissingPermission") //Permissions are handled in initBT
 public class CommsBT{
-    final String MP_UUID = "6f34da3f-188a-4c8c-989c-2baacf8ea6e1";
+    final String WMP_UUID = "6f34da3f-188a-4c8c-989c-2baacf8ea6e1";
     final BluetoothAdapter bluetoothAdapter;
     BluetoothSocket bluetoothSocket;
     final Handler handler;
@@ -102,7 +102,7 @@ public class CommsBT{
             ParcelUuid[] uuids = bondedDevice.getUuids();
             if(uuids == null) continue;
             for(ParcelUuid uuid : uuids){
-                if(uuid.toString().equals(MP_UUID)){
+                if(uuid.toString().equals(WMP_UUID)){
                     CommsBTConnect commsBTConnect = new CommsBTConnect(bondedDevice);
                     commsBTConnect.start();
                     return;
@@ -178,7 +178,7 @@ public class CommsBT{
             Log.d(Main.LOG_TAG, "CommsBTConnect " + device.getName());
             this.device = device;
             try{
-                bluetoothSocket = device.createRfcommSocketToServiceRecord(UUID.fromString(MP_UUID));
+                bluetoothSocket = device.createRfcommSocketToServiceRecord(UUID.fromString(WMP_UUID));
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnect Exception: " + e.getMessage());
                 main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_BT_connect));

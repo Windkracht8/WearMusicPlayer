@@ -1,4 +1,4 @@
-package com.windkracht8.musicplayer;
+package com.windkracht8.wearmusicplayer;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;

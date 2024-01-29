@@ -1,4 +1,4 @@
-package com.windkracht8.musicplayer;
+package com.windkracht8.wearmusicplayer;
 
 import android.Manifest;
 import android.app.Activity;
@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main extends Activity{
-    public static final String LOG_TAG = "MusicPlayer";
+    public static final String LOG_TAG = "WearMusicPlayer";
     public static boolean isScreenRound;
     private boolean showSplash = true;
     private boolean hasBTPermission = false;
@@ -384,7 +384,7 @@ public class Main extends Activity{
             }
         }else{
             if(isPlaying){
-                AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.w8mp_alert));
+                AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
                 builder.setMessage(R.string.confirm_close);
                 builder.setPositiveButton(R.string.yes, (dialog, which) -> System.exit(0));
                 builder.setNegativeButton(R.string.back, (dialog, which) -> dialog.dismiss());
@@ -505,11 +505,11 @@ public class Main extends Activity{
         return pretty;
     }
     private void startOngoingNotification(){
-        String MP_Notification = "MP_Notification";
+        String WMP_Notification = "WMP_Notification";
         int RRW_Notification_ID = 1;
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel notificationChannel = new NotificationChannel(MP_Notification, getString(R.string.open_mp), NotificationManager.IMPORTANCE_DEFAULT);
+        NotificationChannel notificationChannel = new NotificationChannel(WMP_Notification, getString(R.string.open_wmp), NotificationManager.IMPORTANCE_DEFAULT);
         notificationManager.createNotificationChannel(notificationChannel);
 
         Intent actionIntent = new Intent(this, Main.class);
@@ -522,14 +522,14 @@ public class Main extends Activity{
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
                 this
-                ,MP_Notification
+                ,WMP_Notification
         )
                 .setSmallIcon(R.drawable.icon_vector)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setCategory(NotificationCompat.CATEGORY_WORKOUT)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(
-                        R.drawable.icon_vector, getString(R.string.open_mp),
+                        R.drawable.icon_vector, getString(R.string.open_wmp),
                         actionPendingIntent
                 )
                 .setOngoing(true);

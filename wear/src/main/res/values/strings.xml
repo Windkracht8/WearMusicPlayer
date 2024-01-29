@@ -18,7 +18,7 @@
     <string name="confirm_close">Stop playing and close?</string>
     <string name="yes">yes</string>
     <string name="back">back</string>
-    <string name="open_mp">Open Music Player</string>
+    <string name="open_wmp">Open Music Player</string>
     <string name="playing_track">Playing track</string>
 
     <!-- progress -->

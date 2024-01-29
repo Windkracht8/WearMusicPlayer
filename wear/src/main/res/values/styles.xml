@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="w8mp_splash" parent="Theme.SplashScreen.IconBackground">
+    <style name="wmp_splash" parent="Theme.SplashScreen.IconBackground">
         <item name="windowSplashScreenBackground">#000</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
-        <item name="postSplashScreenTheme">@style/w8mp</item>
+        <item name="postSplashScreenTheme">@style/wmp</item>
     </style>
-    <style name="w8mp" parent="Theme.AppCompat">
+    <style name="wmp" parent="Theme.AppCompat">
         <!-- this is set to false so that we can handle back swipes -->
         <item name="android:windowSwipeToDismiss" tools:ignore="WearBackNavigation">false</item>
         <item name="android:buttonStyle">@style/Widget.AppCompat.Button.Borderless.Colored</item>
@@ -14,7 +14,7 @@
         <item name="android:textColor">#fff</item>
         <item name="android:background">#0000</item>
     </style>
-    <style name="w8mp_alert">
+    <style name="wmp_alert">
         <item name="android:gravity">center</item>
         <item name="android:background">#000</item>
         <item name="android:layout_marginTop">5dp</item>
