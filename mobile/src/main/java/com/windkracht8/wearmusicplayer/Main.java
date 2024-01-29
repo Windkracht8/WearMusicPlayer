@@ -1,4 +1,4 @@
-package com.windkracht8.musicplayer;
+package com.windkracht8.wearmusicplayer;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main extends AppCompatActivity{
-    public static final String LOG_TAG = "MusicPlayer";
+    public static final String LOG_TAG = "WearMusicPlayer";
     public static final int MESSAGE_TOAST = 100;
     public static final int MESSAGE_LIBRARY_READY = 200;
     public static final int MESSAGE_LIBRARY_UPDATE_STATUS = 201;

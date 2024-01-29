@@ -1,4 +1,4 @@
-package com.windkracht8.musicplayer;
+package com.windkracht8.wearmusicplayer;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -23,7 +23,7 @@ import java.io.OutputStream;
 import java.util.UUID;
 
 public class CommsBT{
-    private final UUID MP_UUID = UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6e1");
+    private final UUID WMP_UUID = UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6e1");
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothServerSocket bluetoothServerSocket;
     private BluetoothSocket bluetoothSocket;
@@ -89,7 +89,7 @@ public class CommsBT{
         public CommsBTConnect(){
             try{
                 Log.d(Main.LOG_TAG, "CommsBTConnect");
-                bluetoothServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("MusicPlayer", MP_UUID);
+                bluetoothServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("WearMusicPlayer", WMP_UUID);
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnect Exception: " + e.getMessage());
             }

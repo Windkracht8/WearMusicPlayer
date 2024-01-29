@@ -109,7 +109,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.musicplayer.Progress
+    <com.windkracht8.wearmusicplayer.Progress
         android:id="@+id/main_progress"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -119,7 +119,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.musicplayer.MenuLibrary
+    <com.windkracht8.wearmusicplayer.MenuLibrary
         android:id="@+id/main_menu_library"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -129,7 +129,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.musicplayer.MenuArtists
+    <com.windkracht8.wearmusicplayer.MenuArtists
         android:id="@+id/main_menu_artists"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -139,7 +139,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.musicplayer.MenuArtist
+    <com.windkracht8.wearmusicplayer.MenuArtist
         android:id="@+id/main_menu_artist"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -149,7 +149,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.musicplayer.MenuAlbums
+    <com.windkracht8.wearmusicplayer.MenuAlbums
         android:id="@+id/main_menu_albums"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -159,7 +159,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.musicplayer.MenuAlbum
+    <com.windkracht8.wearmusicplayer.MenuAlbum
         android:id="@+id/main_menu_album"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

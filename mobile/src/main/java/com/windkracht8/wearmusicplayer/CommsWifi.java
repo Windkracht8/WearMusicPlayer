@@ -1,4 +1,4 @@
-package com.windkracht8.musicplayer;
+package com.windkracht8.wearmusicplayer;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
