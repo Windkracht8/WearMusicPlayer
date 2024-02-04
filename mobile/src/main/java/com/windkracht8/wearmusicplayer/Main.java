@@ -323,17 +323,20 @@ public class Main extends AppCompatActivity{
                 case "sync":
                     JSONObject responseDataSync = response.getJSONObject("responseData");
                     JSONArray tracks = responseDataSync.getJSONArray("tracks");
-                    long freeSpace = responseDataSync.getLong("freeSpace");
-                    String line = getString(R.string.available) + bytesToHuman(freeSpace);
-                    gotStatus(line);
-                    runOnUiThread(()->main_available.setText(bytesToHuman(freeSpace)));
+                    long freeSpaceSync = responseDataSync.getLong("freeSpace");
+                    runOnUiThread(()->gotFreeSpace(freeSpaceSync));
                     executorService.submit(()->library.updateLibWithFilesOnWatch(this, tracks));
                     break;
                 case "fileDetails":
+                    Object responseDataFileDetails = response.get("responseData");
+                    if(responseDataFileDetails instanceof String){
+                        Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + responseDataFileDetails);
+                        toast(R.string.fail_response);
+                    }else{
+                        long freeSpaceFileDetails = response.getJSONObject("responseData").getLong("freeSpace");
+                        runOnUiThread(() -> gotFreeSpace(freeSpaceFileDetails));
+                    }
                     executorService.submit(()->commsWifi.stopSendFile());
-                    String responseDataFileDetails = response.getString("responseData");
-                    Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + responseDataFileDetails);
-                    toast(R.string.fail_response);
                     break;
                 case "fileBinary":
                     String path_done = response.getString("responseData");
@@ -354,6 +357,11 @@ public class Main extends AppCompatActivity{
             Log.e(LOG_TAG, "Main.gotResponse: " + e.getMessage());
             toast(R.string.fail_response);
         }
+    }
+    private void gotFreeSpace(long freeSpace){
+        String line = getString(R.string.available) + bytesToHuman(freeSpace);
+        gotStatus(line);
+        main_available.setText(bytesToHuman(freeSpace));
     }
     private String bytesToHuman(long bytes){
         long GB = 1073741824;

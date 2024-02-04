@@ -95,10 +95,21 @@ public class CommsBT{
             JSONObject response = new JSONObject();
             response.put("requestType", requestType);
             response.put("responseData", responseData);
-            Log.d(Main.LOG_TAG, "CommsBT.sendResponse: " + response);
             responseQueue.put(response);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "CommsBT.sendResponse String Exception: " + e.getMessage());
+            main.toast(R.string.fail_respond);
+        }
+    }
+    void sendFileBinaryResponse(String path){
+        try{
+            long freeSpace = new File(Library.exStorageDir).getFreeSpace();
+            JSONObject responseData = new JSONObject();
+            responseData.put("path", path);
+            responseData.put("freeSpace", freeSpace);
+            sendResponse("fileBinary", responseData);
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "CommsBT.sendFileBinaryResponse String Exception: " + e.getMessage());
             main.toast(R.string.fail_respond);
         }
     }
