@@ -232,7 +232,7 @@ public class Main extends Activity{
     void commsFileDone(String path){
         executorService.submit(()->library.addFile(this, path));
         runOnUiThread(()->main_progress.setVisibility(View.GONE));
-        executorService.submit(()->commsBT.sendResponse("fileBinary", path));
+        executorService.submit(()->commsBT.sendFileBinaryResponse(path));
     }
     void commsFileFailed(String path){
         executorService.submit(()->library.addFile(this, path));
@@ -270,8 +270,10 @@ public class Main extends Activity{
                 current_tracks.size() == 0 ||
                 current_tracks.size() <= index ||
                 index < 0) return;
-        runOnUiThread(()->loadTrackUi(index));
-        player.loadTrack(this, current_tracks.get(index).uri);
+        runOnUiThread(()->{
+            loadTrackUi(index);
+            player.loadTrack(this, current_tracks.get(index).uri);
+        });
     }
     private void loadTrackUi(int index){
         if(current_tracks == null ||
