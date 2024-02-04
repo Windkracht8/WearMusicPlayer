@@ -2,7 +2,6 @@ package com.windkracht8.wearmusicplayer;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
-import android.os.Handler;
 import android.util.Log;
 
 import java.io.FileInputStream;
@@ -31,7 +30,7 @@ public class CommsWifi{
         return String.format(Locale.US, "%d.%d.%d.%d", (ipAddress & 0xff),
                 (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
     }
-    public void sendFile(Handler handler_message, Item item){
+    public void sendFile(Main main, Item item){
         Library.LibItem libItem = item.libItem;
         sendingFile = true;
         try(ServerSocket serverSocket = new ServerSocket(PORT_NUMBER)){
@@ -50,7 +49,7 @@ public class CommsWifi{
                         outputStream.write(buffer, 0, numBytes);
                         bytesDone += numBytes;
                         libItem.progress = bytesDone;
-                        handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_COMMS_PROGRESS, item));
+                        main.runOnUiThread(item::updateProgress);
                     }
                     sendingFile = false;
                 }catch(Exception e){

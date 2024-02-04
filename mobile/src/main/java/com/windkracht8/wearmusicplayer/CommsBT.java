@@ -18,107 +18,168 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 @SuppressLint("MissingPermission") //Permissions are handled in initBT
 public class CommsBT{
-    final String WMP_UUID = "6f34da3f-188a-4c8c-989c-2baacf8ea6e1";
-    final BluetoothAdapter bluetoothAdapter;
-    BluetoothSocket bluetoothSocket;
-    final Handler handler;
-    final Main main;
+    private final String WMP_UUID = "6f34da3f-188a-4c8c-989c-2baacf8ea6e1";
+    private BluetoothAdapter bluetoothAdapter;
+    private BluetoothSocket bluetoothSocket;
+    private final Handler handler;
+    private final Main main;
 
-    String status = "INIT";
-    boolean connect = false;
-    final JSONArray requestQueue = new JSONArray();
-    public final ArrayList<String> connect_failed_addresses = new ArrayList<>();
-    public final ArrayList<String> queried_addresses = new ArrayList<>();
+    enum Status{INIT, SEARCHING, SEARCH_TIMEOUT, CONNECTED, FATAL}
+    Status status = Status.INIT;
+    private boolean closeConnection = false;
+    private int remainingSearchCount = 0;
+    private int remainingFailedConnectCount = 0;
+    private Set<String> wmp_device_addresses = new HashSet<>();
+    private final ArrayList<String> devices_fetch_pending = new ArrayList<>();
+    private Set<BluetoothDevice> bondedDevices;
+    private final JSONArray requestQueue = new JSONArray();
 
     public CommsBT(Main main){
         this.main = main;
         handler = new Handler(Looper.getMainLooper());
-        BluetoothManager bluetoothManager = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
-        bluetoothAdapter = bluetoothManager.getAdapter();
-        if(bluetoothAdapter == null){
-            bt_off();
-            return;
-        }
-        main.registerReceiver(btStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
     }
 
-    private final BroadcastReceiver btStateReceiver = new BroadcastReceiver(){
-        public void onReceive(Context context, Intent intent){
-            if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())){
-                int btState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
-                if(btState == BluetoothAdapter.STATE_TURNING_OFF){
-                    bt_off();
-                    stop();
-                }else if(btState == BluetoothAdapter.STATE_ON){
-                    connect();
-                }
+    public void startComms(){
+        Log.d(Main.LOG_TAG, "CommsBT.startComms");
+        if(status == Status.INIT){
+            BluetoothManager bluetoothManager = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
+            bluetoothAdapter = bluetoothManager.getAdapter();
+            if(bluetoothAdapter == null){
+                gotError(main.getString(R.string.fail_BT_off));
+                return;
             }
+            IntentFilter btIntentFilter = new IntentFilter();
+            btIntentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+            btIntentFilter.addAction(BluetoothDevice.ACTION_UUID);
+            BroadcastReceiver btBroadcastReceiver = new BroadcastReceiver(){
+                public void onReceive(Context context, Intent intent){
+                    Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver: " + intent);
+                    if(closeConnection) return;
+                    if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())){
+                        int btState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
+                        if(btState == BluetoothAdapter.STATE_TURNING_OFF){
+                            gotError(main.getString(R.string.fail_BT_off));
+                            stopComms();
+                        }else if(btState == BluetoothAdapter.STATE_ON){
+                            startComms();
+                        }
+                    }else if(BluetoothDevice.ACTION_UUID.equals(intent.getAction())){
+                        BluetoothDevice bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                        if(bluetoothDevice == null || status != Status.SEARCHING) return;
+                        Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver ACTION_UUID: " + bluetoothDevice.getName());
+                        remainingSearchCount--;
+                        isDeviceWMP(bluetoothDevice);
+                        devices_fetch_pending.remove(bluetoothDevice.getAddress());
+                    }
+                }
+            };
+            main.registerReceiver(btBroadcastReceiver, btIntentFilter);
         }
-    };
-
-    public void connect(){
-        Log.d(Main.LOG_TAG, "CommsBT.connect");
-        connect = true;
+        closeConnection = false;
         if(bluetoothAdapter.getState() == BluetoothAdapter.STATE_TURNING_OFF || bluetoothAdapter.getState() == BluetoothAdapter.STATE_OFF){
             gotError(main.getString(R.string.fail_BT_off));
             return;
         }
+        wmp_device_addresses = Main.sharedPreferences.getStringSet("wmp_device_addresses", wmp_device_addresses);
         search();
     }
-
-    void stop(){
-        Log.d(Main.LOG_TAG, "CommsBT.stop");
-        connect = false;
-        handler.removeCallbacksAndMessages(null);
-        try{
-            main.unregisterReceiver(btStateReceiver);
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "CommsBT.stop unregisterReceiver: " + e.getMessage());
-        }
+    public void stopComms(){
+        Log.d(Main.LOG_TAG, "CommsBT.stopComms");
+        closeConnection = true;
+        devices_fetch_pending.clear();
     }
-
-    void search(){
-        if(!connect) return;
-        Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
-
+    private void search(){
+        if(closeConnection) return;
+        Log.d(Main.LOG_TAG, "CommsBT.search");
+        updateStatus(Status.SEARCHING);
+        bondedDevices = bluetoothAdapter.getBondedDevices();
         if(bondedDevices == null){
-            Log.e(Main.LOG_TAG, "bondedDevices == null");
-            gotError(main.getString(R.string.fail_BT_off));
+            main.toast(R.string.fail_BT_connect);
+            gotError(main.getString(R.string.no_devices));
             return;
         }
-
-        updateStatus("SEARCHING");
-        for(BluetoothDevice bondedDevice : bondedDevices){
-            if(connect_failed_addresses.contains(bondedDevice.getAddress())) continue;
-            ParcelUuid[] uuids = bondedDevice.getUuids();
-            if(uuids == null) continue;
-            for(ParcelUuid uuid : uuids){
-                if(uuid.toString().equals(WMP_UUID)){
-                    CommsBTConnect commsBTConnect = new CommsBTConnect(bondedDevice);
-                    commsBTConnect.start();
-                    return;
+        for(String rrw_device_address : wmp_device_addresses){
+            boolean stillBonded = false;
+            for(BluetoothDevice bondedDevice : bondedDevices){
+                if(bondedDevice.getAddress().equals(rrw_device_address)){
+                    stillBonded = true;
+                    break;
                 }
             }
+            if(!stillBonded){
+                wmp_device_addresses.remove(rrw_device_address);
+                Main.sharedPreferences_editor.putStringSet("wmp_device_addresses", wmp_device_addresses);
+                Main.sharedPreferences_editor.apply();
+            }
         }
-
         for(BluetoothDevice bondedDevice : bondedDevices){
-            if(queried_addresses.contains(bondedDevice.getAddress())) continue;
-            bondedDevice.fetchUuidsWithSdp();
-            queried_addresses.add(bondedDevice.getAddress());
+            isDeviceWMP(bondedDevice);
         }
+        remainingFailedConnectCount += wmp_device_addresses.size();
 
-        connect_failed_addresses.clear();
-        handler.postDelayed(this::search, 3000);
+        remainingSearchCount = 10 * (bondedDevices.size() - wmp_device_addresses.size());
+        search_newDevices();
     }
+    private void isDeviceWMP(BluetoothDevice bluetoothDevice){
+        if(wmp_device_addresses.contains(bluetoothDevice.getAddress())){
+            Log.d(Main.LOG_TAG, "CommsBT.isDeviceWMP device is in wmp_device_addresses: " + bluetoothDevice.getName());
+            try_wmpDevice(bluetoothDevice);
+            return;
+        }
+        ParcelUuid[] uuids = bluetoothDevice.getUuids();
+        if(uuids == null) return;
+        for(ParcelUuid uuid : uuids){
+            if(uuid.toString().equals(WMP_UUID)){
+                Log.d(Main.LOG_TAG, "CommsBT.isDeviceWMP device has WMP_UUID: " + bluetoothDevice.getName());
+                wmp_device_addresses.add(bluetoothDevice.getAddress());
+                Main.sharedPreferences_editor.putStringSet("wmp_device_addresses", wmp_device_addresses);
+                Main.sharedPreferences_editor.apply();
+                try_wmpDevice(bluetoothDevice);
+                return;
+            }
+        }
+    }
+    private void try_wmpDevice(BluetoothDevice rrw_device){
+        if(status != Status.SEARCHING) return;
+        main.gotStatus(String.format("%s %s", main.getString(R.string.try_connect_to), rrw_device.getName()));
+        (new CommsBT.CommsBTConnect(rrw_device)).start();
+    }
+    private void search_newDevices(){
+        Log.d(Main.LOG_TAG, String.format("CommsBT.search_newDevices status: %s remainingSearchCount: %s remainingFailedConnectCount: %s", status, remainingSearchCount, remainingFailedConnectCount));
+        if(status != Status.SEARCHING) return;
+        if(remainingSearchCount <= 0){
+            updateStatus(Status.SEARCH_TIMEOUT);
+            stopComms();
+            return;
+        }
+        if(remainingFailedConnectCount > 0){
+            handler.postDelayed(this::search_newDevices, 1000);
+            return;
+        }
+        main.gotStatus(main.getString(R.string.search_new_device));
+        for(BluetoothDevice bondedDevice : bondedDevices){
+            if(devices_fetch_pending.contains(bondedDevice.getAddress()) ||
+                    wmp_device_addresses.contains(bondedDevice.getAddress())
+            ){
+                continue;
+            }
+            Log.d(Main.LOG_TAG, "CommsBT.search_newDevices fetchUuidsWithSdp for: " + bondedDevice.getName());
+            devices_fetch_pending.add(bondedDevice.getAddress());
+            bondedDevice.fetchUuidsWithSdp();
+        }
+        handler.postDelayed(this::search_newDevices, 1000);
+    }
+
     public void sendFileDetails(Library.LibItem libItem, String ipAddress){
         try{
             java.io.File file = new java.io.File(libItem.uri);
@@ -133,7 +194,6 @@ public class CommsBT{
             Log.e(Main.LOG_TAG, "CommsBT.sendFileDetails exception: " + e.getMessage());
         }
     }
-
     public void sendRequest(String requestType, String requestData){
         Log.d(Main.LOG_TAG, "CommsBT.sendRequest: " + requestType);
         try{
@@ -145,7 +205,6 @@ public class CommsBT{
             Log.e(Main.LOG_TAG, "CommsBT.sendRequest Exception: " + e.getMessage());
         }
     }
-
     public void sendRequest(String requestType, JSONObject requestData){
         Log.d(Main.LOG_TAG, "CommsBT.sendRequest: " + requestType);
         try{
@@ -157,23 +216,29 @@ public class CommsBT{
             Log.e(Main.LOG_TAG, "CommsBT.sendRequest Exception: " + e.getMessage());
         }
     }
-
-    private void gotError(String fatal_string){
-        updateStatus("FATAL");
-        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_ERROR, fatal_string));
+    private void gotResponse(String response){
+        Log.d(Main.LOG_TAG, "CommsBTConnected.gotResponse: " + response);
+        try{
+            JSONObject responseMessage = new JSONObject(response);
+            main.gotResponse(responseMessage);
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "CommsBTConnected.gotResponse: " + e.getMessage());
+            main.toast(R.string.fail_response);
+            main.gotError("Response error: " + e.getMessage());
+        }
     }
-    private void bt_off(){
-        updateStatus("FATAL");
-        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_BT_OFF));
+    private void gotError(String message){
+        updateStatus(Status.FATAL);
+        main.gotError(message);
     }
-    private void updateStatus(String status){
+    public void updateStatus(Status status){
+        Log.d(Main.LOG_TAG, "CommsBT.updateStatus " + this.status + " > " + status);
+        if(this.status != status) main.updateStatus(status);
         this.status = status;
-        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_STATUS, status));
     }
 
     private class CommsBTConnect extends Thread{
         private final BluetoothDevice device;
-
         public CommsBTConnect(BluetoothDevice device){
             Log.d(Main.LOG_TAG, "CommsBTConnect " + device.getName());
             this.device = device;
@@ -181,22 +246,26 @@ public class CommsBT{
                 bluetoothSocket = device.createRfcommSocketToServiceRecord(UUID.fromString(WMP_UUID));
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnect Exception: " + e.getMessage());
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_BT_connect));
+                main.toast(R.string.fail_BT_connect);
             }
         }
-
         public void run(){
             Log.d(Main.LOG_TAG, "CommsBTConnect.run");
             bluetoothAdapter.cancelDiscovery();
             try{
                 bluetoothSocket.connect();
-            }catch(IOException e){
-                connect_failed_addresses.add(device.getAddress());
-                search();
+            }catch(Exception e){
+                Log.d(Main.LOG_TAG, "CommsBTConnect.run failed: " + e.getMessage());
+                try{
+                    bluetoothSocket.close();
+                }catch(Exception e2){
+                    Log.d(Main.LOG_TAG, "CommsBTConnect.run close failed: " + e2.getMessage());
+                }
+                remainingFailedConnectCount--;
+                handler.postDelayed(() -> try_wmpDevice(device), 500);
                 return;
             }
-            CommsBTConnected commsBTConnected = new CommsBTConnected();
-            commsBTConnected.start();
+            (new CommsBTConnected()).start();
         }
     }
 
@@ -210,15 +279,15 @@ public class CommsBT{
                 inputStream = bluetoothSocket.getInputStream();
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnected getInputStream Exception: " + e.getMessage());
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_BT_connect));
+                main.toast(R.string.fail_BT_connect);
             }
             try{
                 outputStream = bluetoothSocket.getOutputStream();
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnected getOutputStream Exception: " + e.getMessage());
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_BT_connect));
+                main.toast(R.string.fail_BT_connect);
             }
-            updateStatus("CONNECTED");
+            updateStatus(Status.CONNECTED);
         }
 
         public void run(){
@@ -227,7 +296,7 @@ public class CommsBT{
         }
 
         private void process(){
-            if(!connect){
+            if(closeConnection){
                 close();
                 return;
             }
@@ -241,6 +310,8 @@ public class CommsBT{
         }
 
         private void close(){
+            Log.d(Main.LOG_TAG, "CommsBTConnected.close");
+            main.gotStatus(main.getString(R.string.closing_connection));
             try{
                 bluetoothSocket.close();
             }catch(Exception e){
@@ -263,20 +334,20 @@ public class CommsBT{
                 JSONObject request = (JSONObject) requestQueue.get(0);
                 requestQueue.remove(0);
                 Log.d(Main.LOG_TAG, "CommsBTConnected.sendNextRequest: " + request.toString());
+                main.gotStatus(String.format("%s %s", main.getString(R.string.send_request), request.getString("requestType")));
                 outputStream.write(request.toString().getBytes());
             }catch(Exception e){
-                if(e.getMessage() != null && e.getMessage().contains("Broken pipe")){
-                    return false;
-                }
                 Log.e(Main.LOG_TAG, "CommsBTConnected.sendNextRequest Exception: " + e.getMessage());
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_send_message));
+                main.toast(R.string.fail_send_message);
+                return false;
             }
             return true;
         }
 
         private void read(){
             try{
-                if(inputStream.available() == 0) return;
+                if(inputStream.available() < 5) return;
+                long read_start = (new Date()).getTime();
                 String response = "";
 
                 while(inputStream.available() > 0){
@@ -284,7 +355,8 @@ public class CommsBT{
                     int numBytes = inputStream.read(buffer);
                     if(numBytes < 0){
                         Log.e(Main.LOG_TAG, "CommsBTConnected.read read error, response: " + response);
-                        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_response));
+                        main.toast(R.string.fail_response);
+                        main.gotError("Read error");
                         return;
                     }
                     String temp = new String(buffer);
@@ -293,28 +365,21 @@ public class CommsBT{
                         gotResponse(response);
                         return;
                     }
-                    if(inputStream.available() == 0) sleep100();
+                    if((new Date()).getTime() - read_start > 3000){
+                        Log.e(Main.LOG_TAG, "CommsBTConnected.read started to read, no complete message after 3 seconds: " + response);
+                        main.toast(R.string.fail_response);
+                        main.gotError("Started to read, did not complete");
+                        return;
+                    }
+                    sleep100();
                 }
-                Log.e(Main.LOG_TAG, "CommsBTConnected.read no more bytes to read, no valid json, response: " + response);
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_response));
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnected.read Exception: " + e.getMessage());
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_response));
-            }
-        }
-
-        private void gotResponse(String response){
-            Log.d(Main.LOG_TAG, "CommsBTConnected.gotResponse: " + response);
-            try{
-                JSONObject responseMessage = new JSONObject(response);
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_RESPONSE, responseMessage));
-            }catch(Exception e){
-                Log.e(Main.LOG_TAG, "CommsBTConnected.gotResponse: " + e.getMessage());
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_response));
+                main.toast(R.string.fail_response);
+                main.gotError("Read error: " + e.getMessage());
             }
         }
     }
-
     private static boolean isValidJSON(String json){
         try{
             new JSONObject(json);

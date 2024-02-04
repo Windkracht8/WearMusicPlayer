@@ -56,7 +56,6 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:src="@drawable/icon_play"
-        android:textSize="11sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_volume_down"

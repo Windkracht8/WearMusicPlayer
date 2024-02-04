@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.MotionEvent;
@@ -46,7 +47,7 @@ public class Main extends Activity{
     private TextView main_song_title;
     private TextView main_song_artist;
     private TextView main_library;
-    private Progress main_progress;
+    Progress main_progress;
     private MenuLibrary main_menu_library;
     public MenuArtists main_menu_artists;
     public MenuArtist main_menu_artist;
@@ -57,13 +58,6 @@ public class Main extends Activity{
     public ExecutorService executorService;
     private AudioManager audioManager;
     public final static int MESSAGE_TOAST = 101;
-    public final static int MESSAGE_LIBRARY_READY = 201;
-    public final static int MESSAGE_LIBRARY_SCANNING = 202;
-    public final static int MESSAGE_COMMS_FILE_START = 301;
-    public final static int MESSAGE_COMMS_FILE_PROGRESS = 302;
-    public final static int MESSAGE_COMMS_FILE_DONE = 303;
-    public final static int MESSAGE_COMMS_FILE_ERROR = 304;
-    private final static int REQUEST_PERMISSION_CODE = 100;
 
     public static int heightPixels;
     public static int widthPixels;
@@ -89,8 +83,9 @@ public class Main extends Activity{
         splashScreen.setKeepOnScreenCondition(() -> showSplash);
         super.onCreate(savedInstanceState);
         isScreenRound = getResources().getConfiguration().isScreenRound();
-        heightPixels = getWindowManager().getMaximumWindowMetrics().getBounds().height();
-        widthPixels = getWindowManager().getMaximumWindowMetrics().getBounds().width();
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        heightPixels = displayMetrics.heightPixels;
+        widthPixels = displayMetrics.widthPixels;
         SWIPE_THRESHOLD = widthPixels / 3;
         vh25 = (int) (heightPixels * .25);
         vw20 = (int) (widthPixels * .2);
@@ -101,7 +96,6 @@ public class Main extends Activity{
         player = new W8Player(this);
 
         setContentView(R.layout.main);
-
         main_progress = findViewById(R.id.main_progress);
         main_menu_library = findViewById(R.id.main_menu_library);
         main_menu_artists = findViewById(R.id.main_menu_artists);
@@ -137,6 +131,10 @@ public class Main extends Activity{
         }
         findViewById(R.id.main).setOnClickListener(v -> onMainClick());
 
+        if(heightPixels < 68 * displayMetrics.scaledDensity + 144 * displayMetrics.density){
+            main_song_title.setLines(1);
+        }
+
         showSplash = false;
         executorService.submit(() -> library.scanMediaStore(this));
         executorService.submit(() -> requestPermissions());
@@ -144,6 +142,7 @@ public class Main extends Activity{
     @Override
     public void onDestroy(){
         super.onDestroy();
+        commsBT.stopComms();
         stopOngoingNotification();
     }
     private void requestPermissions(){
@@ -163,7 +162,7 @@ public class Main extends Activity{
                         android.Manifest.permission.BLUETOOTH,
                         android.Manifest.permission.BLUETOOTH_CONNECT,
                         android.Manifest.permission.BLUETOOTH_SCAN
-                }, REQUEST_PERMISSION_CODE);
+                }, 1);
             }
         }else if(Build.VERSION.SDK_INT >= 31){
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH) &&
@@ -179,7 +178,7 @@ public class Main extends Activity{
                                 android.Manifest.permission.BLUETOOTH,
                                 android.Manifest.permission.BLUETOOTH_CONNECT,
                                 android.Manifest.permission.BLUETOOTH_SCAN},
-                        REQUEST_PERMISSION_CODE);
+                        1);
             }
         }else{//30
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH);
@@ -191,7 +190,7 @@ public class Main extends Activity{
                                 android.Manifest.permission.MANAGE_EXTERNAL_STORAGE,
                                 android.Manifest.permission.READ_EXTERNAL_STORAGE,
                                 android.Manifest.permission.BLUETOOTH},
-                        REQUEST_PERMISSION_CODE);
+                        1);
             }
         }
         if(hasBTPermission) initBT();
@@ -228,7 +227,7 @@ public class Main extends Activity{
 
     public final Handler handler_message = new Handler(Looper.getMainLooper()){
         public void handleMessage(Message msg){
-            switch(msg.what){
+            switch(msg.what){//TODO: replace with method
                 case MESSAGE_TOAST:
                     if(msg.obj instanceof String){
                         runOnUiThread(() -> Toast.makeText(getBaseContext(), (String) msg.obj, Toast.LENGTH_SHORT).show());
@@ -237,45 +236,25 @@ public class Main extends Activity{
                         runOnUiThread(() -> Toast.makeText(getBaseContext(), msg_str, Toast.LENGTH_SHORT).show());
                     }
                     break;
-                case MESSAGE_LIBRARY_SCANNING:
-                    setScanning();
-                    break;
-                case MESSAGE_LIBRARY_READY:
-                    main_library.setText(R.string.library);
-                    if(current_tracks == null){
-                        current_tracks = library.tracks;
-                        loadFirstTrack();
-                    }
-                    break;
-                case MESSAGE_COMMS_FILE_START:
-                    if(msg.obj instanceof String){
-                        main_progress.show((String) msg.obj);
-                    }
-                    break;
-                case MESSAGE_COMMS_FILE_PROGRESS:
-                    if(msg.obj instanceof Integer){
-                        main_progress.setProgress((Integer) msg.obj);
-                    }
-                    break;
-                case MESSAGE_COMMS_FILE_ERROR:
-                    main_progress.setVisibility(View.GONE);
-                    break;
-                case MESSAGE_COMMS_FILE_DONE:
-                    if(msg.obj instanceof String){
-                        commsFileDone((String) msg.obj);
-                    }
-                    main_progress.setVisibility(View.GONE);
-                    break;
             }
         }
     };
-    private void commsFileDone(String path){
+    void commsFileDone(String path){
         executorService.submit(() -> library.addFile(this, path));
+        main_progress.setVisibility(View.GONE);
         executorService.submit(() -> commsBT.sendResponse("fileBinary", path));
     }
-    public void commsFileFailed(String path){
+    void commsFileFailed(String path){
         executorService.submit(() -> library.addFile(this, path));
+        main_progress.setVisibility(View.GONE);
         executorService.submit(() -> commsBT.sendResponse("fileBinary", "failed"));
+    }
+    void libraryReady(){
+        main_library.setText(R.string.library);
+        if(current_tracks == null){
+            current_tracks = library.tracks;
+            loadFirstTrack();
+        }
     }
 
     public void openTrackList(ArrayList<Library.Track> tracks, int index){
@@ -328,11 +307,11 @@ public class Main extends Activity{
         }
     }
     public void onRescanClick(){
-        setScanning();
+        librarySetScanning();
         main_menu_library.setVisibility(View.GONE);
-        executorService.submit(() -> library.scanFiles(this, ""));
+        executorService.submit(() -> library.scanFiles(this));
     }
-    private void setScanning(){
+    public void librarySetScanning(){
         if(!isPlaying){
             main_song_title.setText("");
             main_song_artist.setText("");

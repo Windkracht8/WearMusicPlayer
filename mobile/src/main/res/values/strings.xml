@@ -16,18 +16,25 @@
     <string name="alert_delete_positive">Delete</string>
     <string name="alert_delete_negative">Cancel</string>
 
-    <!-- status -->
-    <string name="status_STARTING">Starting</string>
-    <string name="status_LISTENING">Looking for watch</string>
+    <!-- CommsBT -->
+    <string name="status_SEARCHING">Starting search for watch.</string>
+    <string name="status_SEARCH_TIMEOUT">Did not find the watch. To connect, make sure you have a
+        bluetooth connection with the watch, keep the app on the watch open.
+        Then tab the icon to try again.</string>
     <string name="status_CONNECTED">Connected</string>
-    <string name="status_DISCONNECTED">Disconnected</string>
-    <string name="status_ERROR">error</string>
+    <string name="no_devices">No devices.</string>
+    <string name="try_connect_to">Trying to connect to:</string>
+    <string name="search_new_device">Looking for a new device. This might take a few minutes.
+        To connect, keep the app on the watch open.</string>
+    <string name="send_request">Send request:</string>
+    <string name="received_response">Received response:</string>
+    <string name="closing_connection">Closing connection.</string>
     <string name="first_connect">First connect with watch</string>
-
-    <!-- fail -->
-    <string name="fail_BT_denied">No Bluetooth permission</string>
+    <string name="fail_BT_denied">No Bluetooth permission. Close and reopen app, allow nearby devices.</string>
     <string name="fail_BT_off">Bluetooth turned off</string>
     <string name="fail_BT_connect">Bluetooth connection failed</string>
+
+    <!-- fail -->
     <string name="fail_sync">Failed to synchronise with watch</string>
     <string name="fail_send_message">Failed to send message to watch</string>
     <string name="fail_response">Problem with response from watch</string>

@@ -14,7 +14,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -37,8 +36,9 @@ public class Library{
         return array;
     }
     public void scanMediaStore(Main main){
+        Log.d(Main.LOG_TAG, "Library.scanMediaStore");
         if(libraryScanVersion > 0){
-            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_SCANNING));
+            main.runOnUiThread(main::librarySetScanning);
         }
         tracks.clear();
         artists.clear();
@@ -62,6 +62,7 @@ public class Library{
                 null,
                 null
         )) {
+            Log.d(Main.LOG_TAG, "Library.scanMediaStore query done");
             if(cursor == null){
                 Log.e(Main.LOG_TAG, "Library.scanMediaStore: Cursor is null");
                 main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_scan_media));
@@ -89,51 +90,30 @@ public class Library{
             }
         }
         try{
+            Log.d(Main.LOG_TAG, "Library.scanMediaStore sort");
             Collections.sort(tracks);
             Collections.sort(artists);
             Collections.sort(albums);
-            for(Artist artist : artists) artist.sort();
-            for(Album album : albums) album.sort();
+            artists.forEach(Artist::sort);
+            albums.forEach(Album::sort);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Library.scanMediaStore sort exception: " + e.getMessage());
             main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_scan_media));
         }
 
+        Log.d(Main.LOG_TAG, "Library.scanMediaStore ready");
         libraryScanVersion++;
-        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_READY));
+        main.runOnUiThread(main::libraryReady);
     }
-    public void scanFiles(Main main, String subdir){
-        String path = exStorageDir+"/Music"+subdir;
-        File directory = new File(path);
-        File[] files = directory.listFiles();
-        if(files == null) return;
-        for(File file : files){
-            if(file.isDirectory()){
-                scanFiles(main, subdir+"/"+file.getName());
-            }
-            if(!file.getName().endsWith(".mp3")) continue;
-            if(!trackExists(file.toURI())){
-                scanFile(main, file);
-            }
-        }
-        if(subdir.length()>0) return;
-        //2nd step, ask MediaStore to check if all files in the store still exist
+    public void scanFiles(Main main){
+        Log.d(Main.LOG_TAG, "Library.scanFiles");
         ArrayList<String> paths = new ArrayList<>();
-        for(Track track : tracks){
-            paths.add(exStorageDir+"/"+track.path);
-        }
+        paths.add(exStorageDir);
         MediaScannerConnection.scanFile(main,
                 paths.toArray(new String[0]),
                 null,
                 (path1, uri) -> scanMediaStore(main)
         );
-    }
-    private boolean trackExists(URI uri){
-        String path = uri.getPath().substring(exStorageDir.length()+1);
-        for(Track track : tracks){
-            if(track.path.equals(path)) return true;
-        }
-        return false;
     }
     public boolean ensurePath(Handler handler_message, String path){
         File file = new File(exStorageDir + "/" + path);
