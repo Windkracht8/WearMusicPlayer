@@ -23,11 +23,11 @@ public class MenuAlbum extends Menu{
         main.openTrackList(album.album_tracks, menuItem.index);
     }
     @Override
-    public String getItemPrimary(Main main, int index){
+    String getItemPrimary(Main main, int index){
         return album.album_tracks.get(index).title;
     }
     @Override
-    public String getItemSecondary(Main main, int index){
+    String getItemSecondary(Main main, int index){
         return album.album_tracks.get(index).artist.name;
     }
 }

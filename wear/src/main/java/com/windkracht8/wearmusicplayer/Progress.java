@@ -30,13 +30,13 @@ public class Progress extends ConstraintLayout{
         layoutParams.leftMargin = Main.vw20;
         layoutParams.rightMargin = Main.vw20;
     }
-    public void show(String path){
+    void show(String path){
         setProgress(0);
         String file = path.substring(path.lastIndexOf("/")+1, path.length()-4);
         progress_file.setText(file);
         setVisibility(View.VISIBLE);
     }
-    public void setProgress(int progress){
+    void setProgress(int progress){
         progress_indicator.setProgress(progress);
     }
 

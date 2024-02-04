@@ -16,11 +16,11 @@ public class MenuAlbums extends Menu{
         main.main_menu_album.show(main, menuItem.index);
     }
     @Override
-    public String getItemPrimary(Main main, int index){
+    String getItemPrimary(Main main, int index){
         return Main.library.albums.get(index).name;
     }
     @Override
-    public String getItemSecondary(Main main, int index){
+    String getItemSecondary(Main main, int index){
         return Main.library.albums.get(index).artist;
     }
 }

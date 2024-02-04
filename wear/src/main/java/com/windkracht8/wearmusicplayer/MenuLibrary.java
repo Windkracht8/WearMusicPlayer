@@ -28,7 +28,7 @@ public class MenuLibrary extends Menu{
     }
 
     @Override
-    public String getItemPrimary(Main main, int index){
+    String getItemPrimary(Main main, int index){
         switch(index){
             case 0:
                 return main.getString(R.string.albums);
@@ -40,7 +40,7 @@ public class MenuLibrary extends Menu{
         return main.getString(R.string.fail_oops);
     }
     @Override
-    public String getItemSecondary(Main main, int index){
+    String getItemSecondary(Main main, int index){
         switch(index){
             case 0:
                 return String.valueOf(Main.library.albums.size());

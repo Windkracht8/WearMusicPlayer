@@ -11,12 +11,12 @@ import java.net.Socket;
 import java.util.Locale;
 
 public class CommsWifi{
-    public static final int PORT_NUMBER = 9002;
-    public static boolean sendingFile = false;
+    static final int PORT_NUMBER = 9002;
+    static boolean sendingFile = false;
     private Socket socket;
 
     public CommsWifi(){}
-    public void stopSendFile(){
+    void stopSendFile(){
         sendingFile = false;
         try{
             socket.close();
@@ -24,13 +24,13 @@ public class CommsWifi{
             Log.e(Main.LOG_TAG, "CommsWifi.stopSendFile Exception: " + e.getMessage());
         }
     }
-    public String getIpAddress(Main main){
+    String getIpAddress(Main main){
         WifiManager wifiManager = (WifiManager) main.getSystemService(Context.WIFI_SERVICE);
         int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
         return String.format(Locale.US, "%d.%d.%d.%d", (ipAddress & 0xff),
                 (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
     }
-    public void sendFile(Main main, Item item){
+    void sendFile(Main main, Item item){
         Library.LibItem libItem = item.libItem;
         sendingFile = true;
         try(ServerSocket serverSocket = new ServerSocket(PORT_NUMBER)){
@@ -49,7 +49,7 @@ public class CommsWifi{
                         outputStream.write(buffer, 0, numBytes);
                         bytesDone += numBytes;
                         libItem.progress = bytesDone;
-                        main.runOnUiThread(item::updateProgress);
+                        item.updateProgress(main);
                     }
                     sendingFile = false;
                 }catch(Exception e){

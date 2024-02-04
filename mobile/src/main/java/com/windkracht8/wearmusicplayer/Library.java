@@ -14,13 +14,13 @@ import java.util.Collections;
 
 public class Library{
     private static String exStorageDir;
-    public LibDir dir_music;
+    LibDir dir_music;
 
-    public void scanFiles(Main main){
+    void scanFiles(Main main){
         exStorageDir = Environment.getExternalStorageDirectory().toString();
         dir_music = new LibDir(URI.create(exStorageDir + "/Music"));
         scanFilesDir(dir_music);
-        main.runOnUiThread(main::loadFileList);
+        main.libraryFilesScanned();
     }
     private void scanFilesDir(LibDir libDir){
         File[] files = (new File(exStorageDir + "/" + libDir.path)).listFiles();
@@ -38,7 +38,7 @@ public class Library{
         libDir.sort();
     }
 
-    public void updateLibWithFilesOnWatch(Main main, JSONArray filesOnWatch){
+    void updateLibWithFilesOnWatch(Main main, JSONArray filesOnWatch){
         ArrayList<String> pathsOnWatch = new ArrayList<>();
         try{
             for(int i = 0; i < filesOnWatch.length(); i++){
@@ -47,7 +47,7 @@ public class Library{
                 pathsOnWatch.add(Uri.decode(path));
             }
             updateDirWithFilesOnWatch(pathsOnWatch, dir_music);
-            main.runOnUiThread(main::itemsNewStatus);
+            main.libraryNewStatuses();
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Library.updateLibWithFilesOnWatch: " + e.getMessage());
         }
@@ -90,16 +90,16 @@ public class Library{
         return name.endsWith(".mp3") || name.endsWith(".m4a");
     }
 
-    public static class LibItem implements Comparable<LibItem>{
-        public enum Status {FULL, PARTIAL, NOT, UNKNOWN}
-        public final URI uri;
-        public String path;
-        public final String name;
-        public int depth = -1;
-        public Status status = Status.UNKNOWN;
-        public long length = 1;
-        public long progress = 0;
-        public LibItem(URI uri){
+    static class LibItem implements Comparable<LibItem>{
+        enum Status {FULL, PARTIAL, NOT, UNKNOWN}
+        final URI uri;
+        String path;
+        final String name;
+        int depth = -1;
+        Status status = Status.UNKNOWN;
+        long length = 1;
+        long progress = 0;
+        LibItem(URI uri){
             this.uri = uri;
             path = uri.getPath().substring(exStorageDir.length()+1);
             if(path.endsWith("/")) path = path.substring(0, path.length()-1);
@@ -119,18 +119,18 @@ public class Library{
             return this.name.compareTo(libItem.name);
         }
     }
-    public static class LibTrack extends LibItem{
-        public LibTrack(URI uri){
+    static class LibTrack extends LibItem{
+        LibTrack(URI uri){
             super(uri);
         }
     }
-    public static class LibDir extends LibItem{
-        public final ArrayList<LibTrack> libTracks = new ArrayList<>();
-        public final ArrayList<LibDir> libDirs = new ArrayList<>();
-        public LibDir(URI uri){
+    static class LibDir extends LibItem{
+        final ArrayList<LibTrack> libTracks = new ArrayList<>();
+        final ArrayList<LibDir> libDirs = new ArrayList<>();
+        LibDir(URI uri){
             super(uri);
         }
-        public void sort(){
+        void sort(){
             Collections.sort(libTracks);
             Collections.sort(libDirs);
         }

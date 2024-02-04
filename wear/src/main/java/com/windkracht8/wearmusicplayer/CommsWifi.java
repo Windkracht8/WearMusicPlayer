@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.net.Socket;
 
 public class CommsWifi{
-    public static void receiveFile(Main main, String path, long length, String ip, int port){
+    static void receiveFile(Main main, String path, long length, String ip, int port){
         long bytesDone = 0;
         Log.d(Main.LOG_TAG, "CommsWifi.receiveFile path: " + path);
         Log.d(Main.LOG_TAG, "CommsWifi.receiveFile length: " + length);
@@ -28,31 +28,31 @@ public class CommsWifi{
                     int numBytes = inputStream.read(buffer);
                     if(numBytes < 0){
                         Log.e(Main.LOG_TAG, "CommsWifi.receiveFile read error");
-                        main.runOnUiThread(()->main.commsFileFailed(path));
+                        main.commsFileFailed(path);
                         return;
                     }
                     fileOutputStream.write(buffer, 0, numBytes);
                     bytesDone += numBytes;
 
                     long progress = (bytesDone * 100) / length;
-                    main.runOnUiThread(()->main.main_progress.setProgress((int)progress));
+                    main.commsProgress((int)progress);
                     if(bytesDone >= length){
-                        main.runOnUiThread(()->main.commsFileDone(path));
+                        main.commsFileDone(path);
                         return;
                     }
                 }
-                main.runOnUiThread(()->main.commsFileFailed(path));
+                main.commsFileFailed(path);
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsWifi.receiveFile FileOutputStream exception: " + e.getMessage());
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
+                main.toast(R.string.fail_create_file);
             }
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "CommsWifi.receiveFile Socket exception: " + e);
             Log.e(Main.LOG_TAG, "CommsWifi.receiveFile Socket exception: " + e.getMessage());
-            main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_wifi));
+            main.toast(R.string.fail_wifi);
         }
         //if we get here it failed
-        main.runOnUiThread(()->main.commsFileFailed(path));
+        main.commsFileFailed(path);
     }
     private static void sleep100(){
         try{

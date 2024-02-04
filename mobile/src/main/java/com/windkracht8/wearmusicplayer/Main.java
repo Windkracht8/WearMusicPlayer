@@ -31,12 +31,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main extends AppCompatActivity{
-    public static final String LOG_TAG = "WearMusicPlayer";
+    static final String LOG_TAG = "WearMusicPlayer";
     private CommsBT commsBT = null;
     private CommsWifi commsWifi = null;
     private final Library library = new Library();
-    public static SharedPreferences sharedPreferences;
-    public static SharedPreferences.Editor sharedPreferences_editor;
+    static SharedPreferences sharedPreferences;
+    static SharedPreferences.Editor sharedPreferences_editor;
     private ExecutorService executorService;
 
     private TextView main_available;
@@ -78,27 +78,26 @@ public class Main extends AppCompatActivity{
         initBT();
     }
 
-    public void toast(int message){
-        runOnUiThread(()->toastUi(message));
+    void toast(int message){
+        runOnUiThread(()->Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show());
     }
-    private void toastUi(int message){
-        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+    void libraryFilesScanned(){
+        runOnUiThread(()->{
+            findViewById(R.id.main_loading).setVisibility(View.GONE);
+            for(Library.LibDir libDir : library.dir_music.libDirs){
+                Item item = new Item(this, libDir);
+                items.add(item);
+                main_ll.addView(item);
+            }
+            for(Library.LibTrack libTrack : library.dir_music.libTracks){
+                Item item = new Item(this, libTrack);
+                items.add(item);
+                main_ll.addView(item);
+            }
+        });
     }
-    public void loadFileList(){
-        findViewById(R.id.main_loading).setVisibility(View.GONE);
-        for(Library.LibDir libDir : library.dir_music.libDirs){
-            Item item = new Item(this, libDir);
-            items.add(item);
-            main_ll.addView(item);
-        }
-        for(Library.LibTrack libTrack : library.dir_music.libTracks){
-            Item item = new Item(this, libTrack);
-            items.add(item);
-            main_ll.addView(item);
-        }
-    }
-    public void itemsNewStatus(){
-        items.forEach(Item::newStatus);
+    void libraryNewStatuses(){
+        runOnUiThread(()->items.forEach(Item::newStatus));
     }
     private void initBT(){
         if(!hasBTPermission) return;
@@ -197,7 +196,7 @@ public class Main extends AppCompatActivity{
         }
     }
 
-    public void onItemStatusPressed(Item item){
+    void onItemStatusPressed(Item item){
         switch(item.libItem.status){
             case FULL:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -221,7 +220,7 @@ public class Main extends AppCompatActivity{
                 if(cantSendRequest()){
                     return;
                 }
-                item.updateProgress();
+                item.updateProgress(this);
                 executorService.submit(() -> commsWifi.sendFile(this, item));
                 String ipAddress = commsWifi.getIpAddress(this);
                 executorService.submit(() -> commsBT.sendFileDetails(item.libItem, ipAddress));
@@ -237,92 +236,86 @@ public class Main extends AppCompatActivity{
         return true;
     }
 
-    public void gotStatus(final String status){
-        runOnUiThread(() -> gotStatusUi(status));
-    }
-    private void gotStatusUi(final String status){
+    void gotStatus(final String status){
         if(prevStatuses.contains(status)){
             return;
         }
         prevStatuses.add(status);
         if(prevStatuses.size()>2) prevStatuses.remove(0);
 
-        TextView tv = new TextView(this);
-        tv.setText(status);
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        main_ll_BT_log.addView(tv);
-        tv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                main_sv_BT_log.fullScroll(View.FOCUS_DOWN);
-            }
+        runOnUiThread(()->{
+            TextView tv = new TextView(this);
+            tv.setText(status);
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            main_ll_BT_log.addView(tv);
+            tv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    main_sv_BT_log.fullScroll(View.FOCUS_DOWN);
+                }
+            });
         });
     }
-    public void gotError(final String error){
+    void gotError(String error){
         Log.d(Main.LOG_TAG, "Main.gotError: " + error);
-        runOnUiThread(() -> gotErrorUi(error));
-    }
-    private void gotErrorUi(String error){
-        TextView tv = new TextView(this);
-        tv.setText(error);
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        tv.setTextColor(getColor(R.color.error));
-        main_ll_BT_log.addView(tv);
-        tv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                main_sv_BT_log.fullScroll(View.FOCUS_DOWN);
-            }
+        runOnUiThread(()->{
+            TextView tv = new TextView(this);
+            tv.setText(error);
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            tv.setTextColor(getColor(R.color.error));
+            main_ll_BT_log.addView(tv);
+            tv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener(){
+                @Override
+                public void onGlobalLayout(){
+                    tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    main_sv_BT_log.fullScroll(View.FOCUS_DOWN);
+                }
+            });
         });
     }
-    public void updateStatus(final CommsBT.Status status){
-        runOnUiThread(() -> updateStatusUi(status));
-    }
-    private void updateStatusUi(final CommsBT.Status status){
-        switch(status){
-            case FATAL:
-                main_icon.setBackgroundResource(R.drawable.icon_watch);
-                main_icon.setColorFilter(getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
-                return;
-            case SEARCHING:
-                main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
-                main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
-                ((AnimatedVectorDrawable) main_icon.getBackground()).start();
-                prevStatuses.clear();
-                gotStatus(getString(R.string.status_SEARCHING));
-                break;
-            case SEARCH_TIMEOUT:
-                main_icon.setBackgroundResource(R.drawable.icon_watch);
-                main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
-                gotError(getString(R.string.status_SEARCH_TIMEOUT));
-                items.forEach(Item::clearStatus);
-                break;
-            case CONNECTED:
-                main_icon.setBackgroundResource(R.drawable.icon_watch);
-                main_icon.setColorFilter(getColor(R.color.text), android.graphics.PorterDuff.Mode.SRC_IN);
-                gotStatus(getString(R.string.status_CONNECTED));
-                sendSyncRequest();
-                break;
-        }
+    void updateStatus(CommsBT.Status status){
+        runOnUiThread(()->{
+            switch(status){
+                case FATAL:
+                    main_icon.setBackgroundResource(R.drawable.icon_watch);
+                    main_icon.setColorFilter(getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
+                    return;
+                case SEARCHING:
+                    main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
+                    main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                    ((AnimatedVectorDrawable) main_icon.getBackground()).start();
+                    prevStatuses.clear();
+                    gotStatus(getString(R.string.status_SEARCHING));
+                    break;
+                case SEARCH_TIMEOUT:
+                    main_icon.setBackgroundResource(R.drawable.icon_watch);
+                    main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                    gotError(getString(R.string.status_SEARCH_TIMEOUT));
+                    items.forEach(Item::clearStatus);
+                    break;
+                case CONNECTED:
+                    main_icon.setBackgroundResource(R.drawable.icon_watch);
+                    main_icon.setColorFilter(getColor(R.color.text), android.graphics.PorterDuff.Mode.SRC_IN);
+                    gotStatus(getString(R.string.status_CONNECTED));
+                    sendSyncRequest();
+                    break;
+            }
+        });
     }
     private void sendSyncRequest(){
         Log.d(Main.LOG_TAG, "Main.sendSyncRequest");
         if(cantSendRequest()){return;}
         try {
             JSONObject requestData = new JSONObject();
-            commsBT.sendRequest("sync", requestData);
+            executorService.submit(()->commsBT.sendRequest("sync", requestData));
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Main.sendSyncRequest Exception: " + e.getMessage());
-            Toast.makeText(this, R.string.fail_sync, Toast.LENGTH_SHORT).show();
+            toast(R.string.fail_sync);
         }
     }
 
-    public void gotResponse(final JSONObject response){
-        runOnUiThread(() -> gotResponseUi(response));
-    }
-    private void gotResponseUi(final JSONObject response){
+    void gotResponse(final JSONObject response){
         try{
             String requestType = response.getString("requestType");
             gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
@@ -333,33 +326,33 @@ public class Main extends AppCompatActivity{
                     long freeSpace = responseDataSync.getLong("freeSpace");
                     String line = getString(R.string.available) + bytesToHuman(freeSpace);
                     gotStatus(line);
-                    main_available.setText(bytesToHuman(freeSpace));
-                    executorService.submit(() -> library.updateLibWithFilesOnWatch(this, tracks));
+                    runOnUiThread(()->main_available.setText(bytesToHuman(freeSpace)));
+                    executorService.submit(()->library.updateLibWithFilesOnWatch(this, tracks));
                     break;
                 case "fileDetails":
-                    commsWifi.stopSendFile();
+                    executorService.submit(()->commsWifi.stopSendFile());
                     String responseDataFileDetails = response.getString("responseData");
                     Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + responseDataFileDetails);
-                    Toast.makeText(this, R.string.fail_response, Toast.LENGTH_SHORT).show();
+                    toast(R.string.fail_response);
                     break;
                 case "fileBinary":
                     String path_done = response.getString("responseData");
-                    items.forEach((i)->i.updateProgressDone(this, path_done));
+                    runOnUiThread(()->items.forEach((i)->i.updateProgressDone(this, path_done)));
                     break;
                 case "deleteFile":
                     if(response.getString("responseData").equals("OK")){
                         itemDelete.libItem.status = Library.LibItem.Status.NOT;
-                        itemDelete.newStatus();
+                        runOnUiThread(()->itemDelete.newStatus());
                         break;
                     }else{
                         Log.e(LOG_TAG, "Main.gotResponse deleteFile");
-                        Toast.makeText(this, R.string.fail_delete_file, Toast.LENGTH_SHORT).show();
+                        toast(R.string.fail_delete_file);
                     }
                     break;
             }
         }catch(Exception e){
             Log.e(LOG_TAG, "Main.gotResponse: " + e.getMessage());
-            Toast.makeText(this, R.string.fail_response, Toast.LENGTH_SHORT).show();
+            toast(R.string.fail_response);
         }
     }
     private String bytesToHuman(long bytes){
