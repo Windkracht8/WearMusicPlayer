@@ -11,9 +11,6 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -36,8 +33,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main extends Activity{
-    public static final String LOG_TAG = "WearMusicPlayer";
-    public static boolean isScreenRound;
+    static final String LOG_TAG = "WearMusicPlayer";
+    static boolean isScreenRound;
     private boolean showSplash = true;
     private boolean hasBTPermission = false;
     private TextView main_timer;
@@ -49,28 +46,27 @@ public class Main extends Activity{
     private TextView main_library;
     Progress main_progress;
     private MenuLibrary main_menu_library;
-    public MenuArtists main_menu_artists;
-    public MenuArtist main_menu_artist;
-    public MenuAlbums main_menu_albums;
-    public MenuAlbum main_menu_album;
+    MenuArtists main_menu_artists;
+    MenuArtist main_menu_artist;
+    MenuAlbums main_menu_albums;
+    MenuAlbum main_menu_album;
     private View currentVisibleView;
 
-    public ExecutorService executorService;
+    ExecutorService executorService;
     private AudioManager audioManager;
-    public final static int MESSAGE_TOAST = 101;
 
-    public static int heightPixels;
-    public static int widthPixels;
-    public static int vh25;
-    public static int vw20;
-    public static int vh75;
+    static int heightPixels;
+    static int widthPixels;
+    static int vh25;
+    static int vw20;
+    static int vh75;
 
     private static float onTouchStartY = -1;
     private static float onTouchStartX = 0;
     private static int SWIPE_THRESHOLD = 100;
     private static final int SWIPE_VELOCITY_THRESHOLD = 50;
 
-    public final static Library library = new Library();
+    final static Library library = new Library();
     private W8Player player;
     private CommsBT commsBT = null;
     private ArrayList<Library.Track> current_tracks;
@@ -218,46 +214,40 @@ public class Main extends Activity{
             initBT();
         }
     }
-
-    public void initBT(){
+    void initBT(){
         if(!hasBTPermission) return;
         commsBT = new CommsBT(this);
         executorService.submit(() -> commsBT.startComms());
     }
 
-    public final Handler handler_message = new Handler(Looper.getMainLooper()){
-        public void handleMessage(Message msg){
-            switch(msg.what){//TODO: replace with method
-                case MESSAGE_TOAST:
-                    if(msg.obj instanceof String){
-                        runOnUiThread(() -> Toast.makeText(getBaseContext(), (String) msg.obj, Toast.LENGTH_SHORT).show());
-                    }else if(msg.obj instanceof Integer){
-                        String msg_str = getString((Integer) msg.obj);
-                        runOnUiThread(() -> Toast.makeText(getBaseContext(), msg_str, Toast.LENGTH_SHORT).show());
-                    }
-                    break;
-            }
-        }
-    };
+    void toast(int message){
+        runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
+    }
+    void commsFileStart(String path){
+        runOnUiThread(()->main_progress.show(path));
+    }
+    void commsProgress(int progress){
+        runOnUiThread(()->main_progress.setProgress(progress));
+    }
     void commsFileDone(String path){
-        executorService.submit(() -> library.addFile(this, path));
-        main_progress.setVisibility(View.GONE);
-        executorService.submit(() -> commsBT.sendResponse("fileBinary", path));
+        executorService.submit(()->library.addFile(this, path));
+        runOnUiThread(()->main_progress.setVisibility(View.GONE));
+        executorService.submit(()->commsBT.sendResponse("fileBinary", path));
     }
     void commsFileFailed(String path){
-        executorService.submit(() -> library.addFile(this, path));
-        main_progress.setVisibility(View.GONE);
-        executorService.submit(() -> commsBT.sendResponse("fileBinary", "failed"));
+        executorService.submit(()->library.addFile(this, path));
+        runOnUiThread(()->main_progress.setVisibility(View.GONE));
+        executorService.submit(()->commsBT.sendResponse("fileBinary", "failed"));
     }
     void libraryReady(){
-        main_library.setText(R.string.library);
+        runOnUiThread(()->main_library.setText(R.string.library));
         if(current_tracks == null){
             current_tracks = library.tracks;
-            loadFirstTrack();
+            loadTrack(0);
         }
     }
 
-    public void openTrackList(ArrayList<Library.Track> tracks, int index){
+    void openTrackList(ArrayList<Library.Track> tracks, int index){
         current_tracks = tracks;
         main_play_pause.setImageResource(R.drawable.icon_pause);
         main_menu_library.setVisibility(View.GONE);
@@ -280,11 +270,8 @@ public class Main extends Activity{
                 current_tracks.size() == 0 ||
                 current_tracks.size() <= index ||
                 index < 0) return;
-        loadTrackUi(index);
+        runOnUiThread(()->loadTrackUi(index));
         player.loadTrack(this, current_tracks.get(index).uri);
-    }
-    private void loadFirstTrack(){
-        loadTrack(0);
     }
     private void loadTrackUi(int index){
         if(current_tracks == null ||
@@ -306,30 +293,32 @@ public class Main extends Activity{
             main_next.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
         }
     }
-    public void onRescanClick(){
+    void onRescanClick(){
         librarySetScanning();
         main_menu_library.setVisibility(View.GONE);
         executorService.submit(() -> library.scanFiles(this));
     }
-    public void librarySetScanning(){
+    void librarySetScanning(){
         if(!isPlaying){
-            main_song_title.setText("");
-            main_song_artist.setText("");
-            main_library.setText(R.string.scanning);
-            current_tracks = null;
+            runOnUiThread(()->{
+                main_song_title.setText("");
+                main_song_artist.setText("");
+                main_library.setText(R.string.scanning);
+                current_tracks = null;
+            });
         }
     }
-    public void bPreviousPressed(){
+    void bPreviousPressed(){
         loadTrack(current_index-1);
     }
     private void bPlayPausePressed(){
         player.playPause();
     }
-    public void bNextPressed(){
+    void bNextPressed(){
         loadTrack(current_index+1);
     }
 
-    public void onIsPlayingChanged(boolean isPlaying){
+    void onIsPlayingChanged(boolean isPlaying){
         if(this.isPlaying == isPlaying) return;
         this.isPlaying = isPlaying;
         if(isPlaying){
@@ -340,10 +329,10 @@ public class Main extends Activity{
             stopOngoingNotification();
         }
     }
-    public void onProgressChanged(long currentPosition){
+    void onProgressChanged(long currentPosition){
         main_timer.setText(prettyTimer(currentPosition));
     }
-    public void onPlayerEnded(){
+    void onPlayerEnded(){
         if(hasNext()) playTrack(current_index+1);
     }
     private boolean hasPrevious(){
@@ -380,12 +369,12 @@ public class Main extends Activity{
         return true; //Just to let Google know we are listening to rotary events
     }
 
-    public void onMainClick(){
+    void onMainClick(){
         //We need to do this to make sure that we can listen for onTouch on main
         Log.i(LOG_TAG, "onMainClick");
     }
 
-    public void addOnTouch(View v){
+    void addOnTouch(View v){
         v.setOnTouchListener(this::onTouch);
     }
     private boolean onTouch(View ignoredV, MotionEvent event){
@@ -471,7 +460,7 @@ public class Main extends Activity{
     private float getBackSwipeVelocity(MotionEvent event, float diffX){
         return (diffX / (event.getEventTime() - event.getDownTime())) * 1000;
     }
-    public static String prettyTimer(long milli_secs){
+    static String prettyTimer(long milli_secs){
         long tmp = milli_secs % 1000;
         long secs = (milli_secs - tmp) / 1000;
         tmp = secs % 60;

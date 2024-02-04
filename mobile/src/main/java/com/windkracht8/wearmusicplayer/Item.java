@@ -14,8 +14,8 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import java.util.ArrayList;
 
 public class Item extends ConstraintLayout{
-    public boolean isDir;
-    public Library.LibItem libItem;
+    boolean isDir;
+    Library.LibItem libItem;
 
     TextView item_status;
     TextView item_label;
@@ -71,12 +71,12 @@ public class Item extends ConstraintLayout{
         item_label.setText(libItem.name);
     }
 
-    public void clearStatus(){
+    void clearStatus(){
         libItem.status = Library.LibItem.Status.UNKNOWN;
         items.forEach(Item::clearStatus);
         newStatus();
     }
-    public void newStatus(){
+    void newStatus(){
         switch(libItem.status){
             case FULL:
                 if(isDir){
@@ -109,12 +109,14 @@ public class Item extends ConstraintLayout{
         }
         items.forEach(Item::newStatus);
     }
-    public void updateProgress(){
+    void updateProgress(Main main){
         long perc = (libItem.progress * 100) / libItem.length;
-        item_status.setText(String.valueOf(perc));
-        item_status.setBackgroundResource(0);
+        main.runOnUiThread(()->{
+            item_status.setText(String.valueOf(perc));
+            item_status.setBackgroundResource(0);
+        });
     }
-    public void updateProgressDone(Main main, String path){
+    void updateProgressDone(Main main, String path){
         if(libItem.path.equals(path)){
             libItem.status = Library.LibItem.Status.FULL;
             main.runOnUiThread(this::newStatus);
@@ -122,7 +124,7 @@ public class Item extends ConstraintLayout{
         }
         items.forEach((i)-> i.updateProgressDone(main, path));
     }
-    public void onLabelPressed(){
+    void onLabelPressed(){
         if(!isDir) return;
         isExpanded = !isExpanded;
         int view = isExpanded ? View.VISIBLE : View.GONE;

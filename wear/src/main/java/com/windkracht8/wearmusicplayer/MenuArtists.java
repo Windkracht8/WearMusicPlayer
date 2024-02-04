@@ -17,11 +17,11 @@ public class MenuArtists extends Menu{
         main.main_menu_artist.show(main, menuItem.index);
     }
     @Override
-    public String getItemPrimary(Main main, int index){
+    String getItemPrimary(Main main, int index){
         return Main.library.artists.get(index).name;
     }
     @Override
-    public String getItemSecondary(Main main, int index){
+    String getItemSecondary(Main main, int index){
         Library.Artist artist = Main.library.artists.get(index);
         return artist.artist_albums.size() + " albums|" + artist.artist_tracks.size() + " tracks";
     }

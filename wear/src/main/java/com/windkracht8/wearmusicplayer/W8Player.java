@@ -80,12 +80,12 @@ public class W8Player{
             public void onStop(){exoPlayer.stop();}
         });
     }
-    public void playTrack(Context context, Uri uri){
+    void playTrack(Context context, Uri uri){
         exoPlayer.setPlayWhenReady(true);
         loadTrack(context, uri);
     }
     @OptIn(markerClass = UnstableApi.class)
-    public void loadTrack(Context context, Uri uri){
+    void loadTrack(Context context, Uri uri){
         try{
             exoPlayer.setMediaSource(new ProgressiveMediaSource.Factory(new DefaultDataSource.Factory(context)).createMediaSource(MediaItem.fromUri(uri)));
             exoPlayer.prepare();
@@ -101,7 +101,7 @@ public class W8Player{
             handler.postDelayed(() -> update(main), (currentPosition % 1000));
         }
     }
-    public void playPause(){
+    void playPause(){
         if(exoPlayer.isPlaying()){
             exoPlayer.pause();
             exoPlayer.setPlayWhenReady(false);

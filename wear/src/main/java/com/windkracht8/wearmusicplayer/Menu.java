@@ -43,7 +43,7 @@ public abstract class Menu extends ConstraintLayout{
         ((LinearLayout.LayoutParams) menu_items.getLayoutParams()).bottomMargin += Main.vh25;
     }
 
-    public void requestSVFocus(){
+    void requestSVFocus(){
         menu_sv.requestFocus();
     }
     private void show(){
@@ -51,7 +51,7 @@ public abstract class Menu extends ConstraintLayout{
         menu_sv.fullScroll(View.FOCUS_UP);
         menu_sv.requestFocus();
     }
-    public void show(Main main, int size, String labelText){
+    void show(Main main, int size, String labelText){
         if(isInitialized &&
                 libraryScanVersion == Library.libraryScanVersion &&
                 this.labelText.equals(labelText)
@@ -138,10 +138,10 @@ public abstract class Menu extends ConstraintLayout{
 
     protected abstract void onItemClick(Main main, MenuItem menuItem);
 
-    public String getItemPrimary(Main main, int index){
+    String getItemPrimary(Main main, int index){
         return main.getString(R.string.fail_oops);
     }
-    public String getItemSecondary(Main main, int index){
+    String getItemSecondary(Main main, int index){
         return null;
     }
 
