@@ -72,10 +72,8 @@ public class Item extends ConstraintLayout{
     }
 
     public void clearStatus(){
-        libItem.status = Main.Status.UNKNOWN;
-        for(Item item : items){
-            item.clearStatus();
-        }
+        libItem.status = Library.LibItem.Status.UNKNOWN;
+        items.forEach(Item::clearStatus);
         newStatus();
     }
     public void newStatus(){
@@ -109,9 +107,7 @@ public class Item extends ConstraintLayout{
                 }
                 break;
         }
-        for(Item item : items){
-            item.newStatus();
-        }
+        items.forEach(Item::newStatus);
     }
     public void updateProgress(){
         long perc = (libItem.progress * 100) / libItem.length;
@@ -120,20 +116,17 @@ public class Item extends ConstraintLayout{
     }
     public void updateProgressDone(Main main, String path){
         if(libItem.path.equals(path)){
-            libItem.status = Main.Status.FULL;
+            libItem.status = Library.LibItem.Status.FULL;
             main.runOnUiThread(this::newStatus);
             return;
         }
-        for(Item item : items){
-            item.updateProgressDone(main, path);
-        }
+        items.forEach((i)-> i.updateProgressDone(main, path));
     }
     public void onLabelPressed(){
         if(!isDir) return;
         isExpanded = !isExpanded;
-        for(Item item : items){
-            item.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
-        }
+        int view = isExpanded ? View.VISIBLE : View.GONE;
+        items.forEach((i)-> i.setVisibility(view));
     }
 
 }

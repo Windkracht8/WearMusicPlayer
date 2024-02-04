@@ -71,7 +71,7 @@ public abstract class Menu extends ConstraintLayout{
             ((LinearLayout.LayoutParams) menu_label.getLayoutParams()).rightMargin = Main.vw20;
         }
         libraryScanVersion = Library.libraryScanVersion;
-        for (int i = menu_items.getChildCount(); i > 0; i--) {
+        for(int i = menu_items.getChildCount(); i > 0; i--){
             menu_items.removeViewAt(i - 1);
         }
         if(size < 1){

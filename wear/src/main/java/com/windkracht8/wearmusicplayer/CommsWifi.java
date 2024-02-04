@@ -28,20 +28,20 @@ public class CommsWifi{
                     int numBytes = inputStream.read(buffer);
                     if(numBytes < 0){
                         Log.e(Main.LOG_TAG, "CommsWifi.receiveFile read error");
-                        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_ERROR));
+                        main.runOnUiThread(()->main.commsFileFailed(path));
                         return;
                     }
                     fileOutputStream.write(buffer, 0, numBytes);
                     bytesDone += numBytes;
 
                     long progress = (bytesDone * 100) / length;
-                    main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_PROGRESS, (int) progress));
+                    main.runOnUiThread(()->main.main_progress.setProgress((int)progress));
                     if(bytesDone >= length){
-                        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_DONE, path));
+                        main.runOnUiThread(()->main.commsFileDone(path));
                         return;
                     }
                 }
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_ERROR));
+                main.runOnUiThread(()->main.commsFileFailed(path));
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsWifi.receiveFile FileOutputStream exception: " + e.getMessage());
                 main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_create_file));
@@ -52,7 +52,7 @@ public class CommsWifi{
             main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_wifi));
         }
         //if we get here it failed
-        main.commsFileFailed(path);
+        main.runOnUiThread(()->main.commsFileFailed(path));
     }
     private static void sleep100(){
         try{

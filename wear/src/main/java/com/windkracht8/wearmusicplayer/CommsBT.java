@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.UUID;
 
 public class CommsBT{
@@ -27,6 +28,8 @@ public class CommsBT{
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothServerSocket bluetoothServerSocket;
     private BluetoothSocket bluetoothSocket;
+    private CommsBTConnect commsBTConnect;
+    private CommsBTConnected commsBTConnected;
     private final Main main;
     private final Handler handler;
 
@@ -36,7 +39,6 @@ public class CommsBT{
     public CommsBT(Main main){
         this.main = main;
         handler = new Handler(Looper.getMainLooper());
-        main.registerReceiver(btStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
     }
 
     private final BroadcastReceiver btStateReceiver = new BroadcastReceiver(){
@@ -44,8 +46,10 @@ public class CommsBT{
             if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())){
                 int btState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                 if(btState == BluetoothAdapter.STATE_TURNING_OFF){
+                    Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver: stop");
                     stopComms();
                 }else if(btState == BluetoothAdapter.STATE_ON){
+                    Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver: start");
                     startComms();
                 }
             }
@@ -53,6 +57,7 @@ public class CommsBT{
     };
 
     public void startComms(){
+        closeConnection = false;
         BluetoothManager bluetoothManager = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         if(bluetoothAdapter == null || !bluetoothAdapter.isEnabled()){
@@ -60,7 +65,8 @@ public class CommsBT{
             return;
         }
         Log.d(Main.LOG_TAG, "CommsBT.startComms");
-        CommsBTConnect commsBTConnect = new CommsBTConnect();
+        main.registerReceiver(btStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+        commsBTConnect = new CommsBTConnect();
         commsBTConnect.start();
     }
 
@@ -82,6 +88,8 @@ public class CommsBT{
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "CommsBT.stopComms bluetoothServerSocket: " + e.getMessage());
         }
+        commsBTConnect = null;
+        commsBTConnected = null;
     }
 
     private class CommsBTConnect extends Thread{
@@ -91,6 +99,7 @@ public class CommsBT{
                 Log.d(Main.LOG_TAG, "CommsBTConnect");
                 bluetoothServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("WearMusicPlayer", WMP_UUID);
             }catch(Exception e){
+                if(closeConnection) return;
                 Log.e(Main.LOG_TAG, "CommsBTConnect Exception: " + e.getMessage());
             }
         }
@@ -99,12 +108,16 @@ public class CommsBT{
             try{
                 Log.d(Main.LOG_TAG, "CommsBTConnect.run");
                 bluetoothSocket = bluetoothServerSocket.accept();
+                if(closeConnection) return;
                 Log.d(Main.LOG_TAG, "CommsBTConnect.run accepted");
-                CommsBTConnected commsBTConnected = new CommsBTConnected();
+                commsBTConnected = new CommsBTConnected();
                 commsBTConnected.start();
             }catch(Exception e){
+                Log.d(Main.LOG_TAG, "CommsBTConnect.run Exception closeConnection:" + closeConnection);
+                if(closeConnection) return;
                 Log.e(Main.LOG_TAG, "CommsBTConnect.run Exception: " + e.getMessage());
             }
+            Log.d(Main.LOG_TAG, "CommsBTConnect.run done");
         }
     }
 
@@ -141,12 +154,12 @@ public class CommsBT{
             }catch(Exception e){
                 Log.d(Main.LOG_TAG, "Connection closed");
                 stopComms();
-                main.initBT();
+                startComms();
                 return;
             }
             if(responseQueue.length() > 0 && !sendNextResponse()){
                 stopComms();
-                main.initBT();
+                startComms();
                 return;
             }
             read();
@@ -171,7 +184,8 @@ public class CommsBT{
         }
         private void read(){
             try{
-                if(inputStream.available() == 0) return;
+                if(inputStream.available() < 5) return;
+                long read_start = (new Date()).getTime();
                 String request = "";
 
                 while(inputStream.available() > 0){
@@ -185,14 +199,16 @@ public class CommsBT{
                     String temp = new String(buffer);
                     request += temp;
                     if(isValidJSON(request)){
-                        JSONObject requestMessage = new JSONObject(request);
-                        gotRequest(requestMessage);
+                        gotRequest(request);
                         return;
                     }
-                    if(inputStream.available() == 0) sleep100();
+                    if((new Date()).getTime() - read_start > 3000){
+                        Log.e(Main.LOG_TAG, "CommsBTConnected.read started to read, no complete message after 3 seconds: " + request);
+                        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_request));
+                        return;
+                    }
+                    sleep100();
                 }
-                Log.e(Main.LOG_TAG, "CommsBTConnected.read no more bytes to read, no valid json, request: " + request);
-                main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_request));
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnected.read Exception: " + e.getMessage());
                 main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_TOAST, R.string.fail_request));
@@ -205,9 +221,10 @@ public class CommsBT{
                 Log.e(Main.LOG_TAG, "CommsBTConnected.sleep100 exception: " + e.getMessage());
             }
         }
-        private void gotRequest(final JSONObject requestMessage){
-            Log.d(Main.LOG_TAG, "CommsBTConnected.gotRequest: " + requestMessage);
+        private void gotRequest(final String request){
+            Log.d(Main.LOG_TAG, "CommsBTConnected.gotRequest: " + request);
             try{
+                JSONObject requestMessage = new JSONObject(request);
                 String requestType = requestMessage.getString("requestType");
                 switch(requestType){
                     case "sync":
@@ -225,7 +242,7 @@ public class CommsBT{
                         String ip = requestData.getString("ip");
                         int port = requestData.getInt("port");
 
-                        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_COMMS_FILE_START, path));
+                        main.runOnUiThread(()->main.main_progress.show(path));
                         main.executorService.submit(() -> CommsWifi.receiveFile(main, path, length, ip, port));
                         break;
                     case "deleteFile":

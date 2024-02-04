@@ -2,7 +2,6 @@ package com.windkracht8.wearmusicplayer;
 
 import android.net.Uri;
 import android.os.Environment;
-import android.os.Handler;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -21,7 +20,7 @@ public class Library{
         exStorageDir = Environment.getExternalStorageDirectory().toString();
         dir_music = new LibDir(URI.create(exStorageDir + "/Music"));
         scanFilesDir(dir_music);
-        main.handler_message.sendMessage(main.handler_message.obtainMessage(Main.MESSAGE_LIBRARY_READY));
+        main.runOnUiThread(main::loadFileList);
     }
     private void scanFilesDir(LibDir libDir){
         File[] files = (new File(exStorageDir + "/" + libDir.path)).listFiles();
@@ -39,7 +38,7 @@ public class Library{
         libDir.sort();
     }
 
-    public void updateLibWithFilesOnWatch(Handler handler_message, JSONArray filesOnWatch){
+    public void updateLibWithFilesOnWatch(Main main, JSONArray filesOnWatch){
         ArrayList<String> pathsOnWatch = new ArrayList<>();
         try{
             for(int i = 0; i < filesOnWatch.length(); i++){
@@ -48,7 +47,7 @@ public class Library{
                 pathsOnWatch.add(Uri.decode(path));
             }
             updateDirWithFilesOnWatch(pathsOnWatch, dir_music);
-            handler_message.sendMessage(handler_message.obtainMessage(Main.MESSAGE_LIBRARY_UPDATE_STATUS));
+            main.runOnUiThread(main::itemsNewStatus);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Library.updateLibWithFilesOnWatch: " + e.getMessage());
         }
@@ -61,17 +60,17 @@ public class Library{
         boolean full = directory.libTracks.size() > 0;
         for(LibTrack libTrack : directory.libTracks){
             if(pathsOnWatch.contains(libTrack.path)){
-                libTrack.status = Main.Status.FULL;
+                libTrack.status = LibItem.Status.FULL;
                 partial = true;
             }else{
-                libTrack.status = Main.Status.NOT;
+                libTrack.status = LibItem.Status.NOT;
                 full = false;
             }
         }
         for(LibDir libDir : directory.libDirs){
-            if(libDir.status == Main.Status.FULL){
+            if(libDir.status == LibItem.Status.FULL){
                 partial = true;
-            }else if(libDir.status == Main.Status.PARTIAL){
+            }else if(libDir.status == LibItem.Status.PARTIAL){
                 partial = true;
                 full = false;
             }else{
@@ -79,11 +78,11 @@ public class Library{
             }
         }
         if(full){
-            directory.status = Main.Status.FULL;
+            directory.status = LibItem.Status.FULL;
         }else if(partial){
-            directory.status = Main.Status.PARTIAL;
+            directory.status = LibItem.Status.PARTIAL;
         }else{
-            directory.status = Main.Status.NOT;
+            directory.status = LibItem.Status.NOT;
         }
     }
 
@@ -92,11 +91,12 @@ public class Library{
     }
 
     public static class LibItem implements Comparable<LibItem>{
+        public enum Status {FULL, PARTIAL, NOT, UNKNOWN}
         public final URI uri;
         public String path;
         public final String name;
         public int depth = -1;
-        public Main.Status status = Main.Status.UNKNOWN;
+        public Status status = Status.UNKNOWN;
         public long length = 1;
         public long progress = 0;
         public LibItem(URI uri){

@@ -6,17 +6,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,88 +32,59 @@ import java.util.concurrent.Executors;
 
 public class Main extends AppCompatActivity{
     public static final String LOG_TAG = "WearMusicPlayer";
-    public static final int MESSAGE_TOAST = 100;
-    public static final int MESSAGE_LIBRARY_READY = 200;
-    public static final int MESSAGE_LIBRARY_UPDATE_STATUS = 201;
-    public static final int MESSAGE_COMMS_BT_OFF = 300;
-    public static final int MESSAGE_COMMS_ERROR = 301;
-    public static final int MESSAGE_COMMS_STATUS = 302;
-    public static final int MESSAGE_COMMS_RESPONSE = 303;
-    public static final int MESSAGE_COMMS_PROGRESS = 304;
-    private final static int REQUEST_PERMISSION_CODE = 1;
-
-    public enum Status {FULL, PARTIAL, NOT, UNKNOWN}
-
     private CommsBT commsBT = null;
     private CommsWifi commsWifi = null;
     private final Library library = new Library();
-
+    public static SharedPreferences sharedPreferences;
+    public static SharedPreferences.Editor sharedPreferences_editor;
     private ExecutorService executorService;
 
+    private TextView main_available;
     private ImageView main_icon;
-    private TextView main_status;
-    private TextView main_error;
+    private ScrollView main_sv_BT_log;
+    private LinearLayout main_ll_BT_log;
     private LinearLayout main_ll;
     private final ArrayList<Item> items = new ArrayList<>();
     private Item itemDelete;
+    private final ArrayList<String> prevStatuses = new ArrayList<>();
+    private static boolean hasBTPermission = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        sharedPreferences = getSharedPreferences("com.windkracht8.wearmusicplayer", Context.MODE_PRIVATE);
+        sharedPreferences_editor = sharedPreferences.edit();
         executorService = Executors.newFixedThreadPool(4);
         commsWifi = new CommsWifi();
 
+        main_available = findViewById(R.id.main_available);
         main_icon = findViewById(R.id.main_icon);
-        main_status = findViewById(R.id.main_status);
-        main_error = findViewById(R.id.main_error);
+        main_sv_BT_log = findViewById(R.id.main_sv_BT_log);
+        main_ll_BT_log = findViewById(R.id.main_ll_BT_log);
         main_ll = findViewById(R.id.main_ll);
 
-        initBT();
-        executorService.submit(() -> library.scanFiles(this));
+        commsBT = new CommsBT(this);
+
+        if(Build.VERSION.SDK_INT >= 31){
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_SCAN)
+                    && hasPermission(android.Manifest.permission.BLUETOOTH_CONNECT);
+        }else{
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH);
+        }
         requestPermissions();
+        executorService.submit(() -> library.scanFiles(this));
+        initBT();
     }
 
-    public final Handler handler_message = new Handler(Looper.getMainLooper()){
-        public void handleMessage(Message msg){
-            switch(msg.what){
-                case MESSAGE_TOAST:
-                    if(!(msg.obj instanceof Integer)) return;
-                    Toast.makeText(getApplicationContext(), getString((Integer) msg.obj), Toast.LENGTH_SHORT).show();
-                    break;
-                case MESSAGE_LIBRARY_READY:
-                    loadFileList();
-                    break;
-                case MESSAGE_LIBRARY_UPDATE_STATUS:
-                    for(Item item : items){
-                        item.newStatus();
-                    }
-                    break;
-                case MESSAGE_COMMS_BT_OFF:
-                    gotError(getString(R.string.fail_BT_off));
-                    break;
-                case MESSAGE_COMMS_ERROR:
-                    if(!(msg.obj instanceof String)) return;
-                    gotError((String) msg.obj);
-                    break;
-                case MESSAGE_COMMS_STATUS:
-                    if(!(msg.obj instanceof String)) return;
-                    updateStatus((String) msg.obj);
-                    break;
-                case MESSAGE_COMMS_RESPONSE:
-                    if(!(msg.obj instanceof JSONObject)) return;
-                    gotResponse((JSONObject) msg.obj);
-                    break;
-                case MESSAGE_COMMS_PROGRESS:
-                    if(!(msg.obj instanceof Item)) return;
-                    ((Item) msg.obj).updateProgress();
-                    break;
-            }
-        }
-    };
-
-    private void loadFileList(){
+    public void toast(int message){
+        runOnUiThread(()->toastUi(message));
+    }
+    private void toastUi(int message){
+        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+    }
+    public void loadFileList(){
         findViewById(R.id.main_loading).setVisibility(View.GONE);
         for(Library.LibDir libDir : library.dir_music.libDirs){
             Item item = new Item(this, libDir);
@@ -124,66 +97,86 @@ public class Main extends AppCompatActivity{
             main_ll.addView(item);
         }
     }
+    public void itemsNewStatus(){
+        items.forEach(Item::newStatus);
+    }
     private void initBT(){
-        if(Build.VERSION.SDK_INT >= 31){
-            if(doesNotHavePermission(android.Manifest.permission.BLUETOOTH) ||
-                    doesNotHavePermission(android.Manifest.permission.BLUETOOTH_CONNECT) ||
-                    doesNotHavePermission(android.Manifest.permission.BLUETOOTH_SCAN)){
-                return;
-            }
-        }else{
-            if(doesNotHavePermission(android.Manifest.permission.BLUETOOTH)){
-                return;
-            }
-        }
-        if(commsBT == null) commsBT = new CommsBT(this);
-        executorService.submit(() -> commsBT.connect());
+        if(!hasBTPermission) return;
+        executorService.submit(() -> commsBT.startComms());
     }
 
     private void requestPermissions(){
-        if(Build.VERSION.SDK_INT >= 31){
-            if(doesNotHavePermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) ||
-                    doesNotHavePermission(android.Manifest.permission.BLUETOOTH) ||
-                    doesNotHavePermission(android.Manifest.permission.BLUETOOTH_CONNECT) ||
-                    doesNotHavePermission(android.Manifest.permission.BLUETOOTH_SCAN)){
-                ActivityCompat.requestPermissions(this, new String[]{
-                                android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                                android.Manifest.permission.BLUETOOTH,
-                                android.Manifest.permission.BLUETOOTH_CONNECT,
-                                android.Manifest.permission.BLUETOOTH_SCAN},
-                        REQUEST_PERMISSION_CODE);
+        if(Build.VERSION.SDK_INT >= 33){
+            if(!hasPermission(Manifest.permission.READ_MEDIA_AUDIO)
+                    || !hasBTPermission
+            ){
+                ActivityCompat.requestPermissions(this
+                        ,new String[]{
+                            Manifest.permission.READ_MEDIA_AUDIO
+                            ,Manifest.permission.BLUETOOTH_CONNECT
+                            ,Manifest.permission.BLUETOOTH_SCAN
+                        }
+                        ,1
+                );
+            }
+        }else if(Build.VERSION.SDK_INT >= 31){
+            if(!hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    || !hasBTPermission
+            ){
+                ActivityCompat.requestPermissions(this
+                        ,new String[]{
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                            ,Manifest.permission.BLUETOOTH_CONNECT
+                            ,Manifest.permission.BLUETOOTH_SCAN
+                        }
+                        ,1
+                );
             }
         }else{
-            if(doesNotHavePermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) ||
-                    doesNotHavePermission(android.Manifest.permission.BLUETOOTH)){
-                ActivityCompat.requestPermissions(this, new String[]{
-                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                        android.Manifest.permission.BLUETOOTH},
-                        REQUEST_PERMISSION_CODE);
+            if(!hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    || !hasBTPermission
+            ){
+                ActivityCompat.requestPermissions(this
+                        ,new String[]{
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                            ,Manifest.permission.BLUETOOTH
+                        }
+                        ,1
+                );
             }
         }
-    }
-    private boolean doesNotHavePermission(String permission){
-        return ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED;
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        boolean bt_granted = false;
+        Log.d(LOG_TAG, "Main.onRequestPermissionsResult");
         for(int i=0; i<permissions.length; i++){
-            if(permissions[i].equals(Manifest.permission.BLUETOOTH_CONNECT) ||
-                permissions[i].equals(Manifest.permission.BLUETOOTH_SCAN) ||
-                permissions[i].equals(Manifest.permission.BLUETOOTH)){
-                if(grantResults[i] == PackageManager.PERMISSION_DENIED){
-                    updateStatus("FATAL");
-                    gotError(getString(R.string.fail_BT_denied));
-                    return;
-                }else{
-                    bt_granted = true;
+            if(permissions[i].equals(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    || permissions[i].equals(Manifest.permission.READ_MEDIA_AUDIO)
+            ){
+                if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
+                    executorService.submit(() -> library.scanFiles(this));
                 }
+                break;
             }
         }
-        if(bt_granted) initBT();
+        for(int i=0; i<permissions.length; i++){
+            if(permissions[i].equals(Manifest.permission.BLUETOOTH_CONNECT)
+                    || permissions[i].equals(Manifest.permission.BLUETOOTH)
+            ){
+                if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
+                    hasBTPermission = true;
+                    initBT();
+                }else{
+                    updateStatus(CommsBT.Status.FATAL);
+                    gotError(getString(R.string.fail_BT_denied));
+                }
+                break;
+            }
+        }
+    }
+    private boolean hasPermission(String permission){
+        return ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
@@ -229,7 +222,7 @@ public class Main extends AppCompatActivity{
                     return;
                 }
                 item.updateProgress();
-                executorService.submit(() -> commsWifi.sendFile(handler_message, item));
+                executorService.submit(() -> commsWifi.sendFile(this, item));
                 String ipAddress = commsWifi.getIpAddress(this);
                 executorService.submit(() -> commsBT.sendFileDetails(item.libItem, ipAddress));
                 break;
@@ -237,52 +230,81 @@ public class Main extends AppCompatActivity{
     }
 
     private boolean cantSendRequest(){
-        if(commsBT != null && commsBT.status.equals("CONNECTED")){
+        if(commsBT != null && commsBT.status == CommsBT.Status.CONNECTED){
             return false;
         }
         gotError(getString(R.string.first_connect));
         return true;
     }
 
-    public void updateStatus(final String status){
+    public void gotStatus(final String status){
+        runOnUiThread(() -> gotStatusUi(status));
+    }
+    private void gotStatusUi(final String status){
+        if(prevStatuses.contains(status)){
+            return;
+        }
+        prevStatuses.add(status);
+        if(prevStatuses.size()>2) prevStatuses.remove(0);
+
+        TextView tv = new TextView(this);
+        tv.setText(status);
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        main_ll_BT_log.addView(tv);
+        tv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                main_sv_BT_log.fullScroll(View.FOCUS_DOWN);
+            }
+        });
+    }
+    public void gotError(final String error){
+        Log.d(Main.LOG_TAG, "Main.gotError: " + error);
+        runOnUiThread(() -> gotErrorUi(error));
+    }
+    private void gotErrorUi(String error){
+        TextView tv = new TextView(this);
+        tv.setText(error);
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        tv.setTextColor(getColor(R.color.error));
+        main_ll_BT_log.addView(tv);
+        tv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                main_sv_BT_log.fullScroll(View.FOCUS_DOWN);
+            }
+        });
+    }
+    public void updateStatus(final CommsBT.Status status){
+        runOnUiThread(() -> updateStatusUi(status));
+    }
+    private void updateStatusUi(final CommsBT.Status status){
         switch(status){
-            case "FATAL":
+            case FATAL:
                 main_icon.setBackgroundResource(R.drawable.icon_watch);
                 main_icon.setColorFilter(getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
-                main_status.setVisibility(View.GONE);
                 return;
-            case "SEARCHING":
+            case SEARCHING:
                 main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
                 main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
                 ((AnimatedVectorDrawable) main_icon.getBackground()).start();
-                main_status.setText(getString(R.string.status_LISTENING));
-                main_status.setVisibility(View.VISIBLE);
-                main_error.setText("");
+                prevStatuses.clear();
+                gotStatus(getString(R.string.status_SEARCHING));
                 break;
-            case "CONNECTED":
-                main_icon.setBackgroundResource(R.drawable.icon_watch);
-                main_icon.setColorFilter(getColor(R.color.text), android.graphics.PorterDuff.Mode.SRC_IN);
-                main_status.setText(getString(R.string.status_CONNECTED));
-                main_status.setVisibility(View.VISIBLE);
-                main_error.setText("");
-                sendSyncRequest();
-                break;
-            case "DISCONNECTED":
+            case SEARCH_TIMEOUT:
                 main_icon.setBackgroundResource(R.drawable.icon_watch);
                 main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
-                main_status.setText(getString(R.string.status_DISCONNECTED));
-                main_status.setVisibility(View.VISIBLE);
-                main_error.setText("");
-                for(Item item : items){
-                    item.clearStatus();
-                }
+                gotError(getString(R.string.status_SEARCH_TIMEOUT));
+                items.forEach(Item::clearStatus);
                 break;
-            default:
+            case CONNECTED:
                 main_icon.setBackgroundResource(R.drawable.icon_watch);
-                main_icon.setColorFilter(getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
-                main_status.setText(status);
-                main_status.setVisibility(View.VISIBLE);
-                main_error.setText(getString(R.string.status_ERROR));
+                main_icon.setColorFilter(getColor(R.color.text), android.graphics.PorterDuff.Mode.SRC_IN);
+                gotStatus(getString(R.string.status_CONNECTED));
+                sendSyncRequest();
+                break;
         }
     }
     private void sendSyncRequest(){
@@ -298,16 +320,21 @@ public class Main extends AppCompatActivity{
     }
 
     public void gotResponse(final JSONObject response){
+        runOnUiThread(() -> gotResponseUi(response));
+    }
+    private void gotResponseUi(final JSONObject response){
         try{
             String requestType = response.getString("requestType");
+            gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
             switch(requestType){
                 case "sync":
                     JSONObject responseDataSync = response.getJSONObject("responseData");
                     JSONArray tracks = responseDataSync.getJSONArray("tracks");
                     long freeSpace = responseDataSync.getLong("freeSpace");
                     String line = getString(R.string.available) + bytesToHuman(freeSpace);
-                    main_status.setText(line);
-                    executorService.submit(() -> library.updateLibWithFilesOnWatch(handler_message, tracks));
+                    gotStatus(line);
+                    main_available.setText(bytesToHuman(freeSpace));
+                    executorService.submit(() -> library.updateLibWithFilesOnWatch(this, tracks));
                     break;
                 case "fileDetails":
                     commsWifi.stopSendFile();
@@ -317,13 +344,11 @@ public class Main extends AppCompatActivity{
                     break;
                 case "fileBinary":
                     String path_done = response.getString("responseData");
-                    for(Item item : items){
-                        item.updateProgressDone(this, path_done);
-                    }
+                    items.forEach((i)->i.updateProgressDone(this, path_done));
                     break;
                 case "deleteFile":
                     if(response.getString("responseData").equals("OK")){
-                        itemDelete.libItem.status = Status.NOT;
+                        itemDelete.libItem.status = Library.LibItem.Status.NOT;
                         itemDelete.newStatus();
                         break;
                     }else{
@@ -336,9 +361,6 @@ public class Main extends AppCompatActivity{
             Log.e(LOG_TAG, "Main.gotResponse: " + e.getMessage());
             Toast.makeText(this, R.string.fail_response, Toast.LENGTH_SHORT).show();
         }
-    }
-    private void gotError(String error){
-        main_error.setText(error);
     }
     private String bytesToHuman(long bytes){
         long GB = 1073741824;
