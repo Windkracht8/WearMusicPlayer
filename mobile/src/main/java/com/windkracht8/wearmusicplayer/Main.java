@@ -61,6 +61,7 @@ public class Main extends AppCompatActivity{
 
         main_available = findViewById(R.id.main_available);
         main_icon = findViewById(R.id.main_icon);
+        main_icon.setOnClickListener(view -> iconClick());
         main_sv_BT_log = findViewById(R.id.main_sv_BT_log);
         main_ll_BT_log = findViewById(R.id.main_ll_BT_log);
         main_ll = findViewById(R.id.main_ll);
@@ -180,7 +181,7 @@ public class Main extends AppCompatActivity{
 
     @Override
     public void onBackPressed(){
-        if(CommsWifi.sendingFile){
+        if(CommsWifi.isSendingFile){
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.alert_exit_title);
             builder.setMessage(R.string.alert_exit_message);
@@ -196,15 +197,25 @@ public class Main extends AppCompatActivity{
         }
     }
 
+    void iconClick(){
+        if(commsBT == null || commsBT.status == CommsBT.Status.SEARCH_TIMEOUT){
+            initBT();
+        }
+        if(commsBT != null && commsBT.status == CommsBT.Status.SEARCHING){
+            commsBT.updateStatus(CommsBT.Status.SEARCH_TIMEOUT);
+            commsBT.stopComms();
+        }
+    }
+
     void onItemStatusPressed(Item item){
         switch(item.libItem.status){
             case FULL:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.alert_delete_title);
                 builder.setMessage(R.string.alert_delete_message);
-                builder.setPositiveButton(R.string.alert_delete_positive, (dialog, which) -> {
+                builder.setPositiveButton(R.string.alert_delete_positive, (dialog, which)-> {
                     itemDelete = item;
-                    executorService.submit(() -> commsBT.sendRequest("deleteFile", item.libItem.path));
+                    executorService.submit(()-> commsBT.sendRequest("deleteFile", item.libItem.path));
                     dialog.dismiss();
                 });
                 builder.setNegativeButton(R.string.alert_delete_negative, (dialog, which) -> dialog.dismiss());
@@ -213,17 +224,21 @@ public class Main extends AppCompatActivity{
             case PARTIAL:
                 break;
             case NOT:
-                if(CommsWifi.sendingFile){
-                    Toast.makeText(this, R.string.fail_sending_file, Toast.LENGTH_SHORT).show();
+                if(CommsWifi.isSendingFile){
+                    Toast.makeText(this, R.string.fail_cannot_send_file, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if(cantSendRequest()){
                     return;
                 }
-                item.updateProgress(this);
-                executorService.submit(() -> commsWifi.sendFile(this, item));
                 String ipAddress = commsWifi.getIpAddress(this);
-                executorService.submit(() -> commsBT.sendFileDetails(item.libItem, ipAddress));
+                if(ipAddress.equals("0.0.0.0")) {
+                    gotError(getString(R.string.no_wifi));
+                    return;
+                }
+                item.updateProgress(this);
+                executorService.submit(()-> commsWifi.sendFile(this, item));
+                executorService.submit(()-> commsBT.sendFileDetails(item.libItem, ipAddress));
                 break;
         }
     }
@@ -243,14 +258,14 @@ public class Main extends AppCompatActivity{
         prevStatuses.add(status);
         if(prevStatuses.size()>2) prevStatuses.remove(0);
 
-        runOnUiThread(()->{
+        runOnUiThread(()-> {
             TextView tv = new TextView(this);
             tv.setText(status);
             tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
             main_ll_BT_log.addView(tv);
             tv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
-                public void onGlobalLayout() {
+                public void onGlobalLayout(){
                     tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                     main_sv_BT_log.fullScroll(View.FOCUS_DOWN);
                 }
@@ -259,7 +274,7 @@ public class Main extends AppCompatActivity{
     }
     void gotError(String error){
         Log.d(Main.LOG_TAG, "Main.gotError: " + error);
-        runOnUiThread(()->{
+        runOnUiThread(()-> {
             TextView tv = new TextView(this);
             tv.setText(error);
             tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
@@ -275,7 +290,7 @@ public class Main extends AppCompatActivity{
         });
     }
     void updateStatus(CommsBT.Status status){
-        runOnUiThread(()->{
+        runOnUiThread(()-> {
             switch(status){
                 case FATAL:
                     main_icon.setBackgroundResource(R.drawable.icon_watch);
@@ -284,6 +299,7 @@ public class Main extends AppCompatActivity{
                 case SEARCHING:
                     main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
                     main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                    gotFreeSpace(0);
                     ((AnimatedVectorDrawable) main_icon.getBackground()).start();
                     prevStatuses.clear();
                     gotStatus(getString(R.string.status_SEARCHING));
@@ -291,6 +307,7 @@ public class Main extends AppCompatActivity{
                 case SEARCH_TIMEOUT:
                     main_icon.setBackgroundResource(R.drawable.icon_watch);
                     main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                    gotFreeSpace(0);
                     gotError(getString(R.string.status_SEARCH_TIMEOUT));
                     items.forEach(Item::clearStatus);
                     break;
@@ -306,7 +323,7 @@ public class Main extends AppCompatActivity{
     private void sendSyncRequest(){
         Log.d(Main.LOG_TAG, "Main.sendSyncRequest");
         if(cantSendRequest()){return;}
-        try {
+        try{
             JSONObject requestData = new JSONObject();
             executorService.submit(()->commsBT.sendRequest("sync", requestData));
         }catch(Exception e){
@@ -328,18 +345,23 @@ public class Main extends AppCompatActivity{
                     executorService.submit(()->library.updateLibWithFilesOnWatch(this, tracks));
                     break;
                 case "fileDetails":
-                    Object responseDataFileDetails = response.get("responseData");
-                    if(responseDataFileDetails instanceof String){
-                        Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + responseDataFileDetails);
-                        toast(R.string.fail_response);
-                    }else{
-                        long freeSpaceFileDetails = response.getJSONObject("responseData").getLong("freeSpace");
-                        runOnUiThread(() -> gotFreeSpace(freeSpaceFileDetails));
-                    }
                     executorService.submit(()->commsWifi.stopSendFile());
+                    Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + response.get("responseData"));
+                    toast(R.string.fail_send_file);
+                    gotError(getString(R.string.fail_send_file));
                     break;
                 case "fileBinary":
-                    String path_done = response.getString("responseData");
+                    executorService.submit(()->commsWifi.stopSendFile());
+                    Object responseDataFileDetails = response.get("responseData");
+                    if(responseDataFileDetails instanceof String){
+                        Log.e(LOG_TAG, "Main.gotResponse fileBinary responseData: " + responseDataFileDetails);
+                        toast(R.string.fail_send_file);
+                        gotError(getString(R.string.fail_send_file));
+                        break;
+                    }
+                    long freeSpaceFileDetails = response.getJSONObject("responseData").getLong("freeSpace");
+                    runOnUiThread(() -> gotFreeSpace(freeSpaceFileDetails));
+                    String path_done = response.getJSONObject("responseData").getString("path");
                     runOnUiThread(()->items.forEach((i)->i.updateProgressDone(this, path_done)));
                     break;
                 case "deleteFile":
@@ -359,6 +381,10 @@ public class Main extends AppCompatActivity{
         }
     }
     private void gotFreeSpace(long freeSpace){
+        if(freeSpace == 0){
+            main_available.setText("");
+            return;
+        }
         String line = getString(R.string.available) + bytesToHuman(freeSpace);
         gotStatus(line);
         main_available.setText(bytesToHuman(freeSpace));

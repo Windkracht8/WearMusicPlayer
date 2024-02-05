@@ -6,7 +6,7 @@ android {
         minSdk 26
         targetSdk 34
         compileSdk 34
-        versionCode 102
+        versionCode 103
         versionName "1.0"
     }
     buildTypes {
