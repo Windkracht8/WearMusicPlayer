@@ -222,7 +222,7 @@ public class Main extends Activity{
         executorService.submit(()->commsBT.sendFileBinaryResponse(path));
     }
     void commsFileFailed(String path){
-        executorService.submit(()->library.addFile(this, path));
+        executorService.submit(()->library.deleteFile(this, path));
         runOnUiThread(()->main_progress.setVisibility(View.GONE));
         executorService.submit(()->commsBT.sendResponse("fileBinary", "failed"));
     }

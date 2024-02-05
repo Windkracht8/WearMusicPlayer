@@ -1,8 +1,6 @@
 package com.windkracht8.wearmusicplayer;
 
 import android.content.Context;
-import android.util.AttributeSet;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -13,9 +11,9 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import java.util.ArrayList;
 
-public class Item extends ConstraintLayout{
-    boolean isDir;
-    Library.LibItem libItem;
+class Item extends ConstraintLayout{
+    final boolean isDir;
+    final Library.LibItem libItem;
 
     TextView item_status;
     TextView item_label;
@@ -23,14 +21,12 @@ public class Item extends ConstraintLayout{
     private final ArrayList<Item> items = new ArrayList<>();
     private boolean isExpanded = false;
 
-    public Item(Context context, AttributeSet attrs){super(context, attrs);}
-    public Item(Main main, Library.LibDir libDir){
+    Item(Main main, Library.LibDir libDir){
         super(main);
         this.libItem = libDir;
         isDir = true;
         show(main);
         item_label.setTextAppearance(R.style.w8TextViewStyleBold);
-        item_label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
 
         LinearLayout item_items = findViewById(R.id.item_items);
         for(Library.LibDir libDirSub : libDir.libDirs){
@@ -44,7 +40,7 @@ public class Item extends ConstraintLayout{
             item_items.addView(item);
         }
     }
-    public Item(Main main, Library.LibTrack libTrack){
+    Item(Main main, Library.LibTrack libTrack){
         super(main);
         this.libItem = libTrack;
         isDir = false;
@@ -63,12 +59,14 @@ public class Item extends ConstraintLayout{
         newStatus();
 
         if(libItem.depth > 0){
-            this.setVisibility(View.GONE);
+            setVisibility(View.GONE);
         }
 
         int margin = getResources().getDimensionPixelSize(R.dimen.dp5) * libItem.depth;
         ((LinearLayout.LayoutParams) item_label.getLayoutParams()).setMarginStart(margin);
         item_label.setText(libItem.name);
+
+        getViewTreeObserver().addOnGlobalLayoutListener(()-> item_label.setY(0.0F));//This is to fix, which I assume, is a bug in Android
     }
 
     void clearStatus(){
@@ -130,5 +128,4 @@ public class Item extends ConstraintLayout{
         int view = isExpanded ? View.VISIBLE : View.GONE;
         items.forEach((i)-> i.setVisibility(view));
     }
-
 }

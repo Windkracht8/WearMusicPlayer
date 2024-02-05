@@ -23,7 +23,7 @@ import java.io.OutputStream;
 import java.util.Date;
 import java.util.UUID;
 
-public class CommsBT{
+class CommsBT{
     private final UUID WMP_UUID = UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6e1");
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothServerSocket bluetoothServerSocket;
@@ -33,15 +33,15 @@ public class CommsBT{
     private final Main main;
     private final Handler handler;
 
-    private boolean closeConnection = false;
+    private boolean closeConnection;
     private final JSONArray responseQueue = new JSONArray();
 
-    public CommsBT(Main main){
+    CommsBT(Main main){
         this.main = main;
         handler = new Handler(Looper.getMainLooper());
     }
 
-    private void gotRequest(final String request){
+    private void gotRequest(String request){
         Log.d(Main.LOG_TAG, "CommsBT.gotRequest: " + request);
         try{
             JSONObject requestMessage = new JSONObject(request);
@@ -91,7 +91,7 @@ public class CommsBT{
             sendResponse("sync", "unexpected error");
         }
     }
-    void sendResponse(final String requestType, final String responseData){
+    void sendResponse(String requestType, String responseData){
         try{
             JSONObject response = new JSONObject();
             response.put("requestType", requestType);
@@ -114,7 +114,7 @@ public class CommsBT{
             main.toast(R.string.fail_respond);
         }
     }
-    void sendResponse(final String requestType, final JSONObject responseData){
+    private void sendResponse(String requestType, JSONObject responseData){
         try{
             JSONObject response = new JSONObject();
             response.put("requestType", requestType);
@@ -177,7 +177,7 @@ public class CommsBT{
 
     private class CommsBTConnect extends Thread{
         @SuppressLint("MissingPermission")//Permissions are handled in initBT
-        public CommsBTConnect(){
+        CommsBTConnect(){
             try{
                 Log.d(Main.LOG_TAG, "CommsBTConnect");
                 bluetoothServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("WearMusicPlayer", WMP_UUID);
@@ -207,7 +207,7 @@ public class CommsBT{
         private InputStream inputStream;
         private OutputStream outputStream;
 
-        public CommsBTConnected(){
+        CommsBTConnected(){
             try{
                 Log.d(Main.LOG_TAG, "CommsBTConnected.getInputStream");
                 inputStream = bluetoothSocket.getInputStream();
