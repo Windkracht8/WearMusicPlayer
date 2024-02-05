@@ -61,7 +61,7 @@ public class Main extends AppCompatActivity{
 
         main_available = findViewById(R.id.main_available);
         main_icon = findViewById(R.id.main_icon);
-        main_icon.setOnClickListener(view -> iconClick());
+        main_icon.setOnClickListener(view -> onIconClick());
         main_sv_BT_log = findViewById(R.id.main_sv_BT_log);
         main_ll_BT_log = findViewById(R.id.main_ll_BT_log);
         main_ll = findViewById(R.id.main_ll);
@@ -197,7 +197,7 @@ public class Main extends AppCompatActivity{
         }
     }
 
-    void iconClick(){
+    void onIconClick(){
         if(commsBT == null || commsBT.status == CommsBT.Status.SEARCH_TIMEOUT){
             initBT();
         }
