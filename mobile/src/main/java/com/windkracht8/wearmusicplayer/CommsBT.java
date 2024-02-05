@@ -49,7 +49,7 @@ public class CommsBT{
         handler = new Handler(Looper.getMainLooper());
     }
 
-    public void sendFileDetails(Library.LibItem libItem, String ipAddress){
+    void sendFileDetails(Library.LibItem libItem, String ipAddress){
         try{
             java.io.File file = new java.io.File(libItem.uri);
             libItem.length = file.length();
@@ -63,7 +63,8 @@ public class CommsBT{
             Log.e(Main.LOG_TAG, "CommsBT.sendFileDetails exception: " + e.getMessage());
         }
     }
-    public void sendRequest(String requestType, String requestData){
+    /** @noinspection SameParameterValue*/
+    void sendRequest(String requestType, String requestData){
         Log.d(Main.LOG_TAG, "CommsBT.sendRequest: " + requestType);
         try{
             JSONObject request = new JSONObject();
@@ -74,7 +75,7 @@ public class CommsBT{
             Log.e(Main.LOG_TAG, "CommsBT.sendRequest Exception: " + e.getMessage());
         }
     }
-    public void sendRequest(String requestType, JSONObject requestData){
+    void sendRequest(String requestType, JSONObject requestData){
         Log.d(Main.LOG_TAG, "CommsBT.sendRequest: " + requestType);
         try{
             JSONObject request = new JSONObject();
@@ -100,13 +101,13 @@ public class CommsBT{
         updateStatus(Status.FATAL);
         main.gotError(message);
     }
-    public void updateStatus(Status status){
+    void updateStatus(Status status){
         Log.d(Main.LOG_TAG, "CommsBT.updateStatus " + this.status + " > " + status);
         if(this.status != status) main.updateStatus(status);
         this.status = status;
     }
 
-    public void startComms(){
+    void startComms(){
         Log.d(Main.LOG_TAG, "CommsBT.startComms");
         if(status == Status.INIT){
             BluetoothManager bluetoothManager = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -150,7 +151,7 @@ public class CommsBT{
         wmp_device_addresses = Main.sharedPreferences.getStringSet("wmp_device_addresses", wmp_device_addresses);
         search();
     }
-    public void stopComms(){
+    void stopComms(){
         Log.d(Main.LOG_TAG, "CommsBT.stopComms");
         closeConnection = true;
         devices_fetch_pending.clear();
