@@ -40,6 +40,7 @@ public class CommsBT{
         this.main = main;
         handler = new Handler(Looper.getMainLooper());
     }
+
     private void gotRequest(final String request){
         Log.d(Main.LOG_TAG, "CommsBT.gotRequest: " + request);
         try{
@@ -124,6 +125,7 @@ public class CommsBT{
             main.toast(R.string.fail_respond);
         }
     }
+
     private final BroadcastReceiver btStateReceiver = new BroadcastReceiver(){
         public void onReceive(Context context, Intent intent){
             if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())){
@@ -151,7 +153,6 @@ public class CommsBT{
         commsBTConnect = new CommsBTConnect();
         commsBTConnect.start();
     }
-
     void stopComms(){
         Log.d(Main.LOG_TAG, "CommsBT.stopComms");
         closeConnection = true;
@@ -185,7 +186,6 @@ public class CommsBT{
                 Log.e(Main.LOG_TAG, "CommsBTConnect Exception: " + e.getMessage());
             }
         }
-
         public void run(){
             try{
                 Log.d(Main.LOG_TAG, "CommsBTConnect.run");
@@ -221,12 +221,10 @@ public class CommsBT{
                 Log.e(Main.LOG_TAG, "CommsBTConnected getOutputStream Exception: " + e.getMessage());
             }
         }
-
         public void run(){
             Log.d(Main.LOG_TAG, "CommsBTConnected.run");
             process();
         }
-
         private void process(){
             if(closeConnection){
                 return;
@@ -247,7 +245,6 @@ public class CommsBT{
             read();
             handler.postDelayed(this::process, 100);
         }
-
         private boolean sendNextResponse(){
             try{
                 JSONObject response = (JSONObject) responseQueue.get(0);
@@ -255,12 +252,9 @@ public class CommsBT{
                 Log.d(Main.LOG_TAG, "CommsBTConnected.sendNextResponse: " + response.toString());
                 outputStream.write(response.toString().getBytes());
             }catch(Exception e){
-                if(e.getMessage() != null && e.getMessage().contains("Broken pipe")){
-                    Log.d(Main.LOG_TAG, "Connection closed");
-                    return false;
-                }
                 Log.e(Main.LOG_TAG, "CommsBTConnected.sendNextResponse Exception: " + e.getMessage());
                 main.toast(R.string.fail_respond);
+                return false;
             }
             return true;
         }

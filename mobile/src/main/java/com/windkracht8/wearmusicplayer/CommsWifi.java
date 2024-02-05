@@ -12,12 +12,12 @@ import java.util.Locale;
 
 public class CommsWifi{
     static final int PORT_NUMBER = 9002;
-    static boolean sendingFile = false;
+    static boolean isSendingFile = false;
     private Socket socket;
 
     public CommsWifi(){}
     void stopSendFile(){
-        sendingFile = false;
+        isSendingFile = false;
         try{
             socket.close();
         }catch(Exception e){
@@ -32,9 +32,9 @@ public class CommsWifi{
     }
     void sendFile(Main main, Item item){
         Library.LibItem libItem = item.libItem;
-        sendingFile = true;
+        isSendingFile = true;
         try(ServerSocket serverSocket = new ServerSocket(PORT_NUMBER)){
-            while(sendingFile){
+            while(isSendingFile){
                 socket = serverSocket.accept();
                 try(FileInputStream fileInputStream = new FileInputStream(libItem.uri.getPath())){
                     long bytesDone = 0;
@@ -51,7 +51,7 @@ public class CommsWifi{
                         libItem.progress = bytesDone;
                         item.updateProgress(main);
                     }
-                    sendingFile = false;
+                    isSendingFile = false;
                 }catch(Exception e){
                     Log.e(Main.LOG_TAG, "CommsWifi.sendFile FileInputStream exception: " + e.getMessage());
                 }
