@@ -143,50 +143,37 @@ public class Main extends Activity{
     }
     private void requestPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH) &&
-                    hasPermission(Manifest.permission.BLUETOOTH_CONNECT) &&
-                    hasPermission(Manifest.permission.BLUETOOTH_SCAN);
-            if(!hasPermission(Manifest.permission.POST_NOTIFICATIONS) ||
-                    !hasPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE) ||
-                    !hasPermission(android.Manifest.permission.BLUETOOTH) ||
-                    !hasPermission(android.Manifest.permission.BLUETOOTH_CONNECT) ||
-                    !hasPermission(android.Manifest.permission.BLUETOOTH_SCAN)
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                    && hasPermission(Manifest.permission.BLUETOOTH_SCAN);
+            if(!hasBTPermission
+                    || !hasPermission(Manifest.permission.POST_NOTIFICATIONS)
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
-                        android.Manifest.permission.POST_NOTIFICATIONS,
-                        android.Manifest.permission.MANAGE_EXTERNAL_STORAGE,
-                        android.Manifest.permission.BLUETOOTH,
-                        android.Manifest.permission.BLUETOOTH_CONNECT,
-                        android.Manifest.permission.BLUETOOTH_SCAN
-                }, 1);
+                        Manifest.permission.POST_NOTIFICATIONS
+                        ,Manifest.permission.BLUETOOTH_CONNECT
+                        ,Manifest.permission.BLUETOOTH_SCAN}, 1);
             }
         }else if(Build.VERSION.SDK_INT >= 31){
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH) &&
-                    hasPermission(Manifest.permission.BLUETOOTH_CONNECT) &&
-                    hasPermission(Manifest.permission.BLUETOOTH_SCAN);
-            if(!hasPermission(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE) ||
-                    !hasPermission(android.Manifest.permission.BLUETOOTH) ||
-                    !hasPermission(android.Manifest.permission.BLUETOOTH_CONNECT) ||
-                    !hasPermission(android.Manifest.permission.BLUETOOTH_SCAN)
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                    && hasPermission(Manifest.permission.BLUETOOTH_SCAN);
+            if(!hasBTPermission
+                    || !hasPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
-                                android.Manifest.permission.MANAGE_EXTERNAL_STORAGE,
-                                android.Manifest.permission.BLUETOOTH,
-                                android.Manifest.permission.BLUETOOTH_CONNECT,
-                                android.Manifest.permission.BLUETOOTH_SCAN},
-                        1);
+                                Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                                ,Manifest.permission.BLUETOOTH_CONNECT
+                                ,Manifest.permission.BLUETOOTH_SCAN}, 1);
             }
         }else{//30
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH);
-            if(!hasPermission(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE) ||
-                    !hasPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) ||
-                    !hasPermission(android.Manifest.permission.BLUETOOTH)
+            if(!hasBTPermission
+                    || !hasPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+                    || !hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
-                                android.Manifest.permission.MANAGE_EXTERNAL_STORAGE,
-                                android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                                android.Manifest.permission.BLUETOOTH},
-                        1);
+                                Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                                ,Manifest.permission.READ_EXTERNAL_STORAGE
+                                ,Manifest.permission.BLUETOOTH}, 1);
             }
         }
         if(hasBTPermission) initBT();
