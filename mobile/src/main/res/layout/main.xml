@@ -6,16 +6,16 @@
     android:layout_height="match_parent">
     <TextView
         android:id="@+id/main_available"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="80sp"
+        android:layout_height="80sp"
         android:gravity="center"
         android:textSize="14sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
     <ImageView
         android:id="@+id/main_icon"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="80sp"
+        android:layout_height="80sp"
         android:contentDescription="@string/main_icon_desc"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -23,7 +23,7 @@
     <ScrollView
         android:id="@+id/main_sv_BT_log"
         android:layout_width="0dp"
-        android:layout_height="80dp"
+        android:layout_height="80sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/main_icon"
         app:layout_constraintTop_toTopOf="parent" >
@@ -48,6 +48,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
+        android:contentDescription="@string/main_sv_desc"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_loading"

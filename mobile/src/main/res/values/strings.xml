@@ -4,7 +4,8 @@
     <!-- main ui -->
     <string name="main_icon_desc">icon</string>
     <string name="main_loading_text">loading file list</string>
-    <string name="available">Available: </string>
+    <string name="main_sv_desc">File overview</string>
+    <string name="available">Available:</string>
 
     <string name="alert_exit_title">Upload in progress</string>
     <string name="alert_exit_message">Stop sending file and close?</string>
