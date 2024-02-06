@@ -10,7 +10,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Locale;
 
-public class CommsWifi{
+class CommsWifi{
     static final int PORT_NUMBER = 9002;
     static boolean isSendingFile = false;
     private Socket socket;

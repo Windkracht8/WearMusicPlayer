@@ -16,7 +16,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Library{
+class Library{
     static String exStorageDir;
     final ArrayList<Track> tracks = new ArrayList<>();
     final ArrayList<Artist> artists = new ArrayList<>();
@@ -24,7 +24,7 @@ public class Library{
 
     static int libraryScanVersion = 0;
 
-    public Library(){
+    Library(){
         exStorageDir = Environment.getExternalStorageDirectory().toString();
     }
     JSONArray getTracks(Main main){
@@ -180,12 +180,12 @@ public class Library{
     }
     class Track implements Comparable<Track>{
         final Uri uri;//content://media/external/audio/media/32
-        final String path;//Music/Austrian Death Machine - Jingle Bells.mp3
+        private final String path;//Music/Austrian Death Machine - Jingle Bells.mp3
         final String title;//Jingle Bells
         final Artist artist;
-        final Album album;
-        final String track_no;
-        public Track(Context context, Uri uri, String path, String title, String artistName, String albumName, String albumArtist, String track_no){
+        private final Album album;
+        private final String track_no;
+        private Track(Context context, Uri uri, String path, String title, String artistName, String albumName, String albumArtist, String track_no){
             this.uri = uri;
             this.path = path.substring(exStorageDir.length()+1);
             this.title = title;
@@ -196,7 +196,7 @@ public class Library{
             artist.addAlbum(album);
             tracks.add(this);
         }
-        JSONObject toJson(Main main){
+        private JSONObject toJson(Main main){
             JSONObject object = new JSONObject();
             try{
                 object.put("path", path);
@@ -210,18 +210,18 @@ public class Library{
         public int compareTo(Track track){
             int album = this.album.name.compareTo(track.album.name);
             if(album != 0) return album;
-            if(this.track_no != null && track.track_no != null){
+            if(track_no != null && track.track_no != null){
                 int track_no = this.track_no.compareTo(track.track_no);
                 if(track_no != 0) return track_no;
             }
-            return this.title.compareTo(track.title);
+            return title.compareTo(track.title);
         }
     }
     class Artist implements Comparable<Artist>{
         final String name;
         final ArrayList<Track> artist_tracks = new ArrayList<>();
         final ArrayList<Album> artist_albums = new ArrayList<>();
-        public Artist(Track track, String artistName){
+        private Artist(Track track, String artistName){
             name = artistName == null ? "<empty>" : artistName;
             artist_tracks.add(track);
             artists.add(this);
@@ -232,14 +232,14 @@ public class Library{
         }
         @Override
         public int compareTo(Artist artist){
-            return this.name.compareTo(artist.name);
+            return name.compareTo(artist.name);
         }
-        void sort(){
+        private void sort(){
             Collections.sort(artist_tracks);
             Collections.sort(artist_albums);
         }
     }
-    Artist getArtistForNewTrack(Track track, String artistName){
+    private Artist getArtistForNewTrack(Track track, String artistName){
         for(Artist artist : artists){
             if(artist.name.equals(artistName)){
                 artist.artist_tracks.add(track);
@@ -252,7 +252,7 @@ public class Library{
         final String name;
         String artist;
         final ArrayList<Track> album_tracks = new ArrayList<>();
-        public Album(Track track, String albumName, String albumArtist){
+        private Album(Track track, String albumName, String albumArtist){
             name = albumName == null ? "<empty>" : albumName;
             artist = albumArtist;
             album_tracks.add(track);
@@ -260,13 +260,13 @@ public class Library{
         }
         @Override
         public int compareTo(Album album){
-            return this.name.compareTo(album.name);
+            return name.compareTo(album.name);
         }
-        void sort(){
+        private void sort(){
             Collections.sort(album_tracks);
         }
     }
-    Album getAlbumForNewTrack(Context context, Track track, String albumName, String albumArtist){
+    private Album getAlbumForNewTrack(Context context, Track track, String albumName, String albumArtist){
         for(Album album : albums){
             if(album.name.equals(albumName)){
                 if(album.artist != null && !album.artist.equals(albumArtist)){

@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@SuppressLint("MissingPermission") //Permissions are handled in initBT
+@SuppressLint("MissingPermission")//Permissions are handled in initBT
 public class CommsBT{
     private final String WMP_UUID = "6f34da3f-188a-4c8c-989c-2baacf8ea6e1";
     private BluetoothAdapter bluetoothAdapter;
@@ -239,7 +239,7 @@ public class CommsBT{
     }
     private class CommsBTConnect extends Thread{
         private final BluetoothDevice device;
-        public CommsBTConnect(BluetoothDevice device){
+        private CommsBTConnect(BluetoothDevice device){
             Log.d(Main.LOG_TAG, "CommsBTConnect " + device.getName());
             this.device = device;
             try{
@@ -273,7 +273,7 @@ public class CommsBT{
         private InputStream inputStream;
         private OutputStream outputStream;
 
-        public CommsBTConnected(){
+        CommsBTConnected(){
             Log.d(Main.LOG_TAG, "CommsBTConnected");
             try{
                 inputStream = bluetoothSocket.getInputStream();

@@ -116,21 +116,21 @@ public class Library{
 
         @Override
         public int compareTo(LibItem libItem){
-            return this.name.compareTo(libItem.name);
+            return name.compareTo(libItem.name);
         }
     }
     static class LibTrack extends LibItem{
-        LibTrack(URI uri){
+        private LibTrack(URI uri){
             super(uri);
         }
     }
     static class LibDir extends LibItem{
         final ArrayList<LibTrack> libTracks = new ArrayList<>();
         final ArrayList<LibDir> libDirs = new ArrayList<>();
-        LibDir(URI uri){
+        private LibDir(URI uri){
             super(uri);
         }
-        void sort(){
+        private void sort(){
             Collections.sort(libTracks);
             Collections.sort(libDirs);
         }

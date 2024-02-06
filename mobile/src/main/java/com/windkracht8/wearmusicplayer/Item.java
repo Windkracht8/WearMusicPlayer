@@ -12,18 +12,18 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import java.util.ArrayList;
 
 class Item extends ConstraintLayout{
-    final boolean isDir;
+    private final boolean isDir;
     final Library.LibItem libItem;
 
-    TextView item_status;
-    TextView item_label;
+    private TextView item_status;
+    private TextView item_label;
 
     private final ArrayList<Item> items = new ArrayList<>();
     private boolean isExpanded = false;
 
     Item(Main main, Library.LibDir libDir){
         super(main);
-        this.libItem = libDir;
+        libItem = libDir;
         isDir = true;
         show(main);
         item_label.setTextAppearance(R.style.w8TextViewStyleBold);
@@ -42,7 +42,7 @@ class Item extends ConstraintLayout{
     }
     Item(Main main, Library.LibTrack libTrack){
         super(main);
-        this.libItem = libTrack;
+        libItem = libTrack;
         isDir = false;
         show(main);
     }
@@ -122,7 +122,7 @@ class Item extends ConstraintLayout{
         }
         items.forEach((i)-> i.updateProgressDone(main, path));
     }
-    void onLabelPressed(){
+    private void onLabelPressed(){
         if(!isDir) return;
         isExpanded = !isExpanded;
         int view = isExpanded ? View.VISIBLE : View.GONE;
