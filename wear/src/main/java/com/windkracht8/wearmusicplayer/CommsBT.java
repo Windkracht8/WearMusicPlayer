@@ -177,7 +177,7 @@ class CommsBT{
 
     private class CommsBTConnect extends Thread{
         @SuppressLint("MissingPermission")//Permissions are handled in initBT
-        CommsBTConnect(){
+        private CommsBTConnect(){
             try{
                 Log.d(Main.LOG_TAG, "CommsBTConnect");
                 bluetoothServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("WearMusicPlayer", WMP_UUID);

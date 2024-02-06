@@ -20,7 +20,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
-public class W8Player{
+class W8Player{
     private final Handler handler;
     private final ExoPlayer exoPlayer;
     public W8Player(Main main){

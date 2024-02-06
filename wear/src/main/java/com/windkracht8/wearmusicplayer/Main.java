@@ -44,7 +44,7 @@ public class Main extends Activity{
     private TextView main_song_title;
     private TextView main_song_artist;
     private TextView main_library;
-    Progress main_progress;
+    private Progress main_progress;
     private MenuLibrary main_menu_library;
     MenuArtists main_menu_artists;
     MenuArtist main_menu_artist;
@@ -56,7 +56,7 @@ public class Main extends Activity{
     private AudioManager audioManager;
 
     static int heightPixels;
-    static int widthPixels;
+    private static int widthPixels;
     static int vh25;
     static int vw20;
     static int vh75;
@@ -201,7 +201,7 @@ public class Main extends Activity{
             initBT();
         }
     }
-    void initBT(){
+    private void initBT(){
         if(!hasBTPermission) return;
         commsBT = new CommsBT(this);
         executorService.submit(() -> commsBT.startComms());
@@ -358,7 +358,7 @@ public class Main extends Activity{
         return true; //Just to let Google know we are listening to rotary events
     }
 
-    void onMainClick(){
+    private void onMainClick(){
         //We need to do this to make sure that we can listen for onTouch on main
         Log.i(LOG_TAG, "onMainClick");
     }
@@ -449,7 +449,7 @@ public class Main extends Activity{
     private float getBackSwipeVelocity(MotionEvent event, float diffX){
         return (diffX / (event.getEventTime() - event.getDownTime())) * 1000;
     }
-    static String prettyTimer(long milli_secs){
+    private static String prettyTimer(long milli_secs){
         long tmp = milli_secs % 1000;
         long secs = (milli_secs - tmp) / 1000;
         tmp = secs % 60;

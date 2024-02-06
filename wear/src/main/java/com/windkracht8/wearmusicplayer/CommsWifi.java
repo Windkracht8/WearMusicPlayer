@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.Socket;
 
-public class CommsWifi{
+class CommsWifi{
     static void receiveFile(Main main, String path, long length, String ip, int port){
         long bytesDone = 0;
         Log.d(Main.LOG_TAG, "CommsWifi.receiveFile path: " + path);

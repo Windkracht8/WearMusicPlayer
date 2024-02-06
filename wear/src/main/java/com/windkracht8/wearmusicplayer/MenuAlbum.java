@@ -5,7 +5,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 public class MenuAlbum extends Menu{
-    Library.Album album;
+    private Library.Album album;
     public MenuAlbum(Context context, AttributeSet attrs){
         super(context, attrs);
     }

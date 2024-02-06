@@ -5,7 +5,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 public class MenuArtist extends Menu{
-    Library.Artist artist;
+    private Library.Artist artist;
     public MenuArtist(Context context, AttributeSet attrs){
         super(context, attrs);
     }

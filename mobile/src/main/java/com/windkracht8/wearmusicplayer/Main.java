@@ -197,7 +197,7 @@ public class Main extends AppCompatActivity{
         }
     }
 
-    void onIconClick(){
+    private void onIconClick(){
         if(commsBT == null || commsBT.status == CommsBT.Status.SEARCH_TIMEOUT){
             initBT();
         }
@@ -251,7 +251,7 @@ public class Main extends AppCompatActivity{
         return true;
     }
 
-    void gotStatus(final String status){
+    void gotStatus(String status){
         if(prevStatuses.contains(status)){
             return;
         }
@@ -332,7 +332,7 @@ public class Main extends AppCompatActivity{
         }
     }
 
-    void gotResponse(final JSONObject response){
+    void gotResponse(JSONObject response){
         try{
             String requestType = response.getString("requestType");
             gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
