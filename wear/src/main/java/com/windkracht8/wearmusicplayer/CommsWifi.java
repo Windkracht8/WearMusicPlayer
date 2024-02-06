@@ -1,18 +1,57 @@
 package com.windkracht8.wearmusicplayer;
 
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.Socket;
 
 class CommsWifi{
-    static void receiveFile(Main main, String path, long length, String ip, int port){
+    private static ConnectivityManager connectivityManager;
+    static void receiveFile(Main main, String path, long length, String ip, int port) {
+        Log.d(Main.LOG_TAG, "CommsWifi path: " + path);
+        Log.d(Main.LOG_TAG, "CommsWifi length: " + length);
+        Log.d(Main.LOG_TAG, "CommsWifi ip: " + ip);
+        Log.d(Main.LOG_TAG, "CommsWifi port: " + port);
+
+        if(connectivityManager == null){
+            connectivityManager = (ConnectivityManager)main.getSystemService(Main.CONNECTIVITY_SERVICE);
+        }
+        try{
+            connectivityManager.requestNetwork(
+                    new NetworkRequest.Builder()
+                            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                            .build()
+                    , new ConnectivityManager.NetworkCallback() {
+                        public void onAvailable(@NonNull Network network){
+                            super.onAvailable(network);
+                            Log.d(Main.LOG_TAG, "CommsWifi.NetworkCallback.onAvailable");
+                            connectivityManager.bindProcessToNetwork(network);
+                            readFileFromStream(main, path, length, ip, port);
+                        }
+                        public void onUnavailable(){
+                            super.onUnavailable();
+                            Log.d(Main.LOG_TAG, "CommsWifi.NetworkCallback.onUnavailable");
+                            main.toast(R.string.fail_wifi_fast);
+                            readFileFromStream(main, path, length, ip, port);
+                        }
+                    }
+                    , 2000
+            );
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "CommsWifi " + e.getMessage());
+            main.toast(R.string.fail_wifi_fast);
+        }
+    }
+    private static void readFileFromStream(Main main, String path, long length, String ip, int port){
+        Log.d(Main.LOG_TAG, "CommsWifi.readFileFromStream");
         long bytesDone = 0;
-        Log.d(Main.LOG_TAG, "CommsWifi.receiveFile path: " + path);
-        Log.d(Main.LOG_TAG, "CommsWifi.receiveFile length: " + length);
-        Log.d(Main.LOG_TAG, "CommsWifi.receiveFile ip: " + ip);
-        Log.d(Main.LOG_TAG, "CommsWifi.receiveFile port: " + port);
         try(Socket socket = new Socket(ip, port)){
             InputStream inputStream = socket.getInputStream();
             try(FileOutputStream fileOutputStream = new FileOutputStream(Library.exStorageDir + "/" + path)){
@@ -29,6 +68,7 @@ class CommsWifi{
                     if(numBytes < 0){
                         Log.e(Main.LOG_TAG, "CommsWifi.receiveFile read error");
                         main.commsFileFailed(path);
+                        connectivityManager.bindProcessToNetwork(null);
                         return;
                     }
                     fileOutputStream.write(buffer, 0, numBytes);
@@ -38,6 +78,7 @@ class CommsWifi{
                     main.commsProgress((int)progress);
                     if(bytesDone >= length){
                         main.commsFileDone(path);
+                        connectivityManager.bindProcessToNetwork(null);
                         return;
                     }
                 }
@@ -53,6 +94,7 @@ class CommsWifi{
         }
         //if we get here it failed
         main.commsFileFailed(path);
+        connectivityManager.bindProcessToNetwork(null);
     }
     private static void sleep100(){
         try{

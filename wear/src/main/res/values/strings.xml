@@ -35,6 +35,7 @@
     <string name="fail_request">Problem with request from phone</string>
     <string name="fail_respond">Failed to respond to phone</string>
     <string name="fail_wifi">Wifi connection failed</string>
+    <string name="fail_wifi_fast">Failed to request connection over wifi</string>
     <string name="fail_create_file">Failed to create file</string>
     <string name="fail_delete_file">Failed to delete file</string>
     <string name="fail_scan_media">Problem with finding tracks</string>
