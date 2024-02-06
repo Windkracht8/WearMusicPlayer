@@ -9,7 +9,7 @@ public class MenuArtists extends Menu{
         super(context, attrs);
     }
 
-    public void show(Main main){
+    void show(Main main){
         super.show(main, Main.library.artists.size(), main.getString(R.string.artists));
     }
     @Override

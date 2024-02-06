@@ -24,6 +24,7 @@
         android:id="@+id/main_sv_BT_log"
         android:layout_width="0dp"
         android:layout_height="80sp"
+        android:contentDescription="@string/main_sv_BT_log_desc"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/main_icon"
         app:layout_constraintTop_toTopOf="parent" >

@@ -60,12 +60,10 @@ class Item extends ConstraintLayout{
 
         if(libItem.depth > 0){
             setVisibility(View.GONE);
+            int margin = getResources().getDimensionPixelSize(R.dimen.dp5) * libItem.depth;
+            ((LinearLayout.LayoutParams) item_label.getLayoutParams()).setMarginStart(margin);
         }
-
-        int margin = getResources().getDimensionPixelSize(R.dimen.dp5) * libItem.depth;
-        ((LinearLayout.LayoutParams) item_label.getLayoutParams()).setMarginStart(margin);
         item_label.setText(libItem.name);
-
         getViewTreeObserver().addOnGlobalLayoutListener(()-> item_label.setY(0.0F));//This is to fix, which I assume, is a bug in Android
     }
 

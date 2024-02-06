@@ -9,10 +9,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class MenuItem extends LinearLayout{
-    public int index;
+    int index;
 
     public MenuItem(Context context, AttributeSet attrs){super(context, attrs);}
-    public MenuItem(Main main, int index, String primary, String secondary){
+    MenuItem(Main main, int index, String primary, String secondary){
         super(main);
         LayoutInflater inflater = (LayoutInflater) main.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if(inflater == null){Toast.makeText(main, R.string.fail_show_menu, Toast.LENGTH_SHORT).show();return;}

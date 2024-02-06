@@ -23,7 +23,8 @@ import android.widget.Toast;
 class W8Player{
     private final Handler handler;
     private final ExoPlayer exoPlayer;
-    public W8Player(Main main){
+    private MediaSession mediaSession;
+    W8Player(Main main){
         handler = new Handler(Looper.getMainLooper());
         exoPlayer = new ExoPlayer.Builder(main).build();
         exoPlayer.addListener(
@@ -42,8 +43,8 @@ class W8Player{
             }
         );
 
-        MediaSession mediaSession = new MediaSession(main, Main.LOG_TAG);
-        mediaSession.setCallback(new Callback() {
+        mediaSession = new MediaSession(main, Main.LOG_TAG);
+        mediaSession.setCallback(new Callback(){
             @Override
             public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent){
                 KeyEvent keyEvent;
@@ -52,17 +53,14 @@ class W8Player{
                 }else{
                     keyEvent = mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
                 }
-                if(keyEvent == null) return false;
+                Log.d(Main.LOG_TAG, "W8Player.MediaSession.onMediaButtonEvent keyEvent: " + keyEvent);
+                if(keyEvent == null || keyEvent.getAction() != KeyEvent.ACTION_UP) return false;
                 switch(keyEvent.getKeyCode()){
                     case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
                         main.bPreviousPressed();
                         return true;
                     case KeyEvent.KEYCODE_MEDIA_PLAY:
-                        exoPlayer.play();
-                        return true;
                     case KeyEvent.KEYCODE_MEDIA_PAUSE:
-                        exoPlayer.pause();
-                        return true;
                     case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                         playPause();
                         return true;
@@ -73,11 +71,20 @@ class W8Player{
                 return false;
             }
             @Override
-            public void onPlay(){exoPlayer.play();}
+            public void onPlay(){
+                Log.d(Main.LOG_TAG, "W8Player.MediaSession.onPlay");
+                exoPlayer.play();
+            }
             @Override
-            public void onPause(){exoPlayer.pause();}
+            public void onPause(){
+                Log.d(Main.LOG_TAG, "W8Player.MediaSession.onPause");
+                exoPlayer.pause();
+            }
             @Override
-            public void onStop(){exoPlayer.stop();}
+            public void onStop(){
+                Log.d(Main.LOG_TAG, "W8Player.MediaSession.onStop");
+                exoPlayer.stop();
+            }
         });
     }
     void playTrack(Context context, Uri uri){
@@ -102,6 +109,7 @@ class W8Player{
         }
     }
     void playPause(){
+        Log.d(Main.LOG_TAG, "W8Player.playPause");
         if(exoPlayer.isPlaying()){
             exoPlayer.pause();
             exoPlayer.setPlayWhenReady(false);

@@ -8,7 +8,7 @@ public class MenuAlbums extends Menu{
         super(context, attrs);
     }
 
-    public void show(Main main){
+    void show(Main main){
         super.show(main, Main.library.albums.size(), main.getString(R.string.albums));
     }
     @Override
