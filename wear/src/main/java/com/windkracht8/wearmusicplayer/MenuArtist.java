@@ -10,7 +10,7 @@ public class MenuArtist extends Menu{
         super(context, attrs);
     }
 
-    public void show(Main main, int index){
+    void show(Main main, int index){
         //TODO: first show albums, than tracks
         try{
             artist = Main.library.artists.get(index);

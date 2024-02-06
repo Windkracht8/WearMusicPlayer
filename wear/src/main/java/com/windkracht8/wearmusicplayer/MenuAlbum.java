@@ -10,7 +10,7 @@ public class MenuAlbum extends Menu{
         super(context, attrs);
     }
 
-    public void show(Main main, int index){
+    void show(Main main, int index){
         try{
             album = Main.library.albums.get(index);
             super.show(main, album.album_tracks.size(), album.name);

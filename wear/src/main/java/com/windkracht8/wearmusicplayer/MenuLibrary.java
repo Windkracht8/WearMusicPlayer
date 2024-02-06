@@ -9,7 +9,7 @@ public class MenuLibrary extends Menu{
         super(context, attrs);
     }
 
-    public void show(Main main){
+    void show(Main main){
         super.show(main, 3, main.getString(R.string.menu_library_label));
     }
     @Override

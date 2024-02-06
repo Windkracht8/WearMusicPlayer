@@ -4,6 +4,7 @@
     <!-- main ui -->
     <string name="main_icon_desc">icon</string>
     <string name="main_loading_text">loading file list</string>
+    <string name="main_sv_BT_log_desc">Bluetooth log</string>
     <string name="main_sv_desc">File overview</string>
     <string name="available">Available:</string>
 
