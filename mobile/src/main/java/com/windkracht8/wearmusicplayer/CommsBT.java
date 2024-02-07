@@ -44,6 +44,7 @@ public class CommsBT{
     private final ArrayList<String> devices_fetch_pending = new ArrayList<>();
     private Set<BluetoothDevice> bondedDevices;
     private final JSONArray requestQueue = new JSONArray();
+    private String fileNameInRequestQueue;
 
     public CommsBT(Main main){
         this.main = main;
@@ -52,6 +53,7 @@ public class CommsBT{
 
     void sendFileDetails(Library.LibItem libItem, String ipAddress){
         try{
+            fileNameInRequestQueue = libItem.name;
             java.io.File file = new java.io.File(libItem.uri);
             libItem.length = file.length();
             JSONObject requestData = new JSONObject();
@@ -337,7 +339,12 @@ public class CommsBT{
                 JSONObject request = (JSONObject) requestQueue.get(0);
                 requestQueue.remove(0);
                 Log.d(Main.LOG_TAG, "CommsBTConnected.sendNextRequest: " + request.toString());
-                main.gotStatus(String.format("%s %s", main.getString(R.string.send_request), request.getString("requestType")));
+                String requestType = request.getString("requestType");
+                if(requestType.equals("fileDetails")){
+                    main.gotStatus(String.format("%s %s", main.getString(R.string.send_file), fileNameInRequestQueue));
+                }else{
+                    main.gotStatus(String.format("%s %s", main.getString(R.string.send_request), requestType));
+                }
                 outputStream.write(request.toString().getBytes());
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnected.sendNextRequest Exception: " + e.getMessage());

@@ -6,7 +6,6 @@
     <string name="main_loading_text">loading file list</string>
     <string name="main_sv_BT_log_desc">Bluetooth log</string>
     <string name="main_sv_desc">File overview</string>
-    <string name="available">Available:</string>
 
     <string name="alert_exit_title">Upload in progress</string>
     <string name="alert_exit_message">Stop sending file and close?</string>
@@ -29,6 +28,8 @@
     <string name="search_new_device">Looking for a new device. This might take a few minutes.
         To connect, keep the app on the watch open.</string>
     <string name="send_request">Send request:</string>
+    <string name="send_file">Send file:</string>
+    <string name="received_file">File received by watch</string>
     <string name="received_response">Received response:</string>
     <string name="send_error">Send error:</string>
     <string name="response_error">Response error:</string>
