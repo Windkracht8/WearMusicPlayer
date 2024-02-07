@@ -327,7 +327,6 @@ public class Main extends AppCompatActivity{
     void gotResponse(JSONObject response){
         try{
             String requestType = response.getString("requestType");
-            gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
             switch(requestType){
                 case "sync":
                     JSONObject responseDataSync = response.getJSONObject("responseData");
@@ -335,6 +334,7 @@ public class Main extends AppCompatActivity{
                     long freeSpaceSync = responseDataSync.getLong("freeSpace");
                     runOnUiThread(()->gotFreeSpace(freeSpaceSync));
                     executorService.submit(()->library.updateLibWithFilesOnWatch(this, tracks));
+                    gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
                     break;
                 case "fileDetails":
                     executorService.submit(commsWifi::stop);
@@ -350,15 +350,18 @@ public class Main extends AppCompatActivity{
                         gotError(getString(R.string.fail_send_file));
                         break;
                     }
-                    long freeSpaceFileDetails = response.getJSONObject("responseData").getLong("freeSpace");
+                    JSONObject responseData = response.getJSONObject("responseData");
+                    long freeSpaceFileDetails = responseData.getLong("freeSpace");
                     runOnUiThread(() -> gotFreeSpace(freeSpaceFileDetails));
-                    String path_done = response.getJSONObject("responseData").getString("path");
+                    String path_done = responseData.getString("path");
                     runOnUiThread(()->items.forEach((i)->i.updateProgressDone(this, path_done)));
+                    gotStatus(getString(R.string.received_file));
                     break;
                 case "deleteFile":
                     if(response.getString("responseData").equals("OK")){
                         itemDelete.libItem.status = Library.LibItem.Status.NOT;
                         runOnUiThread(()->itemDelete.newStatus());
+                        gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
                         break;
                     }else{
                         Log.e(LOG_TAG, "Main.gotResponse deleteFile");
@@ -376,8 +379,6 @@ public class Main extends AppCompatActivity{
             main_available.setText("");
             return;
         }
-        String line = getString(R.string.available) + bytesToHuman(freeSpace);
-        gotStatus(line);
         main_available.setText(bytesToHuman(freeSpace));
     }
     private String bytesToHuman(long bytes){
