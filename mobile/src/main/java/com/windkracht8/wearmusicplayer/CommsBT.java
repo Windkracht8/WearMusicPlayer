@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
@@ -132,7 +133,12 @@ public class CommsBT{
                             startComms();
                         }
                     }else if(BluetoothDevice.ACTION_UUID.equals(intent.getAction())){
-                        BluetoothDevice bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                        BluetoothDevice bluetoothDevice;
+                        if(Build.VERSION.SDK_INT >= 33){
+                            bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
+                        }else{
+                            bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                        }
                         if(bluetoothDevice == null || status != Status.SEARCHING) return;
                         Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver ACTION_UUID: " + bluetoothDevice.getName());
                         remainingSearchCount--;

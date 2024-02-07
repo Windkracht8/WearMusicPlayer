@@ -33,7 +33,6 @@ import java.util.concurrent.Executors;
 public class Main extends AppCompatActivity{
     static final String LOG_TAG = "WearMusicPlayer";
     private CommsBT commsBT = null;
-    private CommsWifi commsWifi = null;
     private final Library library = new Library();
     static SharedPreferences sharedPreferences;
     static SharedPreferences.Editor sharedPreferences_editor;
@@ -48,6 +47,7 @@ public class Main extends AppCompatActivity{
     private Item itemDelete;
     private final ArrayList<String> prevStatuses = new ArrayList<>();
     private static boolean hasBTPermission = false;
+    static boolean hasReadPermission = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -57,7 +57,6 @@ public class Main extends AppCompatActivity{
         sharedPreferences = getSharedPreferences("com.windkracht8.wearmusicplayer", Context.MODE_PRIVATE);
         sharedPreferences_editor = sharedPreferences.edit();
         executorService = Executors.newFixedThreadPool(4);
-        commsWifi = new CommsWifi();
 
         main_available = findViewById(R.id.main_available);
         main_icon = findViewById(R.id.main_icon);
@@ -74,9 +73,15 @@ public class Main extends AppCompatActivity{
         }else{
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH);
         }
+        if(Build.VERSION.SDK_INT >= 33){
+            hasReadPermission = hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
+        }else{
+            hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
         requestPermissions();
         executorService.submit(() -> library.scanFiles(this));
         initBT();
+        //commsWifi.startP2PWifi(this);//TODO:test
     }
 
     void toast(int message){
@@ -107,9 +112,7 @@ public class Main extends AppCompatActivity{
 
     private void requestPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
-            if(!hasPermission(Manifest.permission.READ_MEDIA_AUDIO)
-                    || !hasBTPermission
-            ){
+            if(!hasReadPermission || !hasBTPermission){
                 ActivityCompat.requestPermissions(this
                         ,new String[]{
                             Manifest.permission.READ_MEDIA_AUDIO
@@ -120,9 +123,7 @@ public class Main extends AppCompatActivity{
                 );
             }
         }else if(Build.VERSION.SDK_INT >= 31){
-            if(!hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    || !hasBTPermission
-            ){
+            if(!hasReadPermission || !hasBTPermission){
                 ActivityCompat.requestPermissions(this
                         ,new String[]{
                             Manifest.permission.READ_EXTERNAL_STORAGE
@@ -133,9 +134,7 @@ public class Main extends AppCompatActivity{
                 );
             }
         }else{
-            if(!hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    || !hasBTPermission
-            ){
+            if(!hasReadPermission || !hasBTPermission){
                 ActivityCompat.requestPermissions(this
                         ,new String[]{
                             Manifest.permission.READ_EXTERNAL_STORAGE
@@ -155,6 +154,7 @@ public class Main extends AppCompatActivity{
                     || permissions[i].equals(Manifest.permission.READ_MEDIA_AUDIO)
             ){
                 if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
+                    hasReadPermission = true;
                     executorService.submit(() -> library.scanFiles(this));
                 }
                 break;
@@ -231,13 +231,13 @@ public class Main extends AppCompatActivity{
                 if(cantSendRequest()){
                     return;
                 }
-                String ipAddress = commsWifi.getIpAddress(this);
-                if(ipAddress.equals("0.0.0.0")) {
+                String ipAddress = CommsWifi.getIpAddress(this);
+                if(ipAddress.equals("0.0.0.0")){
                     gotError(getString(R.string.no_wifi));
                     return;
                 }
                 item.updateProgress(this);
-                executorService.submit(()-> commsWifi.sendFile(this, item));
+                executorService.submit(()-> CommsWifi.sendFile(this, item));
                 executorService.submit(()-> commsBT.sendFileDetails(item.libItem, ipAddress));
                 break;
         }
@@ -345,13 +345,13 @@ public class Main extends AppCompatActivity{
                     executorService.submit(()->library.updateLibWithFilesOnWatch(this, tracks));
                     break;
                 case "fileDetails":
-                    executorService.submit(()->commsWifi.stopSendFile());
+                    executorService.submit(CommsWifi::stopSendFile);
                     Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + response.get("responseData"));
                     toast(R.string.fail_send_file);
                     gotError(getString(R.string.fail_send_file));
                     break;
                 case "fileBinary":
-                    executorService.submit(()->commsWifi.stopSendFile());
+                    executorService.submit(CommsWifi::stopSendFile);
                     Object responseDataFileDetails = response.get("responseData");
                     if(responseDataFileDetails instanceof String){
                         Log.e(LOG_TAG, "Main.gotResponse fileBinary responseData: " + responseDataFileDetails);
