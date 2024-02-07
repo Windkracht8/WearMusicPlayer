@@ -256,7 +256,6 @@ public class CommsBT{
             }
         }
         public void run(){
-            Log.d(Main.LOG_TAG, "CommsBTConnect.run");
             bluetoothAdapter.cancelDiscovery();
             try{
                 bluetoothSocket.connect();
@@ -296,7 +295,6 @@ public class CommsBT{
             updateStatus(Status.CONNECTED);
         }
         public void run(){
-            Log.d(Main.LOG_TAG, "CommsBTConnected.run");
             process();
         }
         private void close(){
@@ -304,6 +302,9 @@ public class CommsBT{
             main.gotStatus(main.getString(R.string.closing_connection));
             try{
                 bluetoothSocket.close();
+                for(int i=requestQueue.length(); i>0; i--) {
+                    requestQueue.remove(i-1);
+                }
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnected.close exception: " + e.getMessage());
             }

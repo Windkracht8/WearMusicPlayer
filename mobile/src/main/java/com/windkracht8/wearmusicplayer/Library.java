@@ -102,7 +102,6 @@ public class Library{
         int depth = -1;
         Status status = Status.UNKNOWN;
         long length = 1;
-        long progress = 0;
         LibItem(URI uri){
             this.uri = uri;
             path = uri.getPath().substring(exStorageDir.length()+1);
