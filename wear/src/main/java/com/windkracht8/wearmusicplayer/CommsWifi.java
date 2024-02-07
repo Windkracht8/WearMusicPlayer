@@ -33,6 +33,7 @@ class CommsWifi{
                             super.onAvailable(network);
                             Log.d(Main.LOG_TAG, "CommsWifi.NetworkCallback.onAvailable");
                             connectivityManager.bindProcessToNetwork(network);
+                            main.commsConnectionInfo(R.string.connection_info_Wifi);
                             readFileFromStream(main, path, length, ip, port);
                         }
                         public void onUnavailable(){
