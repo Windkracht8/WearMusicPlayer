@@ -23,6 +23,8 @@
 
     <!-- progress -->
     <string name="progress_label_text">Receiving file</string>
+    <string name="connection_info_BT">Bluetooth (slow)</string>
+    <string name="connection_info_Wifi">Wi-Fi (fast)</string>
 
     <!-- menu library -->
     <string name="menu_library_label">Library</string>

@@ -216,6 +216,9 @@ public class Main extends Activity{
     void commsProgress(int progress){
         runOnUiThread(()->main_progress.setProgress(progress));
     }
+    void commsConnectionInfo(int value){
+        runOnUiThread(()->main_progress.setConnectionInfo(value));
+    }
     void commsFileDone(String path){
         executorService.submit(()->library.addFile(this, path));
         runOnUiThread(()->main_progress.setVisibility(View.GONE));

@@ -1,11 +1,8 @@
 package com.windkracht8.wearmusicplayer;
 
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
-
-import androidx.core.app.ActivityCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

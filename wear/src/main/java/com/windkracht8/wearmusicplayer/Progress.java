@@ -13,6 +13,7 @@ import com.google.android.material.progressindicator.CircularProgressIndicator;
 
 public class Progress extends ConstraintLayout{
     private CircularProgressIndicator progress_indicator;
+    private TextView progress_connection_info;
     private TextView progress_file;
     public Progress(Context context, AttributeSet attrs){
         super(context, attrs);
@@ -24,9 +25,12 @@ public class Progress extends ConstraintLayout{
         inflater.inflate(R.layout.progress, this, true);
 
         progress_indicator = findViewById(R.id.progress_indicator);
+        progress_connection_info = findViewById(R.id.progress_connection_info);
         progress_file = findViewById(R.id.progress_file);
-        ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) progress_file.getLayoutParams();
-
+        ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) progress_connection_info.getLayoutParams();
+        layoutParams.leftMargin = Main.vw20;
+        layoutParams.rightMargin = Main.vw20;
+        layoutParams = (ConstraintLayout.LayoutParams) progress_file.getLayoutParams();
         layoutParams.leftMargin = Main.vw20;
         layoutParams.rightMargin = Main.vw20;
     }
@@ -34,10 +38,10 @@ public class Progress extends ConstraintLayout{
         setProgress(0);
         String file = path.substring(path.lastIndexOf("/")+1, path.length()-4);
         progress_file.setText(file);
+        progress_connection_info.setText(R.string.connection_info_BT);
         setVisibility(View.VISIBLE);
     }
-    void setProgress(int progress){
-        progress_indicator.setProgress(progress);
-    }
+    void setProgress(int progress){progress_indicator.setProgress(progress);}
+    void setConnectionInfo(int value){progress_connection_info.setText(value);}
 
 }
