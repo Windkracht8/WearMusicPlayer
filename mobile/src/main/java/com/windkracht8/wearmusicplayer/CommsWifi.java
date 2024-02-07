@@ -5,30 +5,38 @@ import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
 class CommsWifi{
     static final int PORT_NUMBER = 9002;
-    static boolean isSendingFile = false;
-    private static Socket socket;
+    private final Main main;
+    private final Handler handler;
+    private final ArrayList<Item> itemQueue = new ArrayList<>();
+    boolean running = false;
+    private boolean closeConnection = true;
+    private boolean isSendingFile = false;
 
-    static void stopSendFile(){
-        isSendingFile = false;
-        try{
-            if(socket != null) socket.close();
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "CommsWifi.stopSendFile Exception: " + e.getMessage());
-        }
-        socket = null;
+    CommsWifi(Main main){
+        this.main = main;
+        handler = new Handler(Looper.getMainLooper());
     }
-    static String getIpAddress(Main main){
+    void stop(){
+        closeConnection = true;
+        running = false;
+        itemQueue.clear();//TODO: first reset the status back to ...
+        handler.removeCallbacks(this::sendFile);
+    }
+    private String getIpAddress(){
         int ipAddress = 0;
         try{
             if(Build.VERSION.SDK_INT >= 29){
@@ -44,37 +52,80 @@ class CommsWifi{
         return String.format(Locale.US, "%d.%d.%d.%d", (ipAddress & 0xff),
                 (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
     }
-    static void sendFile(Main main, Item item){
+    void queueFile(Item item){
+        Log.d(Main.LOG_TAG, "CommsWifi.queueFile " + item.libItem.name);
+        running = true;
+        closeConnection = false;
+        item.updateProgress(main, 0);
+        itemQueue.add(item);
+        if(Build.VERSION.SDK_INT < 29 || !handler.hasCallbacks(this::sendFile)){
+            sendFile();
+        }
+    }
+    private void sendFile(){
+        if(itemQueue.size() == 0){
+            running = false;
+            return;
+        }
+        if(isSendingFile){
+            handler.postDelayed(()-> main.executorService.submit(this::sendFile), 100);
+            return;
+        }
+        Item item = itemQueue.get(0);
+        itemQueue.remove(0);
         Library.LibItem libItem = item.libItem;
+
+        String ipAddress = getIpAddress();
+        if(ipAddress.equals("0.0.0.0")){
+            main.gotError(main.getString(R.string.no_wifi));
+            return;
+        }
+        Log.d(Main.LOG_TAG, "CommsWifi.sendFile " + libItem.name);
+
         isSendingFile = true;
+        main.sendFileDetailsRequest(item.libItem, ipAddress);
+
         try(ServerSocket serverSocket = new ServerSocket(PORT_NUMBER)){
-            while(isSendingFile){
-                socket = serverSocket.accept();
-                try(FileInputStream fileInputStream = new FileInputStream(libItem.uri.getPath())){
-                    long bytesDone = 0;
-                    OutputStream outputStream = socket.getOutputStream();
-                    while(fileInputStream.available() > 0){
-                        byte[] buffer = new byte[2048];
-                        int numBytes = fileInputStream.read(buffer);
-                        if(numBytes < 0){
-                            Log.e(Main.LOG_TAG, "CommsWifi.sendFile read error");
-                            item.clearStatus();
-                            stopSendFile();
-                            return;
-                        }
-                        outputStream.write(buffer, 0, numBytes);
-                        bytesDone += numBytes;
-                        libItem.progress = bytesDone;
-                        item.updateProgress(main);
+            Socket socket = serverSocket.accept();
+            try(FileInputStream fileInputStream = new FileInputStream(libItem.uri.getPath())){
+                long bytesDone = 0;
+                OutputStream outputStream = socket.getOutputStream();
+                while(!closeConnection && fileInputStream.available() > 0){
+                    byte[] buffer = new byte[2048];
+                    int numBytes = fileInputStream.read(buffer);
+                    if(numBytes < 0){
+                        Log.e(Main.LOG_TAG, "CommsWifi.sendFile read error");
+                        item.clearStatus();
+                        socket.close();
+                        isSendingFile = false;
+                        stop();
+                        return;
                     }
-                }catch(Exception e){
-                    Log.e(Main.LOG_TAG, "CommsWifi.sendFile FileInputStream exception: " + e.getMessage());
+                    outputStream.write(buffer, 0, numBytes);
+                    bytesDone += numBytes;
+                    item.updateProgress(main, bytesDone);
                 }
+            }catch(Exception e){
+                Log.e(Main.LOG_TAG, "CommsWifi.sendFile FileInputStream exception: " + e);
+                Log.e(Main.LOG_TAG, "CommsWifi.sendFile FileInputStream exception: " + e.getMessage());
+            }
+            try{
+                socket.close();
+            }catch(Exception e){
+                Log.e(Main.LOG_TAG, "CommsWifi.sendFile socket.close exception: " + e.getMessage());
+            }
+            try{
+                serverSocket.close();
+            }catch(Exception e){
+                Log.e(Main.LOG_TAG, "CommsWifi.sendFile serverSocket.close exception: " + e.getMessage());
             }
         }catch(Exception e){
+            Log.e(Main.LOG_TAG, "CommsWifi.sendFile ServerSocket exception: " + e);
             Log.e(Main.LOG_TAG, "CommsWifi.sendFile ServerSocket exception: " + e.getMessage());
+            stop();
         }
-        stopSendFile();
+        isSendingFile = false;
+        handler.postDelayed(()-> main.executorService.submit(this::sendFile), 10);
     }
 
 /*

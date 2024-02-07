@@ -109,10 +109,9 @@ class Item extends ConstraintLayout{
         }
         items.forEach(Item::newStatus);
     }
-    void updateProgress(Main main){
-        long perc = (libItem.progress * 100) / libItem.length;
+    void updateProgress(Main main, long progress){
         main.runOnUiThread(()->{
-            item_status.setText(String.valueOf(perc));
+            item_status.setText(String.valueOf((progress * 100) / libItem.length));
             item_status.setBackgroundResource(0);
         });
     }

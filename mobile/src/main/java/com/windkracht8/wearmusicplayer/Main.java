@@ -33,10 +33,11 @@ import java.util.concurrent.Executors;
 public class Main extends AppCompatActivity{
     static final String LOG_TAG = "WearMusicPlayer";
     private CommsBT commsBT = null;
+    private CommsWifi commsWifi = null;
     private final Library library = new Library();
     static SharedPreferences sharedPreferences;
     static SharedPreferences.Editor sharedPreferences_editor;
-    private ExecutorService executorService;
+    ExecutorService executorService;
 
     private TextView main_available;
     private ImageView main_icon;
@@ -66,6 +67,7 @@ public class Main extends AppCompatActivity{
         main_ll = findViewById(R.id.main_ll);
 
         commsBT = new CommsBT(this);
+        commsWifi = new CommsWifi(this);
 
         if(Build.VERSION.SDK_INT >= 31){
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_SCAN)
@@ -181,7 +183,7 @@ public class Main extends AppCompatActivity{
 
     @Override
     public void onBackPressed(){
-        if(CommsWifi.isSendingFile){
+        if(commsWifi.running){
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.alert_exit_title);
             builder.setMessage(R.string.alert_exit_message);
@@ -224,21 +226,8 @@ public class Main extends AppCompatActivity{
             case PARTIAL:
                 break;
             case NOT:
-                if(CommsWifi.isSendingFile){
-                    Toast.makeText(this, R.string.fail_cannot_send_file, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if(cantSendRequest()){
-                    return;
-                }
-                String ipAddress = CommsWifi.getIpAddress(this);
-                if(ipAddress.equals("0.0.0.0")){
-                    gotError(getString(R.string.no_wifi));
-                    return;
-                }
-                item.updateProgress(this);
-                executorService.submit(()-> CommsWifi.sendFile(this, item));
-                executorService.submit(()-> commsBT.sendFileDetails(item.libItem, ipAddress));
+                if(cantSendRequest()) return;
+                executorService.submit(()-> commsWifi.queueFile(item));
                 break;
         }
     }
@@ -320,6 +309,9 @@ public class Main extends AppCompatActivity{
             }
         });
     }
+    void sendFileDetailsRequest(Library.LibItem libItem, String ipAddress){
+        executorService.submit(()-> commsBT.sendFileDetails(libItem, ipAddress));
+    }
     private void sendSyncRequest(){
         Log.d(Main.LOG_TAG, "Main.sendSyncRequest");
         if(cantSendRequest()){return;}
@@ -345,13 +337,12 @@ public class Main extends AppCompatActivity{
                     executorService.submit(()->library.updateLibWithFilesOnWatch(this, tracks));
                     break;
                 case "fileDetails":
-                    executorService.submit(CommsWifi::stopSendFile);
+                    executorService.submit(commsWifi::stop);
                     Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + response.get("responseData"));
                     toast(R.string.fail_send_file);
                     gotError(getString(R.string.fail_send_file));
                     break;
                 case "fileBinary":
-                    executorService.submit(CommsWifi::stopSendFile);
                     Object responseDataFileDetails = response.get("responseData");
                     if(responseDataFileDetails instanceof String){
                         Log.e(LOG_TAG, "Main.gotResponse fileBinary responseData: " + responseDataFileDetails);
