@@ -1,8 +1,11 @@
 package com.windkracht8.wearmusicplayer;
 
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -17,6 +20,7 @@ public class Library{
     LibDir dir_music;
 
     void scanFiles(Main main){
+        if(!Main.hasReadPermission) return;
         exStorageDir = Environment.getExternalStorageDirectory().toString();
         dir_music = new LibDir(URI.create(exStorageDir + "/Music"));
         scanFilesDir(dir_music);

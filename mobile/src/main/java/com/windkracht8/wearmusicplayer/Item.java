@@ -78,6 +78,7 @@ class Item extends ConstraintLayout{
                 if(isDir){
                     item_status.setText("V");
                 }else{
+                    item_status.setText("");
                     item_status.setBackgroundResource(R.drawable.icon_delete);
                 }
                 break;
@@ -85,6 +86,7 @@ class Item extends ConstraintLayout{
                 if(isDir){
                     item_status.setText("/");
                 }else{
+                    item_status.setText("");
                     item_status.setBackgroundResource(0);
                 }
                 break;
@@ -92,6 +94,7 @@ class Item extends ConstraintLayout{
                 if(isDir){
                     item_status.setText("");
                 }else{
+                    item_status.setText("");
                     item_status.setBackgroundResource(R.drawable.icon_upload);
                 }
                 break;
@@ -99,6 +102,7 @@ class Item extends ConstraintLayout{
                 if(isDir){
                     item_status.setText("");
                 }else{
+                    item_status.setText("");
                     item_status.setBackgroundResource(0);
                 }
                 break;
