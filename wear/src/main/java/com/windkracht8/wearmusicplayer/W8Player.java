@@ -23,7 +23,6 @@ import android.widget.Toast;
 class W8Player{
     private final Handler handler;
     private final ExoPlayer exoPlayer;
-    private MediaSession mediaSession;
     W8Player(Main main){
         handler = new Handler(Looper.getMainLooper());
         exoPlayer = new ExoPlayer.Builder(main).build();
@@ -43,7 +42,7 @@ class W8Player{
             }
         );
 
-        mediaSession = new MediaSession(main, Main.LOG_TAG);
+        MediaSession mediaSession = new MediaSession(main, Main.LOG_TAG);
         mediaSession.setCallback(new Callback(){
             @Override
             public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent){
