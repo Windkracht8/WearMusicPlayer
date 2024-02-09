@@ -28,7 +28,7 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/main_volume_up"
-        app:layout_constraintBottom_toTopOf="@id/main_play_pause"
+        app:layout_constraintTop_toTopOf="parent"
         android:contentDescription="@string/main_volume_down_desc" />
     <ImageView
         android:id="@+id/main_volume_up"
@@ -38,7 +38,7 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@id/main_volume_down"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/main_play_pause"
+        app:layout_constraintTop_toTopOf="parent"
         android:contentDescription="@string/main_volume_up_desc" />
     <ImageView
         android:id="@+id/main_previous"
@@ -49,7 +49,6 @@
         app:tint="@color/icon_disabled"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_volume_down"
-        app:layout_constraintBottom_toTopOf="@id/main_song_title"
         android:contentDescription="@string/main_back_desc" />
     <ImageView
         android:id="@+id/main_play_pause"
@@ -59,7 +58,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_volume_down"
-        app:layout_constraintBottom_toTopOf="@id/main_song_title"
         android:contentDescription="@string/main_play_pause_desc" />
     <ImageView
         android:id="@+id/main_next"
@@ -69,18 +67,17 @@
         android:src="@drawable/icon_next"
         app:tint="@color/icon_disabled"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_volume_down"
-        app:layout_constraintBottom_toTopOf="@id/main_song_title"
+        app:layout_constraintTop_toBottomOf="@id/main_volume_up"
         android:contentDescription="@string/main_forward_desc" />
     <TextView
         android:id="@+id/main_song_title"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginLeft="@dimen/ll_in_sc_padding"
         android:layout_marginRight="@dimen/ll_in_sc_padding"
         android:gravity="center"
-        android:autoSizeTextType="uniform"
         android:lines="2"
+        android:autoSizeTextType="uniform"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_play_pause"
@@ -88,15 +85,16 @@
     <TextView
         android:id="@+id/main_song_artist"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/ll_in_sc_padding"
-        android:layout_marginRight="@dimen/ll_in_sc_padding"
+        android:layout_height="0dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
         android:gravity="center"
-        android:autoSizeTextType="uniform"
         android:textColor="@color/w8blue"
         android:maxLines="1"
+        android:autoSizeTextType="uniform"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/main_song_title"
         app:layout_constraintBottom_toTopOf="@id/main_library" />
     <TextView
         android:id="@+id/main_library"
