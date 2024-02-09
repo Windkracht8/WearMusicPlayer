@@ -8,8 +8,8 @@ android {
         //noinspection OldTargetApi
         targetSdk 33
         compileSdk 33
-        versionCode 206
-        versionName '1.1'
+        versionCode 207
+        versionName '1.2'
     }
     buildTypes {
         release {

@@ -11,6 +11,9 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.PowerManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -53,7 +56,10 @@ public class Main extends Activity{
     private View currentVisibleView;
 
     ExecutorService executorService;
+    private Handler handler;
     private AudioManager audioManager;
+    private PowerManager powerManager;
+    private PowerManager.WakeLock wakeLock;
 
     static int heightPixels;
     private static int widthPixels;
@@ -88,7 +94,9 @@ public class Main extends Activity{
         vh75 = (int) (heightPixels * .75);
 
         executorService = Executors.newFixedThreadPool(4);
+        handler = new Handler(Looper.getMainLooper());
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         player = new W8Player(this);
 
         setContentView(R.layout.main);
@@ -465,6 +473,8 @@ public class Main extends Activity{
         return pretty;
     }
     private void startOngoingNotification(){
+        checkWakeLock();
+
         String WMP_Notification = "WMP_Notification";
         int RRW_Notification_ID = 1;
 
@@ -512,7 +522,15 @@ public class Main extends Activity{
 
         notificationManager.notify(RRW_Notification_ID, notificationBuilder.build());
     }
+    private void checkWakeLock(){
+        if(!isPlaying) return;
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WMP:WakeWhilePlayingMusic");
+        wakeLock.acquire(10*60*1000L /*10 minutes*/);
+
+        handler.postDelayed(this::checkWakeLock, 9*60*1000L /*9 minutes*/);
+    }
     private void stopOngoingNotification(){
+        wakeLock.release();
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancelAll();
     }
