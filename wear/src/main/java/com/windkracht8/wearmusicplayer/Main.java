@@ -476,7 +476,7 @@ public class Main extends Activity{
         checkWakeLock();
 
         String WMP_Notification = "WMP_Notification";
-        int RRW_Notification_ID = 1;
+        int WMP_Notification_ID = 1;
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationChannel notificationChannel = new NotificationChannel(WMP_Notification, getString(R.string.open_wmp), NotificationManager.IMPORTANCE_DEFAULT);
@@ -496,7 +496,6 @@ public class Main extends Activity{
         )
                 .setSmallIcon(R.drawable.icon_vector)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setCategory(NotificationCompat.CATEGORY_WORKOUT)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(
                         R.drawable.icon_vector, getString(R.string.open_wmp),
@@ -510,7 +509,7 @@ public class Main extends Activity{
 
         OngoingActivity ongoingActivity = new OngoingActivity.Builder(
                 getBaseContext()
-                ,RRW_Notification_ID
+                ,WMP_Notification_ID
                 ,notificationBuilder
         )
                 .setStaticIcon(R.drawable.icon_vector)
@@ -520,7 +519,7 @@ public class Main extends Activity{
 
         ongoingActivity.apply(getBaseContext());
 
-        notificationManager.notify(RRW_Notification_ID, notificationBuilder.build());
+        notificationManager.notify(WMP_Notification_ID, notificationBuilder.build());
     }
     private void checkWakeLock(){
         if(!isPlaying) return;
