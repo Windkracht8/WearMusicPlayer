@@ -24,7 +24,6 @@
         <activity
             android:name=".Main"
             android:taskAffinity="com.windkracht8.wearmusicplayer.Main"
-            android:launchMode="singleTop"
             android:exported="true"
             android:theme="@style/wmp_splash" >
             <intent-filter>

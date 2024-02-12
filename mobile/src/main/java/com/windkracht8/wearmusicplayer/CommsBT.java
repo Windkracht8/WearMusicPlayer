@@ -174,16 +174,16 @@ public class CommsBT{
             gotError(main.getString(R.string.no_devices));
             return;
         }
-        for(String rrw_device_address : wmp_device_addresses){
+        for(String wmp_device_address : wmp_device_addresses){
             boolean stillBonded = false;
             for(BluetoothDevice bondedDevice : bondedDevices){
-                if(bondedDevice.getAddress().equals(rrw_device_address)){
+                if(bondedDevice.getAddress().equals(wmp_device_address)){
                     stillBonded = true;
                     break;
                 }
             }
             if(!stillBonded){
-                wmp_device_addresses.remove(rrw_device_address);
+                wmp_device_addresses.remove(wmp_device_address);
                 Main.sharedPreferences_editor.putStringSet("wmp_device_addresses", wmp_device_addresses);
                 Main.sharedPreferences_editor.apply();
             }
@@ -215,10 +215,10 @@ public class CommsBT{
             }
         }
     }
-    private void try_wmpDevice(BluetoothDevice rrw_device){
+    private void try_wmpDevice(BluetoothDevice wmp_device){
         if(status != Status.SEARCHING) return;
-        main.gotStatus(String.format("%s %s", main.getString(R.string.try_connect_to), rrw_device.getName()));
-        (new CommsBT.CommsBTConnect(rrw_device)).start();
+        main.gotStatus(String.format("%s %s", main.getString(R.string.try_connect_to), wmp_device.getName()));
+        (new CommsBT.CommsBTConnect(wmp_device)).start();
     }
     private void search_newDevices(){
         Log.d(Main.LOG_TAG, String.format("CommsBT.search_newDevices status: %s remainingSearchCount: %s remainingFailedConnectCount: %s", status, remainingSearchCount, remainingFailedConnectCount));
