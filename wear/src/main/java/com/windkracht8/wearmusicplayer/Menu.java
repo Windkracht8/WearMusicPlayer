@@ -105,7 +105,7 @@ public abstract class Menu extends ConstraintLayout{
                     itemHeight = menuItems.get(0).getHeight();
                     bottom_quarter = Main.vh75-itemHeight;
                     below_screen = Main.heightPixels-itemHeight;
-                    scalePerPixel = 0.5f / Main.vh25;
+                    scalePerPixel = 0.2f / Main.vh25;
                     scaleMenuItems(0);
                 }
             });
@@ -120,13 +120,13 @@ public abstract class Menu extends ConstraintLayout{
             scale = 1.0f;
             if(top < 0){
                 //the item is above the screen
-                scale = 0.5f;
+                scale = 0.8f;
             }else if(top < Main.vh25){
                 //the item is in the top quarter
-                scale = 0.5f + (scalePerPixel * top);
+                scale = 0.8f + (scalePerPixel * top);
             }else if(top > below_screen){
                 //the item is below the screen
-                scale = 0.5f;
+                scale = 0.8f;
             }else if(top > bottom_quarter){
                 //the item is in the bottom quarter
                 scale = 1.0f - (scalePerPixel * (top - bottom_quarter));
