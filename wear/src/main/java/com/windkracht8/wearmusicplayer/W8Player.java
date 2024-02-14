@@ -171,5 +171,8 @@ class W8Player{
             exoPlayer.setPlayWhenReady(true);
         }
     }
-    boolean isPlaying(){return exoPlayer.isPlaying();}
+    boolean isPlaying(){
+        if(exoPlayer == null) return false;
+        return exoPlayer.isPlaying();
+    }
 }

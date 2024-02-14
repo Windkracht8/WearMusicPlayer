@@ -19,23 +19,31 @@ import androidx.wear.ongoing.OngoingActivity;
 import androidx.wear.ongoing.Status;
 
 public class ForegroundService extends Service{
-    private Handler handler;
-    private NotificationManager notificationManager;
-    private boolean isRunning = false;
+    private static Handler handler;
+    private static NotificationManager notificationManager;
+    private static boolean notificationIsRunning = false;
     @Nullable
     @Override
     public IBinder onBind(Intent intent){return null;}
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
+        if(!Main.player.isPlaying()){
+            Log.d(Main.LOG_TAG, "ForegroundService.onStartCommand stopSelf");
+            stopSelf();
+            notificationIsRunning = false;
+            return super.onStartCommand(intent, flags, startId);
+        }
         Log.d(Main.LOG_TAG, "ForegroundService.onStartCommand");
         String channel_id = "WMP_Notification";
 
-        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.createNotificationChannel(new NotificationChannel(
-                channel_id
-                ,getString(R.string.open_wmp)
-                ,NotificationManager.IMPORTANCE_DEFAULT)
-        );
+        if(notificationManager == null){
+            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(new NotificationChannel(
+                    channel_id
+                    , getString(R.string.open_wmp)
+                    , NotificationManager.IMPORTANCE_DEFAULT)
+            );
+        }
         Intent actionIntent = new Intent(this, Main.class);
         PendingIntent actionPendingIntent = PendingIntent.getActivity(
                 this
@@ -61,7 +69,7 @@ public class ForegroundService extends Service{
                 .build();
         OngoingActivity ongoingActivity = new OngoingActivity.Builder(
                 getBaseContext()
-                ,1
+                ,8
                 ,notificationBuilder
         )
                 .setStaticIcon(R.drawable.icon_vector)
@@ -76,28 +84,29 @@ public class ForegroundService extends Service{
                 notificationBuilder.build(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
         );
-        isRunning = true;
+        notificationIsRunning = true;
         return super.onStartCommand(intent, flags, startId);
     }
     void start(Context appContext){
-        if(isRunning) return;
-        if(handler == null) handler = new Handler(Looper.getMainLooper());
+        if(notificationIsRunning || !Main.player.isPlaying()) return;
         Log.d(Main.LOG_TAG, "ForegroundService.start");
         appContext.startForegroundService(new Intent(appContext, getClass()));
     }
-    void stopDelayed(){
+    void stopDelayed(Context appContext){
         if(Main.player.isPlaying()) return;
-        handler.postDelayed(this::stopDelayed2, 1000);
+        if(handler == null) handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(()-> stopDelayed2(appContext), 1000);
     }
-    private void stopDelayed2(){
+    private void stopDelayed2(Context appContext){
         if(Main.player.isPlaying()) return;
-        stop();
+        stop(appContext);
     }
-    void stop(){
-        if(isRunning){
-            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
-            notificationManager.cancelAll();
+    void stop(Context appContext){
+        if(notificationIsRunning){
+            Log.d(Main.LOG_TAG, "ForegroundService.stop");
+            Intent stopIntent = new Intent(appContext, getClass());
+            stopIntent.setAction("STOP_SERVICE");
+            appContext.startService(stopIntent);
         }
-        isRunning = false;
     }
 }

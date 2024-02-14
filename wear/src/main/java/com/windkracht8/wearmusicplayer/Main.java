@@ -364,7 +364,7 @@ public class Main extends Activity{
             service.start(getApplicationContext());
         }else{
             main_play_pause.setImageResource(R.drawable.icon_play);
-            service.stopDelayed();
+            service.stopDelayed(getApplicationContext());
         }
     }
     private void onProgressChanged(long currentPosition){
@@ -402,7 +402,7 @@ public class Main extends Activity{
     }
     private void exit(){
         sendIntent(getApplicationContext(), "player.exit");
-        service.stop();
+        service.stop(getApplicationContext());
         System.exit(0);
     }
 
