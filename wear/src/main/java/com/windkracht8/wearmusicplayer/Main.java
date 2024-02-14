@@ -1,19 +1,17 @@
 package com.windkracht8.wearmusicplayer;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.PowerManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -26,20 +24,20 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.splashscreen.SplashScreen;
-import androidx.wear.ongoing.OngoingActivity;
-import androidx.wear.ongoing.Status;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main extends Activity{
     static final String LOG_TAG = "WearMusicPlayer";
+    static final String INTENT_ACTION = "com.windkracht8.wearmusicplayer";
     static boolean isScreenRound;
     private boolean showSplash = true;
     private boolean hasBTPermission = false;
+    static boolean hasReadPermission = false;
     private TextView main_timer;
     private ImageView main_previous;
     private ImageView main_play_pause;
@@ -56,10 +54,8 @@ public class Main extends Activity{
     private View currentVisibleView;
 
     ExecutorService executorService;
-    private Handler handler;
     private AudioManager audioManager;
-    private PowerManager powerManager;
-    private PowerManager.WakeLock wakeLock;
+    private BroadcastReceiver broadcastReceiver;
 
     static int heightPixels;
     private static int widthPixels;
@@ -73,12 +69,14 @@ public class Main extends Activity{
     private static final int SWIPE_VELOCITY_THRESHOLD = 50;
 
     final static Library library = new Library();
-    private W8Player player;
+    static final W8Player player = new W8Player();
+    private static final ForegroundService service = new ForegroundService();
     private CommsBT commsBT = null;
     private ArrayList<Library.Track> current_tracks;
     private int current_index;
     private boolean isPlaying = false;
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")//registerReceiver is wrapped in SDK_INT, still complains
     @Override
     protected void onCreate(Bundle savedInstanceState){
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
@@ -94,10 +92,40 @@ public class Main extends Activity{
         vh75 = (int) (heightPixels * .75);
 
         executorService = Executors.newFixedThreadPool(4);
-        handler = new Handler(Looper.getMainLooper());
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        player = new W8Player(this);
+
+        broadcastReceiver = new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context context, Intent intent){
+                if(!intent.hasExtra("intent_type")){return;}
+                switch(Objects.requireNonNull(intent.getStringExtra("intent_type"))){
+                    case "onIsPlayingChanged":
+                        if(!intent.hasExtra("isPlaying")){return;}
+                        onIsPlayingChanged(intent.getBooleanExtra("isPlaying", false));
+                        break;
+                    case "onPlayerEnded":
+                        onPlayerEnded();
+                        break;
+                    case "bPreviousPressed":
+                        bPreviousPressed();
+                        break;
+                    case "bNextPressed":
+                        bNextPressed();
+                        break;
+                    case "onProgressChanged":
+                        if(!intent.hasExtra("currentPosition")){return;}
+                        onProgressChanged(intent.getLongExtra("currentPosition", 0));
+                        break;
+                }
+            }
+        };
+        if(Build.VERSION.SDK_INT >= 33){
+            registerReceiver(broadcastReceiver, new IntentFilter(INTENT_ACTION), Context.RECEIVER_NOT_EXPORTED);
+        }else{
+            registerReceiver(broadcastReceiver, new IntentFilter(INTENT_ACTION));
+        }
+
+        player.init(getApplicationContext());
 
         setContentView(R.layout.main);
         main_progress = findViewById(R.id.main_progress);
@@ -139,33 +167,38 @@ public class Main extends Activity{
             main_song_title.setLines(1);
         }
 
-        showSplash = false;
+        commsBT = new CommsBT(this);
+        requestPermissions();
         executorService.submit(() -> library.scanMediaStore(this));
-        executorService.submit(() -> requestPermissions());
+        initBT();
+        showSplash = false;
     }
     @Override
     public void onDestroy(){
         super.onDestroy();
+        unregisterReceiver(broadcastReceiver);
         commsBT.stopComms();
-        stopOngoingNotification();
     }
     private void requestPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
+            hasReadPermission = hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
                     && hasPermission(Manifest.permission.BLUETOOTH_SCAN);
-            if(!hasBTPermission
+            if(!hasReadPermission
+                    || !hasBTPermission
                     || !hasPermission(Manifest.permission.POST_NOTIFICATIONS)
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
                         Manifest.permission.POST_NOTIFICATIONS
+                        ,Manifest.permission.READ_MEDIA_AUDIO
                         ,Manifest.permission.BLUETOOTH_CONNECT
                         ,Manifest.permission.BLUETOOTH_SCAN}, 1);
             }
         }else if(Build.VERSION.SDK_INT >= 31){
+            hasReadPermission = hasPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE);
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
                     && hasPermission(Manifest.permission.BLUETOOTH_SCAN);
-            if(!hasBTPermission
-                    || !hasPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+            if(!hasReadPermission || !hasBTPermission
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
                                 Manifest.permission.MANAGE_EXTERNAL_STORAGE
@@ -173,72 +206,79 @@ public class Main extends Activity{
                                 ,Manifest.permission.BLUETOOTH_SCAN}, 1);
             }
         }else{//30
+            hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH);
-            if(!hasBTPermission
-                    || !hasPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
-                    || !hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+            if(!hasReadPermission || !hasBTPermission
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
-                                Manifest.permission.MANAGE_EXTERNAL_STORAGE
-                                ,Manifest.permission.READ_EXTERNAL_STORAGE
+                                Manifest.permission.READ_EXTERNAL_STORAGE
                                 ,Manifest.permission.BLUETOOTH}, 1);
             }
         }
-        if(hasBTPermission) initBT();
     }
     private boolean hasPermission(String permission){
-        return ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED;
+        return ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        boolean bt_granted = false;
+        for(int i=0; i<permissions.length; i++){
+            if(permissions[i].equals(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    || permissions[i].equals(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+                    || permissions[i].equals(Manifest.permission.READ_MEDIA_AUDIO)
+            ){
+                if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
+                    hasReadPermission = true;
+                    executorService.submit(() -> library.scanMediaStore(this));
+                }
+                break;
+            }
+        }
         for(int i=0; i<permissions.length; i++){
             if(permissions[i].equals(Manifest.permission.BLUETOOTH_CONNECT) ||
                     permissions[i].equals(Manifest.permission.BLUETOOTH_SCAN) ||
                     permissions[i].equals(Manifest.permission.BLUETOOTH)){
-                if(grantResults[i] == PackageManager.PERMISSION_DENIED){
-                    return;
+                if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
+                    hasBTPermission = true;
+                    initBT();
                 }else{
-                    bt_granted = true;
+                    hasBTPermission = false;
                 }
+                break;
             }
-        }
-        if(bt_granted){
-            hasBTPermission = true;
-            initBT();
         }
     }
     private void initBT(){
         if(!hasBTPermission) return;
-        commsBT = new CommsBT(this);
-        executorService.submit(() -> commsBT.startComms());
+        executorService.submit(()-> commsBT.startComms());
     }
 
     void toast(int message){
         runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
     }
     void commsFileStart(String path){
-        runOnUiThread(()->main_progress.show(path));
+        Log.d(LOG_TAG, "commsFileStart " + path);
+        runOnUiThread(()-> main_progress.show(path));
     }
     void commsProgress(int progress){
-        runOnUiThread(()->main_progress.setProgress(progress));
+        runOnUiThread(()-> main_progress.setProgress(progress));
     }
     void commsConnectionInfo(int value){
-        runOnUiThread(()->main_progress.setConnectionInfo(value));
+        runOnUiThread(()-> main_progress.setConnectionInfo(value));
     }
     void commsFileDone(String path){
-        executorService.submit(()->library.addFile(this, path));
-        runOnUiThread(()->main_progress.setVisibility(View.GONE));
-        executorService.submit(()->commsBT.sendFileBinaryResponse(path));
+        Log.d(LOG_TAG, "commsFileDone " + path);
+        executorService.submit(()-> library.addFile(this, path));
+        runOnUiThread(()-> main_progress.setVisibility(View.GONE));
+        executorService.submit(()-> commsBT.sendFileBinaryResponse(path));
     }
     void commsFileFailed(String path){
-        executorService.submit(()->library.deleteFile(this, path));
-        runOnUiThread(()->main_progress.setVisibility(View.GONE));
-        executorService.submit(()->commsBT.sendResponse("fileBinary", "failed"));
+        executorService.submit(()-> library.deleteFile(this, path));
+        runOnUiThread(()-> main_progress.setVisibility(View.GONE));
+        executorService.submit(()-> commsBT.sendResponse("fileBinary", "failed"));
     }
     void libraryReady(){
-        runOnUiThread(()->main_library.setText(R.string.library));
+        runOnUiThread(()-> main_library.setText(R.string.library));
         if(current_tracks == null){
             current_tracks = library.tracks;
             loadTrack(0);
@@ -261,17 +301,15 @@ public class Main extends Activity{
                 current_tracks.size() < index ||
                 index < 0) return;
         loadTrackUi(index);
-        player.playTrack(this, current_tracks.get(index).uri);
+        sendIntent(getApplicationContext(), "player.playTrack", current_tracks.get(index).uri);
     }
     private void loadTrack(int index){
         if(current_tracks == null ||
                 current_tracks.size() == 0 ||
                 current_tracks.size() <= index ||
                 index < 0) return;
-        runOnUiThread(()->{
-            loadTrackUi(index);
-            player.loadTrack(this, current_tracks.get(index).uri);
-        });
+        runOnUiThread(()-> loadTrackUi(index));
+        sendIntent(getApplicationContext(), "player.loadTrack", current_tracks.get(index).uri);
     }
     private void loadTrackUi(int index){
         if(current_tracks == null ||
@@ -298,7 +336,7 @@ public class Main extends Activity{
         main_menu_library.setVisibility(View.GONE);
         executorService.submit(() -> library.scanFiles(this));
     }
-    void librarySetScanning(){
+    private void librarySetScanning(){
         if(!isPlaying){
             runOnUiThread(()->{
                 main_song_title.setText("");
@@ -308,31 +346,31 @@ public class Main extends Activity{
             });
         }
     }
-    void bPreviousPressed(){
+    private void bPreviousPressed(){
         loadTrack(current_index-1);
     }
     private void bPlayPausePressed(){
-        player.playPause();
+        sendIntent(getApplicationContext(), "player.playPause");
     }
-    void bNextPressed(){
+    private void bNextPressed(){
         loadTrack(current_index+1);
     }
 
-    void onIsPlayingChanged(boolean isPlaying){
+    private void onIsPlayingChanged(boolean isPlaying){
         if(this.isPlaying == isPlaying) return;
         this.isPlaying = isPlaying;
         if(isPlaying){
             main_play_pause.setImageResource(R.drawable.icon_pause);
-            startOngoingNotification();
+            service.start(getApplicationContext());
         }else{
             main_play_pause.setImageResource(R.drawable.icon_play);
-            stopOngoingNotification();
+            service.stopDelayed();
         }
     }
-    void onProgressChanged(long currentPosition){
+    private void onProgressChanged(long currentPosition){
         main_timer.setText(prettyTimer(currentPosition));
     }
-    void onPlayerEnded(){
+    private void onPlayerEnded(){
         if(hasNext()) playTrack(current_index+1);
     }
     private boolean hasPrevious(){
@@ -354,13 +392,18 @@ public class Main extends Activity{
             if(isPlaying){
                 AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
                 builder.setMessage(R.string.confirm_close);
-                builder.setPositiveButton(R.string.yes, (dialog, which) -> System.exit(0));
+                builder.setPositiveButton(R.string.yes, (dialog, which) -> exit());
                 builder.setNegativeButton(R.string.back, (dialog, which) -> dialog.dismiss());
                 builder.create().show();
             }else{
-                System.exit(0);
+                exit();
             }
         }
+    }
+    private void exit(){
+        sendIntent(getApplicationContext(), "player.exit");
+        service.stop();
+        System.exit(0);
     }
 
     @Override
@@ -472,66 +515,27 @@ public class Main extends Activity{
 
         return pretty;
     }
-    private void startOngoingNotification(){
-        checkWakeLock();
-
-        String WMP_Notification = "WMP_Notification";
-        int WMP_Notification_ID = 1;
-
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel notificationChannel = new NotificationChannel(WMP_Notification, getString(R.string.open_wmp), NotificationManager.IMPORTANCE_DEFAULT);
-        notificationManager.createNotificationChannel(notificationChannel);
-
-        Intent actionIntent = new Intent(this, Main.class);
-        PendingIntent actionPendingIntent = PendingIntent.getActivity(
-                this,
-                0,
-                actionIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
-                this
-                ,WMP_Notification
-        )
-                .setSmallIcon(R.drawable.icon_vector)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .addAction(
-                        R.drawable.icon_vector, getString(R.string.open_wmp),
-                        actionPendingIntent
-                )
-                .setOngoing(true);
-
-        Status ongoingActivityStatus = new Status.Builder()
-                .addTemplate(getString(R.string.playing_track))
-                .build();
-
-        OngoingActivity ongoingActivity = new OngoingActivity.Builder(
-                getBaseContext()
-                ,WMP_Notification_ID
-                ,notificationBuilder
-        )
-                .setStaticIcon(R.drawable.icon_vector)
-                .setTouchIntent(actionPendingIntent)
-                .setStatus(ongoingActivityStatus)
-                .build();
-
-        ongoingActivity.apply(getBaseContext());
-
-        notificationManager.notify(WMP_Notification_ID, notificationBuilder.build());
+    static void sendIntent(Context context, String intent_type){
+        Intent intent = new Intent(Main.INTENT_ACTION);
+        intent.putExtra("intent_type", intent_type);
+        context.sendBroadcast(intent);
     }
-    private void checkWakeLock(){
-        if(!isPlaying) return;
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WMP:WakeWhilePlayingMusic");
-        wakeLock.acquire(10*60*1000L /*10 minutes*/);
-
-        handler.postDelayed(this::checkWakeLock, 9*60*1000L /*9 minutes*/);
+    static void sendIntentProgressChanged(Context context, long extra_value){
+        Intent intent = new Intent(Main.INTENT_ACTION);
+        intent.putExtra("intent_type", "onProgressChanged");
+        intent.putExtra("currentPosition", extra_value);
+        context.sendBroadcast(intent);
     }
-    private void stopOngoingNotification(){
-        wakeLock.release();
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancelAll();
+    static void sendIntentIsPlayingChanged(Context context, boolean extra_value){
+        Intent intent = new Intent(Main.INTENT_ACTION);
+        intent.putExtra("intent_type", "onIsPlayingChanged");
+        intent.putExtra("isPlaying", extra_value);
+        context.sendBroadcast(intent);
     }
-
+    private static void sendIntent(Context context, String intent_type, Uri extra_value){
+        Intent intent = new Intent(Main.INTENT_ACTION);
+        intent.putExtra("intent_type", intent_type);
+        intent.putExtra("uri", extra_value);
+        context.sendBroadcast(intent);
+    }
 }
