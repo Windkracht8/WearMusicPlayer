@@ -23,6 +23,7 @@ class CommsWifi{
     private final Handler handler;
     private final ArrayList<Item> itemQueue = new ArrayList<>();
     boolean running = false;
+    boolean canSendNext = true;
     private boolean closeConnection = true;
     private boolean isSendingFile = false;
 
@@ -33,8 +34,8 @@ class CommsWifi{
     void stop(){
         closeConnection = true;
         running = false;
-        itemQueue.clear();//TODO: first reset the status back to ...
-        handler.removeCallbacks(this::sendFile);
+        itemQueue.clear();
+        handler.removeCallbacksAndMessages(null);
     }
     private String getIpAddress(){
         int ipAddress = 0;
@@ -58,16 +59,15 @@ class CommsWifi{
         closeConnection = false;
         item.updateProgress(main, 0);
         itemQueue.add(item);
-        if(Build.VERSION.SDK_INT < 29 || !handler.hasCallbacks(this::sendFile)){
-            sendFile();
-        }
+        main.executorService.submit(this::sendFile);
     }
     private void sendFile(){
         if(itemQueue.size() == 0){
             running = false;
             return;
         }
-        if(isSendingFile){
+        if(isSendingFile || !canSendNext){
+            handler.removeCallbacksAndMessages(null);
             handler.postDelayed(()-> main.executorService.submit(this::sendFile), 100);
             return;
         }
@@ -83,6 +83,7 @@ class CommsWifi{
         Log.d(Main.LOG_TAG, "CommsWifi.sendFile " + libItem.name);
 
         isSendingFile = true;
+        canSendNext = false;
         main.sendFileDetailsRequest(item.libItem, ipAddress);
 
         try(ServerSocket serverSocket = new ServerSocket(PORT_NUMBER)){
@@ -125,7 +126,7 @@ class CommsWifi{
             stop();
         }
         isSendingFile = false;
-        handler.postDelayed(()-> main.executorService.submit(this::sendFile), 10);
+        handler.postDelayed(()-> main.executorService.submit(this::sendFile), 100);
     }
 
 /*

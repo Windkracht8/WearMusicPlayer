@@ -35,10 +35,8 @@ class Library{
         return array;
     }
     void scanMediaStore(Main main){
+        if(!Main.hasReadPermission) return;
         Log.d(Main.LOG_TAG, "Library.scanMediaStore");
-        if(libraryScanVersion > 0){
-            main.librarySetScanning();
-        }
         tracks.clear();
         artists.clear();
         albums.clear();
@@ -208,11 +206,15 @@ class Library{
         }
         @Override
         public int compareTo(Track track){
-            int album = this.album.name.compareTo(track.album.name);
-            if(album != 0) return album;
+            int compare = album.name.compareTo(track.album.name);
+            if(compare != 0) return compare;
             if(track_no != null && track.track_no != null){
-                int track_no = this.track_no.compareTo(track.track_no);
-                if(track_no != 0) return track_no;
+                try{
+                    compare = Integer.valueOf(track_no).compareTo(Integer.valueOf(track.track_no));
+                }catch(Exception e){
+                    compare = track_no.compareTo(track.track_no);
+                }
+                if(compare != 0) return compare;
             }
             return title.compareTo(track.title);
         }

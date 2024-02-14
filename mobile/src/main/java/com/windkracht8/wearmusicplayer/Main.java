@@ -69,17 +69,6 @@ public class Main extends AppCompatActivity{
         commsBT = new CommsBT(this);
         commsWifi = new CommsWifi(this);
 
-        if(Build.VERSION.SDK_INT >= 31){
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_SCAN)
-                    && hasPermission(android.Manifest.permission.BLUETOOTH_CONNECT);
-        }else{
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH);
-        }
-        if(Build.VERSION.SDK_INT >= 33){
-            hasReadPermission = hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
-        }else{
-            hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-        }
         requestPermissions();
         executorService.submit(() -> library.scanFiles(this));
         initBT();
@@ -114,6 +103,9 @@ public class Main extends AppCompatActivity{
 
     private void requestPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
+            hasReadPermission = hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_SCAN)
+                    && hasPermission(android.Manifest.permission.BLUETOOTH_CONNECT);
             if(!hasReadPermission || !hasBTPermission){
                 ActivityCompat.requestPermissions(this
                         ,new String[]{
@@ -125,6 +117,9 @@ public class Main extends AppCompatActivity{
                 );
             }
         }else if(Build.VERSION.SDK_INT >= 31){
+            hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_SCAN)
+                    && hasPermission(android.Manifest.permission.BLUETOOTH_CONNECT);
             if(!hasReadPermission || !hasBTPermission){
                 ActivityCompat.requestPermissions(this
                         ,new String[]{
@@ -136,6 +131,8 @@ public class Main extends AppCompatActivity{
                 );
             }
         }else{
+            hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH);
             if(!hasReadPermission || !hasBTPermission){
                 ActivityCompat.requestPermissions(this
                         ,new String[]{
@@ -356,6 +353,7 @@ public class Main extends AppCompatActivity{
                     String path_done = responseData.getString("path");
                     runOnUiThread(()->items.forEach((i)->i.updateProgressDone(this, path_done)));
                     gotStatus(getString(R.string.received_file));
+                    commsWifi.canSendNext = true;
                     break;
                 case "deleteFile":
                     if(response.getString("responseData").equals("OK")){
