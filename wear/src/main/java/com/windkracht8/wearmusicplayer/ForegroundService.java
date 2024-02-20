@@ -19,6 +19,7 @@ import androidx.wear.ongoing.OngoingActivity;
 import androidx.wear.ongoing.Status;
 
 public class ForegroundService extends Service{
+    private static final String channel_id = "WMP_Notification";
     private static Handler handler;
     private static NotificationManager notificationManager;
     private static boolean notificationIsRunning = false;
@@ -34,7 +35,6 @@ public class ForegroundService extends Service{
             return super.onStartCommand(intent, flags, startId);
         }
         Log.d(Main.LOG_TAG, "ForegroundService.onStartCommand");
-        String channel_id = "WMP_Notification";
 
         if(notificationManager == null){
             notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);

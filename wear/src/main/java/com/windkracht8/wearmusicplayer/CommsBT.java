@@ -162,14 +162,14 @@ class CommsBT{
             Log.e(Main.LOG_TAG, "CommsBT.stopComms unregisterReceiver: " + e.getMessage());
         }
         try{
-            if(bluetoothSocket != null) bluetoothSocket.close();
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "CommsBT.stopComms bluetoothSocket: " + e.getMessage());
-        }
-        try{
             if(bluetoothServerSocket != null) bluetoothServerSocket.close();
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "CommsBT.stopComms bluetoothServerSocket: " + e.getMessage());
+        }
+        try{
+            if(bluetoothSocket != null) bluetoothSocket.close();
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "CommsBT.stopComms bluetoothSocket: " + e.getMessage());
         }
         commsBTConnect = null;
         commsBTConnected = null;
@@ -188,7 +188,6 @@ class CommsBT{
         }
         public void run(){
             try{
-                Log.d(Main.LOG_TAG, "CommsBTConnect.run");
                 bluetoothSocket = bluetoothServerSocket.accept();
                 if(closeConnection) return;
                 Log.d(Main.LOG_TAG, "CommsBTConnect.run accepted");
@@ -229,10 +228,12 @@ class CommsBT{
             if(closeConnection){
                 return;
             }
+            read();
             try{
                 outputStream.write("".getBytes());
             }catch(Exception e){
-                Log.d(Main.LOG_TAG, "Connection closed");
+                Log.d(Main.LOG_TAG, "CommsBTConnected.process outputStream.write failed: " + e);
+                Log.d(Main.LOG_TAG, "CommsBTConnected.process outputStream.write failed: " + e.getMessage());
                 stopComms();
                 startComms();
                 return;
@@ -242,7 +243,6 @@ class CommsBT{
                 startComms();
                 return;
             }
-            read();
             handler.postDelayed(this::process, 100);
         }
         private boolean sendNextResponse(){
