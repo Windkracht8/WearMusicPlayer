@@ -66,7 +66,7 @@ public class CommsBT{
             Log.e(Main.LOG_TAG, "CommsBT.sendFileDetails exception: " + e.getMessage());
         }
     }
-    /** @noinspection SameParameterValue*/
+    /** @noinspection SameParameterValue */
     void sendRequest(String requestType, String requestData){
         Log.d(Main.LOG_TAG, "CommsBT.sendRequest: " + requestType);
         try{
@@ -304,7 +304,7 @@ public class CommsBT{
             main.gotStatus(main.getString(R.string.closing_connection));
             try{
                 bluetoothSocket.close();
-                for(int i=requestQueue.length(); i>0; i--) {
+                for(int i=requestQueue.length(); i>0; i--){
                     requestQueue.remove(i-1);
                 }
             }catch(Exception e){
@@ -383,6 +383,9 @@ public class CommsBT{
                     }
                     sleep100();
                 }
+                Log.e(Main.LOG_TAG, "CommsBTConnected.read inputStream.available() == 0, did not get valid json : " + response);
+                main.toast(R.string.fail_response);
+                main.gotError(main.getString(R.string.incomplete_message));
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsBTConnected.read Exception: " + e.getMessage());
                 main.toast(R.string.fail_response);
