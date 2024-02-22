@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
+import android.os.Parcelable;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -136,16 +137,25 @@ public class CommsBT{
                         }
                     }else if(BluetoothDevice.ACTION_UUID.equals(intent.getAction())){
                         BluetoothDevice bluetoothDevice;
+                        Parcelable[] parcelUuids;
                         if(Build.VERSION.SDK_INT >= 33){
                             bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
+                            parcelUuids = intent.getParcelableArrayExtra(BluetoothDevice.EXTRA_UUID, Parcelable.class);
                         }else{
                             bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                            parcelUuids = intent.getParcelableArrayExtra(BluetoothDevice.EXTRA_UUID);
                         }
                         if(bluetoothDevice == null || status != Status.SEARCHING) return;
-                        Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver ACTION_UUID: " + bluetoothDevice.getName());
+                        if(parcelUuids != null){
+                            for(Parcelable parcelUuid : parcelUuids){
+                                if(parcelUuid.toString().equals(WMP_UUID)){
+                                    foundDeviceWithWMP_UUID(bluetoothDevice);
+                                    break;
+                                }
+                            }
+                        }
                         remainingSearchCount--;
-                        isDeviceWMP(bluetoothDevice);
-                        devices_fetch_pending.remove(bluetoothDevice.getAddress());
+                        handler.postDelayed(()->devices_fetch_pending.remove(bluetoothDevice.getAddress()), 3000);
                     }
                 }
             };
@@ -193,7 +203,7 @@ public class CommsBT{
             isDeviceWMP(bondedDevice);
         }
 
-        remainingSearchCount = 10 * (bondedDevices.size() - wmp_device_addresses.size());
+        remainingSearchCount = 5 * (bondedDevices.size() - wmp_device_addresses.size());
         search_newDevices();
     }
     private void isDeviceWMP(BluetoothDevice bluetoothDevice){
@@ -207,13 +217,16 @@ public class CommsBT{
         for(ParcelUuid uuid : uuids){
             if(uuid.toString().equals(WMP_UUID)){
                 Log.d(Main.LOG_TAG, "CommsBT.isDeviceWMP device has WMP_UUID: " + bluetoothDevice.getName());
-                wmp_device_addresses.add(bluetoothDevice.getAddress());
-                Main.sharedPreferences_editor.putStringSet("wmp_device_addresses", wmp_device_addresses);
-                Main.sharedPreferences_editor.apply();
-                try_wmpDevice(bluetoothDevice);
+                foundDeviceWithWMP_UUID(bluetoothDevice);
                 return;
             }
         }
+    }
+    private void foundDeviceWithWMP_UUID(BluetoothDevice bluetoothDevice){
+        wmp_device_addresses.add(bluetoothDevice.getAddress());
+        Main.sharedPreferences_editor.putStringSet("wmp_device_addresses", wmp_device_addresses);
+        Main.sharedPreferences_editor.apply();
+        try_wmpDevice(bluetoothDevice);
     }
     private void try_wmpDevice(BluetoothDevice wmp_device){
         if(status != Status.SEARCHING) return;
