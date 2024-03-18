@@ -41,6 +41,6 @@
     <string name="fail_create_file">Failed to create file</string>
     <string name="fail_delete_file">Failed to delete file</string>
     <string name="fail_scan_media">Problem with finding tracks</string>
-    <string name="fail_prepare">Failed to load track</string>
+    <string name="fail_load_tracks">Failed to load tracks</string>
 
 </resources>

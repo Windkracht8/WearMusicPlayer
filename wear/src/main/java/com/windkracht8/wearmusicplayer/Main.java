@@ -4,12 +4,12 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -25,6 +25,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.splashscreen.SplashScreen;
+import androidx.media3.session.MediaController;
+import androidx.media3.session.SessionToken;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -33,7 +35,7 @@ import java.util.concurrent.Executors;
 
 public class Main extends Activity{
     static final String LOG_TAG = "WearMusicPlayer";
-    static final String INTENT_ACTION = "com.windkracht8.wearmusicplayer";
+    private static final String INTENT_ACTION = "com.windkracht8.wearmusicplayer";
     static boolean isScreenRound;
     private boolean showSplash = true;
     private boolean hasBTPermission = false;
@@ -69,10 +71,8 @@ public class Main extends Activity{
     private static final int SWIPE_VELOCITY_THRESHOLD = 50;
 
     final static Library library = new Library();
-    static final W8Player player = new W8Player();
-    private static final ForegroundService service = new ForegroundService();
+    static W8Player player;
     private CommsBT commsBT = null;
-    private ArrayList<Library.Track> current_tracks;
     private int current_index;
     private boolean isPlaying = false;
 
@@ -93,6 +93,9 @@ public class Main extends Activity{
 
         executorService = Executors.newFixedThreadPool(4);
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        ComponentName cn = new ComponentName(this, W8Player.class);
+        SessionToken st = new SessionToken(this, cn);
+        new MediaController.Builder(this, st).buildAsync();
 
         broadcastReceiver = new BroadcastReceiver(){
             @Override
@@ -104,13 +107,13 @@ public class Main extends Activity{
                         onIsPlayingChanged(intent.getBooleanExtra("isPlaying", false));
                         break;
                     case "onPlayerEnded":
-                        onPlayerEnded();
+                        //onPlayerEnded();
                         break;
                     case "bPreviousPressed":
-                        bPreviousPressed();
+                        //bPreviousPressed();
                         break;
                     case "bNextPressed":
-                        bNextPressed();
+                        //bNextPressed();
                         break;
                     case "onProgressChanged":
                         if(!intent.hasExtra("currentPosition")){return;}
@@ -125,7 +128,7 @@ public class Main extends Activity{
             registerReceiver(broadcastReceiver, new IntentFilter(INTENT_ACTION));
         }
 
-        player.init(getApplicationContext());
+        //player.init(getApplicationContext());
 
         setContentView(R.layout.main);
         main_progress = findViewById(R.id.main_progress);
@@ -148,9 +151,9 @@ public class Main extends Activity{
         findViewById(R.id.main_volume_up).setOnClickListener(v ->
                 audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
         );
-        main_previous.setOnClickListener(v -> bPreviousPressed());
-        main_play_pause.setOnClickListener(v -> bPlayPausePressed());
-        main_next.setOnClickListener(v -> bNextPressed());
+        //main_previous.setOnClickListener(v -> bPreviousPressed());
+        //main_play_pause.setOnClickListener(v -> bPlayPausePressed());
+        //main_next.setOnClickListener(v -> bNextPressed());
         findViewById(R.id.main_library).setOnClickListener(v -> main_menu_library.show(this));
 
         // We need to listen for touch on all objects that have a click listener
@@ -173,6 +176,23 @@ public class Main extends Activity{
         initBT();
         showSplash = false;
     }
+    @Override
+    public void onStart(){
+        super.onStart();
+        /*
+        SessionToken sessionToken =
+                new SessionToken(this, new ComponentName(this, W8Player.class));
+        ListenableFuture<MediaController> controllerFuture =
+                new MediaController.Builder(this, sessionToken).buildAsync();
+        controllerFuture.addListener(() -> {
+            // Call controllerFuture.get() to retrieve the MediaController.
+            // MediaController implements the Player interface, so it can be
+            // attached to the PlayerView UI component.
+            playerView.setPlayer(controllerFuture.get());
+        }, MoreExecutors.directExecutor())
+         */
+    }
+
     @Override
     public void onDestroy(){
         super.onDestroy();
@@ -279,41 +299,42 @@ public class Main extends Activity{
     }
     void libraryReady(){
         runOnUiThread(()-> main_library.setText(R.string.library));
-        if(current_tracks == null){
-            current_tracks = library.tracks;
-            loadTrack(0);
-        }
+        W8Player.tracks = library.tracks;
+        //loadTrack(0);
     }
 
     void openTrackList(ArrayList<Library.Track> tracks, int index){
-        current_tracks = tracks;
+        W8Player.tracks = tracks;
         main_play_pause.setImageResource(R.drawable.icon_pause);
         main_menu_library.setVisibility(View.GONE);
         main_menu_artists.setVisibility(View.GONE);
         main_menu_artist.setVisibility(View.GONE);
         main_menu_albums.setVisibility(View.GONE);
         main_menu_album.setVisibility(View.GONE);
-        playTrack(index);
+        //playTrack(index);
     }
+    /*
     private void playTrack(int index){
         if(current_tracks == null ||
-                current_tracks.size() == 0 ||
+                current_tracks.isEmpty() ||
                 current_tracks.size() < index ||
                 index < 0) return;
         loadTrackUi(index);
-        sendIntent(getApplicationContext(), "player.playTrack", current_tracks.get(index).uri);
+        player.playTrack(this, current_tracks.get(index).uri);
     }
     private void loadTrack(int index){
         if(current_tracks == null ||
-                current_tracks.size() == 0 ||
+                current_tracks.isEmpty() ||
                 current_tracks.size() <= index ||
                 index < 0) return;
         runOnUiThread(()-> loadTrackUi(index));
-        sendIntent(getApplicationContext(), "player.loadTrack", current_tracks.get(index).uri);
+        player.loadTrack(this, current_tracks.get(index).uri);
     }
+     */
+    /*
     private void loadTrackUi(int index){
         if(current_tracks == null ||
-                current_tracks.size() == 0 ||
+                current_tracks.isEmpty() ||
                 current_tracks.size() <= index ||
                 index < 0) return;
         current_index = index;
@@ -331,54 +352,42 @@ public class Main extends Activity{
             main_next.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
         }
     }
+     */
     void onRescanClick(){
         librarySetScanning();
         main_menu_library.setVisibility(View.GONE);
         executorService.submit(() -> library.scanFiles(this));
     }
     private void librarySetScanning(){
-        if(!isPlaying){
+        if(!player.exoPlayer.isPlaying()){
             runOnUiThread(()->{
                 main_song_title.setText("");
                 main_song_artist.setText("");
                 main_library.setText(R.string.scanning);
-                current_tracks = null;
+                //current_tracks = null;
+                //TODO: send intent to W8Player
             });
         }
     }
-    private void bPreviousPressed(){
-        loadTrack(current_index-1);
-    }
-    private void bPlayPausePressed(){
-        sendIntent(getApplicationContext(), "player.playPause");
-    }
-    private void bNextPressed(){
-        loadTrack(current_index+1);
-    }
+    //private void bPreviousPressed(){loadTrack(current_index-1);}
+    //private void bPlayPausePressed(){player.playPause();}
+    //private void bNextPressed(){loadTrack(current_index+1);}
 
     private void onIsPlayingChanged(boolean isPlaying){
         if(this.isPlaying == isPlaying) return;
         this.isPlaying = isPlaying;
         if(isPlaying){
             main_play_pause.setImageResource(R.drawable.icon_pause);
-            service.start(getApplicationContext());
         }else{
             main_play_pause.setImageResource(R.drawable.icon_play);
-            service.stopDelayed(getApplicationContext());
         }
     }
     private void onProgressChanged(long currentPosition){
         main_timer.setText(prettyTimer(currentPosition));
     }
-    private void onPlayerEnded(){
-        if(hasNext()) playTrack(current_index+1);
-    }
-    private boolean hasPrevious(){
-        return current_index > 0;
-    }
-    private boolean hasNext(){
-        return current_tracks.size() > current_index+1;
-    }
+    //private void onPlayerEnded(){if(hasNext()) playTrack(current_index+1);}
+    //private boolean hasPrevious(){return current_index > 0;}
+    //private boolean hasNext(){return current_tracks.size() > current_index+1;}
     @Override
     public void onBackPressed(){
         View view = getCurrentVisibleView();
@@ -389,7 +398,7 @@ public class Main extends Activity{
                 menu.requestSVFocus();
             }
         }else{
-            if(isPlaying){
+            if(player.exoPlayer.isPlaying()){
                 AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
                 builder.setMessage(R.string.confirm_close);
                 builder.setPositiveButton(R.string.yes, (dialog, which) -> exit());
@@ -402,7 +411,6 @@ public class Main extends Activity{
     }
     private void exit(){
         sendIntent(getApplicationContext(), "player.exit");
-        service.stop(getApplicationContext());
         System.exit(0);
     }
 
@@ -530,12 +538,6 @@ public class Main extends Activity{
         Intent intent = new Intent(Main.INTENT_ACTION);
         intent.putExtra("intent_type", "onIsPlayingChanged");
         intent.putExtra("isPlaying", extra_value);
-        context.sendBroadcast(intent);
-    }
-    private static void sendIntent(Context context, String intent_type, Uri extra_value){
-        Intent intent = new Intent(Main.INTENT_ACTION);
-        intent.putExtra("intent_type", intent_type);
-        intent.putExtra("uri", extra_value);
         context.sendBroadcast(intent);
     }
 }
