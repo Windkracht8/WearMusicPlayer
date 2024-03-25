@@ -3,15 +3,14 @@ package com.windkracht8.wearmusicplayer;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -25,17 +24,22 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.splashscreen.SplashScreen;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.PlaybackException;
+import androidx.media3.common.Player;
 import androidx.media3.session.MediaController;
 import androidx.media3.session.SessionToken;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
+
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main extends Activity{
     static final String LOG_TAG = "WearMusicPlayer";
-    private static final String INTENT_ACTION = "com.windkracht8.wearmusicplayer";
     static boolean isScreenRound;
     private boolean showSplash = true;
     private boolean hasBTPermission = false;
@@ -56,8 +60,9 @@ public class Main extends Activity{
     private View currentVisibleView;
 
     ExecutorService executorService;
+    private Handler handler;
     private AudioManager audioManager;
-    private BroadcastReceiver broadcastReceiver;
+    private MediaController mediaController;
 
     static int heightPixels;
     private static int widthPixels;
@@ -71,10 +76,7 @@ public class Main extends Activity{
     private static final int SWIPE_VELOCITY_THRESHOLD = 50;
 
     final static Library library = new Library();
-    static W8Player player;
     private CommsBT commsBT = null;
-    private int current_index;
-    private boolean isPlaying = false;
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")//registerReceiver is wrapped in SDK_INT, still complains
     @Override
@@ -92,43 +94,8 @@ public class Main extends Activity{
         vh75 = (int) (heightPixels * .75);
 
         executorService = Executors.newFixedThreadPool(4);
+        handler = new Handler(Looper.getMainLooper());
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        ComponentName cn = new ComponentName(this, W8Player.class);
-        SessionToken st = new SessionToken(this, cn);
-        new MediaController.Builder(this, st).buildAsync();
-
-        broadcastReceiver = new BroadcastReceiver(){
-            @Override
-            public void onReceive(Context context, Intent intent){
-                if(!intent.hasExtra("intent_type")){return;}
-                switch(Objects.requireNonNull(intent.getStringExtra("intent_type"))){
-                    case "onIsPlayingChanged":
-                        if(!intent.hasExtra("isPlaying")){return;}
-                        onIsPlayingChanged(intent.getBooleanExtra("isPlaying", false));
-                        break;
-                    case "onPlayerEnded":
-                        //onPlayerEnded();
-                        break;
-                    case "bPreviousPressed":
-                        //bPreviousPressed();
-                        break;
-                    case "bNextPressed":
-                        //bNextPressed();
-                        break;
-                    case "onProgressChanged":
-                        if(!intent.hasExtra("currentPosition")){return;}
-                        onProgressChanged(intent.getLongExtra("currentPosition", 0));
-                        break;
-                }
-            }
-        };
-        if(Build.VERSION.SDK_INT >= 33){
-            registerReceiver(broadcastReceiver, new IntentFilter(INTENT_ACTION), Context.RECEIVER_NOT_EXPORTED);
-        }else{
-            registerReceiver(broadcastReceiver, new IntentFilter(INTENT_ACTION));
-        }
-
-        //player.init(getApplicationContext());
 
         setContentView(R.layout.main);
         main_progress = findViewById(R.id.main_progress);
@@ -151,9 +118,15 @@ public class Main extends Activity{
         findViewById(R.id.main_volume_up).setOnClickListener(v ->
                 audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
         );
-        //main_previous.setOnClickListener(v -> bPreviousPressed());
-        //main_play_pause.setOnClickListener(v -> bPlayPausePressed());
-        //main_next.setOnClickListener(v -> bNextPressed());
+        main_previous.setOnClickListener(v -> mediaController.seekToPrevious());
+        main_play_pause.setOnClickListener(v -> {
+            if(mediaController.isPlaying()){
+                mediaController.pause();
+            }else{
+                mediaController.play();
+            }
+        });
+        main_next.setOnClickListener(v -> mediaController.seekToNext());
         findViewById(R.id.main_library).setOnClickListener(v -> main_menu_library.show(this));
 
         // We need to listen for touch on all objects that have a click listener
@@ -179,31 +152,124 @@ public class Main extends Activity{
     @Override
     public void onStart(){
         super.onStart();
-        /*
-        SessionToken sessionToken =
-                new SessionToken(this, new ComponentName(this, W8Player.class));
-        ListenableFuture<MediaController> controllerFuture =
-                new MediaController.Builder(this, sessionToken).buildAsync();
-        controllerFuture.addListener(() -> {
-            // Call controllerFuture.get() to retrieve the MediaController.
-            // MediaController implements the Player interface, so it can be
-            // attached to the PlayerView UI component.
-            playerView.setPlayer(controllerFuture.get());
-        }, MoreExecutors.directExecutor())
-         */
+        ComponentName cn = new ComponentName(this, W8Player.class);
+        SessionToken st = new SessionToken(this, cn);
+        ListenableFuture<MediaController> controllerFuture = new MediaController.Builder(this, st).buildAsync();
+        controllerFuture.addListener(()-> {
+            Log.d(LOG_TAG, "MediaController is ready");
+            try{
+                mediaController = controllerFuture.get();
+                mediaController.addListener(playerListener);
+                if(mediaController.getMediaItemCount() == 0)
+                    loadTracks(library.tracks);
+            }catch(Exception e){
+                Log.e(LOG_TAG, "onStart exception: " + e.getMessage());
+            }
+        },MoreExecutors.directExecutor());
+    }
+    private final Player.Listener playerListener = new Player.Listener(){
+        @Override
+        public void onIsPlayingChanged(boolean isPlaying){
+            if(isPlaying){
+                main_play_pause.setImageResource(R.drawable.icon_pause);
+                updateTimer();
+            }else{
+                main_play_pause.setImageResource(R.drawable.icon_play);
+            }
+        }
+        @Override
+        public void onMediaMetadataChanged(@NonNull MediaMetadata mediaMetadata){
+            main_song_title.setText(mediaMetadata.title);
+            main_song_artist.setText(mediaMetadata.artist);
+            if(mediaController.hasPreviousMediaItem()){
+                main_previous.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+            }else{
+                main_previous.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+            }
+            if(mediaController.hasNextMediaItem()){
+                main_next.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+            }else{
+                main_next.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+            }
+        }
+        @Override
+        public void onPlayerError(PlaybackException error){
+            Log.d(LOG_TAG, "onPlayerError: " + error);
+            Log.d(LOG_TAG, "onPlayerError: " + error.getMessage());
+        }
+    };
+
+    private void updateTimer(){
+        if(!mediaController.isPlaying()) return;
+        long pos = mediaController.getCurrentPosition();
+
+        long tmp = pos % 1000;
+        long secs = (pos - tmp) / 1000;
+        tmp = secs % 60;
+        long minutes = (secs - tmp) / 60;
+        String pretty = Long.toString(tmp);
+        if(tmp < 10){pretty = "0" + pretty;}
+        pretty = minutes + ":" + pretty;
+
+        main_timer.setText(pretty);
+        handler.postDelayed(this::updateTimer, 1000-(pos%1000));
     }
 
+    private void loadTracks(ArrayList<Library.Track> tracks){
+        if(mediaController == null || tracks.isEmpty()) return;
+        mediaController.clearMediaItems();
+        try{
+            for(Library.Track track : tracks){
+                Log.d(Main.LOG_TAG, "loadTracks: " + track.title);
+                mediaController.addMediaItem(MediaItem.fromUri(track.uri));
+            }
+            mediaController.prepare();
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "loadTracks exception: " + e.getMessage());
+            Toast.makeText(this, R.string.fail_load_tracks, Toast.LENGTH_SHORT).show();
+        }
+    }
+    void libraryReady(){
+        runOnUiThread(()-> main_library.setText(R.string.library));
+        loadTracks(library.tracks);
+    }
+
+    void openTrackList(ArrayList<Library.Track> tracks, int index){
+        loadTracks(tracks);
+        main_menu_library.setVisibility(View.GONE);
+        main_menu_artists.setVisibility(View.GONE);
+        main_menu_artist.setVisibility(View.GONE);
+        main_menu_albums.setVisibility(View.GONE);
+        main_menu_album.setVisibility(View.GONE);
+        mediaController.seekTo(index, 0);
+        mediaController.play();
+    }
+
+    void onRescanClick(){
+        librarySetScanning();
+        main_menu_library.setVisibility(View.GONE);
+        executorService.submit(() -> library.scanFiles(this));
+    }
+    private void librarySetScanning(){
+        if(!mediaController.isPlaying()){
+            runOnUiThread(()->{
+                main_song_title.setText("");
+                main_song_artist.setText("");
+                main_library.setText(R.string.scanning);
+                mediaController.clearMediaItems();
+            });
+        }
+    }
     @Override
     public void onDestroy(){
         super.onDestroy();
-        unregisterReceiver(broadcastReceiver);
         commsBT.stopComms();
+        mediaController.release();
     }
     private void requestPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
             hasReadPermission = hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                    && hasPermission(Manifest.permission.BLUETOOTH_SCAN);
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT);
             if(!hasReadPermission
                     || !hasBTPermission
                     || !hasPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -211,19 +277,16 @@ public class Main extends Activity{
                 ActivityCompat.requestPermissions(this, new String[]{
                         Manifest.permission.POST_NOTIFICATIONS
                         ,Manifest.permission.READ_MEDIA_AUDIO
-                        ,Manifest.permission.BLUETOOTH_CONNECT
-                        ,Manifest.permission.BLUETOOTH_SCAN}, 1);
+                        ,Manifest.permission.BLUETOOTH_CONNECT}, 1);
             }
         }else if(Build.VERSION.SDK_INT >= 31){
             hasReadPermission = hasPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE);
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                    && hasPermission(Manifest.permission.BLUETOOTH_SCAN);
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT);
             if(!hasReadPermission || !hasBTPermission
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
                                 Manifest.permission.MANAGE_EXTERNAL_STORAGE
-                                ,Manifest.permission.BLUETOOTH_CONNECT
-                                ,Manifest.permission.BLUETOOTH_SCAN}, 1);
+                                ,Manifest.permission.BLUETOOTH_CONNECT}, 1);
             }
         }else{//30
             hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
@@ -297,97 +360,7 @@ public class Main extends Activity{
         runOnUiThread(()-> main_progress.setVisibility(View.GONE));
         executorService.submit(()-> commsBT.sendResponse("fileBinary", "failed"));
     }
-    void libraryReady(){
-        runOnUiThread(()-> main_library.setText(R.string.library));
-        W8Player.tracks = library.tracks;
-        //loadTrack(0);
-    }
 
-    void openTrackList(ArrayList<Library.Track> tracks, int index){
-        W8Player.tracks = tracks;
-        main_play_pause.setImageResource(R.drawable.icon_pause);
-        main_menu_library.setVisibility(View.GONE);
-        main_menu_artists.setVisibility(View.GONE);
-        main_menu_artist.setVisibility(View.GONE);
-        main_menu_albums.setVisibility(View.GONE);
-        main_menu_album.setVisibility(View.GONE);
-        //playTrack(index);
-    }
-    /*
-    private void playTrack(int index){
-        if(current_tracks == null ||
-                current_tracks.isEmpty() ||
-                current_tracks.size() < index ||
-                index < 0) return;
-        loadTrackUi(index);
-        player.playTrack(this, current_tracks.get(index).uri);
-    }
-    private void loadTrack(int index){
-        if(current_tracks == null ||
-                current_tracks.isEmpty() ||
-                current_tracks.size() <= index ||
-                index < 0) return;
-        runOnUiThread(()-> loadTrackUi(index));
-        player.loadTrack(this, current_tracks.get(index).uri);
-    }
-     */
-    /*
-    private void loadTrackUi(int index){
-        if(current_tracks == null ||
-                current_tracks.isEmpty() ||
-                current_tracks.size() <= index ||
-                index < 0) return;
-        current_index = index;
-        Library.Track track = current_tracks.get(current_index);
-        main_song_title.setText(track.title);
-        main_song_artist.setText(track.artist.name);
-        if(hasPrevious()){
-            main_previous.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
-        }else{
-            main_previous.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
-        }
-        if(hasNext()){
-            main_next.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
-        }else{
-            main_next.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
-        }
-    }
-     */
-    void onRescanClick(){
-        librarySetScanning();
-        main_menu_library.setVisibility(View.GONE);
-        executorService.submit(() -> library.scanFiles(this));
-    }
-    private void librarySetScanning(){
-        if(!player.exoPlayer.isPlaying()){
-            runOnUiThread(()->{
-                main_song_title.setText("");
-                main_song_artist.setText("");
-                main_library.setText(R.string.scanning);
-                //current_tracks = null;
-                //TODO: send intent to W8Player
-            });
-        }
-    }
-    //private void bPreviousPressed(){loadTrack(current_index-1);}
-    //private void bPlayPausePressed(){player.playPause();}
-    //private void bNextPressed(){loadTrack(current_index+1);}
-
-    private void onIsPlayingChanged(boolean isPlaying){
-        if(this.isPlaying == isPlaying) return;
-        this.isPlaying = isPlaying;
-        if(isPlaying){
-            main_play_pause.setImageResource(R.drawable.icon_pause);
-        }else{
-            main_play_pause.setImageResource(R.drawable.icon_play);
-        }
-    }
-    private void onProgressChanged(long currentPosition){
-        main_timer.setText(prettyTimer(currentPosition));
-    }
-    //private void onPlayerEnded(){if(hasNext()) playTrack(current_index+1);}
-    //private boolean hasPrevious(){return current_index > 0;}
-    //private boolean hasNext(){return current_tracks.size() > current_index+1;}
     @Override
     public void onBackPressed(){
         View view = getCurrentVisibleView();
@@ -398,20 +371,16 @@ public class Main extends Activity{
                 menu.requestSVFocus();
             }
         }else{
-            if(player.exoPlayer.isPlaying()){
+            if(mediaController.isPlaying()){
                 AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
                 builder.setMessage(R.string.confirm_close);
-                builder.setPositiveButton(R.string.yes, (dialog, which) -> exit());
+                builder.setPositiveButton(R.string.yes, (dialog, which) -> System.exit(0));
                 builder.setNegativeButton(R.string.back, (dialog, which) -> dialog.dismiss());
                 builder.create().show();
             }else{
-                exit();
+                System.exit(0);
             }
         }
-    }
-    private void exit(){
-        sendIntent(getApplicationContext(), "player.exit");
-        System.exit(0);
     }
 
     @Override
@@ -510,34 +479,5 @@ public class Main extends Activity{
     }
     private float getBackSwipeVelocity(MotionEvent event, float diffX){
         return (diffX / (event.getEventTime() - event.getDownTime())) * 1000;
-    }
-    private static String prettyTimer(long milli_secs){
-        long tmp = milli_secs % 1000;
-        long secs = (milli_secs - tmp) / 1000;
-        tmp = secs % 60;
-        long minutes = (secs - tmp) / 60;
-
-        String pretty = Long.toString(tmp);
-        if(tmp < 10){pretty = "0" + pretty;}
-        pretty = minutes + ":" + pretty;
-
-        return pretty;
-    }
-    static void sendIntent(Context context, String intent_type){
-        Intent intent = new Intent(Main.INTENT_ACTION);
-        intent.putExtra("intent_type", intent_type);
-        context.sendBroadcast(intent);
-    }
-    static void sendIntentProgressChanged(Context context, long extra_value){
-        Intent intent = new Intent(Main.INTENT_ACTION);
-        intent.putExtra("intent_type", "onProgressChanged");
-        intent.putExtra("currentPosition", extra_value);
-        context.sendBroadcast(intent);
-    }
-    static void sendIntentIsPlayingChanged(Context context, boolean extra_value){
-        Intent intent = new Intent(Main.INTENT_ACTION);
-        intent.putExtra("intent_type", "onIsPlayingChanged");
-        intent.putExtra("isPlaying", extra_value);
-        context.sendBroadcast(intent);
     }
 }

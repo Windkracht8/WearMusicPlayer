@@ -20,6 +20,7 @@
     <string name="back">back</string>
     <string name="open_wmp">Open Music Player</string>
     <string name="playing_track">Playing track</string>
+    <string name="paused_track">Track paused</string>
 
     <!-- progress -->
     <string name="progress_label_text">Receiving file</string>
