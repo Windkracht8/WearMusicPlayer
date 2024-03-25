@@ -3,7 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android" >
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
@@ -36,11 +35,9 @@
         <service
             android:name="com.windkracht8.wearmusicplayer.W8Player"
             android:foregroundServiceType="mediaPlayback"
-            android:exported="true" >
+            android:exported="false" >
             <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService"/>
-                <action android:name="androidx.media3.session.MediaLibraryService"/>
-                <action android:name="android.media.browse.MediaBrowserService"/>
+                <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
         </service>
     </application>
