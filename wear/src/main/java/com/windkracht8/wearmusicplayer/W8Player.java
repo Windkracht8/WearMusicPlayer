@@ -97,8 +97,8 @@ public class W8Player extends MediaSessionService{
             if(ongoingActivity == null){
                 ongoingActivity = new OngoingActivity.Builder(
                         getBaseContext()
-                        , 9
-                        , notificationBuilder
+                        ,9
+                        ,notificationBuilder
                 )
                         .setStaticIcon(R.drawable.icon_vector)
                         .setTouchIntent(pendingIntent)

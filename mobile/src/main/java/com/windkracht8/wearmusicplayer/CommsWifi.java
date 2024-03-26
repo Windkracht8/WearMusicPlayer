@@ -62,7 +62,7 @@ class CommsWifi{
         main.executorService.submit(this::sendFile);
     }
     private void sendFile(){
-        if(itemQueue.size() == 0){
+        if(itemQueue.isEmpty()){
             running = false;
             return;
         }
