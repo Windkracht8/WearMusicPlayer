@@ -58,7 +58,7 @@ public class Library{
             updateDirWithFilesOnWatch(pathsOnWatch, subdir);
         }
         boolean partial = false;
-        boolean full = directory.libTracks.size() > 0;
+        boolean full = !directory.libTracks.isEmpty();
         for(LibTrack libTrack : directory.libTracks){
             if(pathsOnWatch.contains(libTrack.path)){
                 libTrack.status = LibItem.Status.FULL;
