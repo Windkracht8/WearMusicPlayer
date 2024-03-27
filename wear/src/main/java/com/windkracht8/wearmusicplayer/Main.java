@@ -121,8 +121,10 @@ public class Main extends Activity{
         main_previous.setOnClickListener(v -> mediaController.seekToPrevious());
         main_play_pause.setOnClickListener(v -> {
             if(mediaController.isPlaying()){
+                main_play_pause.setImageResource(R.drawable.icon_pause);
                 mediaController.pause();
             }else{
+                main_play_pause.setImageResource(R.drawable.icon_play);
                 mediaController.play();
             }
         });
@@ -170,6 +172,7 @@ public class Main extends Activity{
     private final Player.Listener playerListener = new Player.Listener(){
         @Override
         public void onIsPlayingChanged(boolean isPlaying){
+            Log.d(LOG_TAG, "onIsPlayingChanged " + isPlaying);
             if(isPlaying){
                 main_play_pause.setImageResource(R.drawable.icon_pause);
                 updateTimer();
@@ -179,6 +182,8 @@ public class Main extends Activity{
         }
         @Override
         public void onMediaMetadataChanged(@NonNull MediaMetadata mediaMetadata){
+            Log.d(LOG_TAG, "onMediaMetadataChanged " + mediaMetadata.title);
+            if(mediaMetadata.title == null) return;
             main_song_title.setText(mediaMetadata.title);
             main_song_artist.setText(mediaMetadata.artist);
             if(mediaController.hasPreviousMediaItem()){
@@ -217,10 +222,10 @@ public class Main extends Activity{
 
     private void loadTracks(ArrayList<Library.Track> tracks){
         if(mediaController == null || tracks.isEmpty()) return;
+        Log.d(Main.LOG_TAG, "loadTracks: " + tracks.size());
         mediaController.clearMediaItems();
         try{
             for(Library.Track track : tracks){
-                Log.d(Main.LOG_TAG, "loadTracks: " + track.title);
                 mediaController.addMediaItem(MediaItem.fromUri(track.uri));
             }
             mediaController.prepare();
@@ -230,8 +235,18 @@ public class Main extends Activity{
         }
     }
     void libraryReady(){
-        runOnUiThread(()-> main_library.setText(R.string.library));
         loadTracks(library.tracks);
+        runOnUiThread(()-> {
+            if(!library.tracks.isEmpty()){
+                Library.Track track = library.tracks.get(0);
+                main_song_title.setText(track.title);
+                main_song_artist.setText(track.artist.name);
+                if(library.tracks.size()>1){
+                    main_next.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+                }
+            }
+            main_library.setText(R.string.library);
+        });
     }
 
     void openTrackList(ArrayList<Library.Track> tracks, int index){
@@ -257,6 +272,8 @@ public class Main extends Activity{
                 main_song_artist.setText("");
                 main_library.setText(R.string.scanning);
                 mediaController.clearMediaItems();
+                main_previous.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                main_next.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
             });
         }
     }
