@@ -158,10 +158,16 @@ class Library{
     }
     String deleteFile(Main main, String path){
         File file = new File(exStorageDir + "/" + path);
+        Log.d(Main.LOG_TAG, "Library.deleteFile: " + exStorageDir + "/" + path);
         try{
             if(!file.exists()){
                 Log.i(Main.LOG_TAG, "Library.deleteFile: path does not exists");
                 return "OK";
+            }
+            if(!file.canWrite()){
+                Log.e(Main.LOG_TAG, "Library.deleteFile: cannot write");
+                main.toast(R.string.fail_delete_file);
+                return "delete not allowed";
             }
             if(!file.delete()){
                 Log.e(Main.LOG_TAG, "Library.deleteFile: delete");
