@@ -131,7 +131,7 @@ public class CommsBT{
         devices_connect_pending = 0;
         devices_fetch_pending = 0;
 
-        if(status == Status.CONNECT_TIMEOUT){
+        if(status == Status.CONNECT_TIMEOUT || status == Status.SEARCH_TIMEOUT){
             updateStatus(Status.SEARCHING);
             for(BluetoothDevice device : devices){
                 if(wmp_device_addresses.contains(device.getAddress())){
