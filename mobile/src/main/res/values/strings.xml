@@ -22,11 +22,14 @@
     <string name="status_SEARCH_TIMEOUT">Did not find the watch. To connect, make sure you have a
         bluetooth connection with the watch, keep the app on the watch open.
         Then tab the icon to try again.</string>
+    <string name="status_CONNECT_TIMEOUT">Watch not found. To connect, make sure you have a
+        bluetooth connection with the watch, keep the app on the watch open. Tab the icon to
+        try again or search for a new device.</string>
     <string name="status_CONNECTED">Connected</string>
-    <string name="no_devices">No devices.</string>
+    <string name="status_DISCONNECTED">Disconnected</string>
     <string name="try_connect_to">Trying to connect to:</string>
-    <string name="search_new_device">Looking for a new device. This might take a few minutes.
-        To connect, keep the app on the watch open.</string>
+    <string name="found_new">Found new Watch:</string>
+    <string name="looks_like">Looks like a watch:</string>
     <string name="send_request">Send request:</string>
     <string name="send_file">Send file:</string>
     <string name="received_file">File received by watch</string>
@@ -34,7 +37,6 @@
     <string name="send_error">Send error:</string>
     <string name="response_error">Response error:</string>
     <string name="incomplete_message">Received incomplete message</string>
-    <string name="closing_connection">Closing connection.</string>
     <string name="first_connect">First connect with watch</string>
     <string name="fail_BT_denied">No Bluetooth permission. Close and reopen app,
         then allow nearby devices.</string>

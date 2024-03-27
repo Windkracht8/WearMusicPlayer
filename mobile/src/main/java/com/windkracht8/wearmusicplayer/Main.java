@@ -8,6 +8,7 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Build;
@@ -66,12 +67,26 @@ public class Main extends AppCompatActivity{
         main_ll_BT_log = findViewById(R.id.main_ll_BT_log);
         main_ll = findViewById(R.id.main_ll);
 
+        try{
+            PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            String version;
+            if(android.os.Build.VERSION.SDK_INT >= 28){
+                version = String.format("Version %s (%s)", packageInfo.versionName, packageInfo.getLongVersionCode());
+            }else{
+                version = String.format("Version %s (%s)", packageInfo.versionName, packageInfo.versionCode);
+            }
+            Log.d(Main.LOG_TAG, version);
+            gotStatus(version);
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "CommsBTLog getPackageInfo Exception: " + e.getMessage());
+        }
+
         commsBT = new CommsBT(this);
         commsWifi = new CommsWifi(this);
 
         requestPermissions();
         executorService.submit(() -> library.scanFiles(this));
-        initBT();
+        startBT();
         //commsWifi.startP2PWifi(this);//TODO:test
     }
 
@@ -96,7 +111,7 @@ public class Main extends AppCompatActivity{
     void libraryNewStatuses(){
         runOnUiThread(()->items.forEach(Item::newStatus));
     }
-    private void initBT(){
+    private void startBT(){
         if(!hasBTPermission) return;
         executorService.submit(() -> commsBT.startComms());
     }
@@ -165,7 +180,7 @@ public class Main extends AppCompatActivity{
             ){
                 if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
                     hasBTPermission = true;
-                    initBT();
+                    startBT();
                 }else{
                     updateStatus(CommsBT.Status.FATAL);
                     gotError(getString(R.string.fail_BT_denied));
@@ -197,22 +212,29 @@ public class Main extends AppCompatActivity{
     }
 
     private void onIconClick(){
-        if(commsBT == null ||
-                commsBT.status == CommsBT.Status.SEARCH_TIMEOUT ||
-                commsBT.status == CommsBT.Status.INIT
-        ){
-            initBT();
-        }else if(commsBT.status == CommsBT.Status.SEARCHING){
-            commsBT.updateStatus(CommsBT.Status.SEARCH_TIMEOUT);
-            commsBT.stopComms();
-        }else{
-            commsBT.status = CommsBT.Status.INIT;
-            commsBT.stopComms();
-            main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+        switch(commsBT.status){
+            case CONNECTING:
+                commsBT.updateStatus(CommsBT.Status.CONNECT_TIMEOUT);
+                commsBT.stopComms();
+                break;
+            case SEARCHING:
+                commsBT.updateStatus(CommsBT.Status.SEARCH_TIMEOUT);
+                commsBT.stopComms();
+                break;
+            case CONNECT_TIMEOUT:
+            case SEARCH_TIMEOUT:
+            case DISCONNECTED:
+                startBT();
+                break;
+            case CONNECTED:
+                commsBT.status = CommsBT.Status.DISCONNECTED;
+                commsBT.stopComms();
+                main_icon.setColorFilter(getColor(R.color.icon_disabled));
         }
     }
 
     void onItemStatusPressed(Item item){
+        if(cantSendRequest()){return;}
         switch(item.libItem.status){
             case FULL:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -220,7 +242,7 @@ public class Main extends AppCompatActivity{
                 builder.setMessage(R.string.alert_delete_message);
                 builder.setPositiveButton(R.string.alert_delete_positive, (dialog, which)-> {
                     itemDelete = item;
-                    executorService.submit(()-> commsBT.sendRequest("deleteFile", item.libItem.path));
+                    executorService.submit(()-> commsBT.sendRequestDeleteFile(item.libItem.path));
                     dialog.dismiss();
                 });
                 builder.setNegativeButton(R.string.alert_delete_negative, (dialog, which) -> dialog.dismiss());
@@ -229,7 +251,6 @@ public class Main extends AppCompatActivity{
             case PARTIAL:
                 break;
             case NOT:
-                if(cantSendRequest()) return;
                 executorService.submit(()-> commsWifi.queueFile(item));
                 break;
         }
@@ -286,11 +307,11 @@ public class Main extends AppCompatActivity{
             switch(status){
                 case FATAL:
                     main_icon.setBackgroundResource(R.drawable.icon_watch);
-                    main_icon.setColorFilter(getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
+                    main_icon.setColorFilter(getColor(R.color.error));
                     return;
                 case SEARCHING:
                     main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
-                    main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
                     gotFreeSpace(0);
                     ((AnimatedVectorDrawable) main_icon.getBackground()).start();
                     prevStatuses.clear();
@@ -298,22 +319,39 @@ public class Main extends AppCompatActivity{
                     break;
                 case SEARCH_TIMEOUT:
                     main_icon.setBackgroundResource(R.drawable.icon_watch);
-                    main_icon.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
                     gotFreeSpace(0);
                     gotError(getString(R.string.status_SEARCH_TIMEOUT));
                     items.forEach(Item::clearStatus);
                     break;
+                case CONNECTING:
+                    main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
+                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
+                    gotFreeSpace(0);
+                    ((AnimatedVectorDrawable) main_icon.getBackground()).start();
+                    break;
+                case CONNECT_TIMEOUT:
+                    main_icon.setBackgroundResource(R.drawable.icon_watch);
+                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
+                    gotStatus(getString(R.string.status_CONNECT_TIMEOUT));
+                    break;
                 case CONNECTED:
                     main_icon.setBackgroundResource(R.drawable.icon_watch);
-                    main_icon.setColorFilter(getColor(R.color.text), android.graphics.PorterDuff.Mode.SRC_IN);
+                    main_icon.setColorFilter(getColor(R.color.text));
                     gotStatus(getString(R.string.status_CONNECTED));
                     sendSyncRequest();
+                    break;
+                case DISCONNECTED:
+                    main_icon.setBackgroundResource(R.drawable.icon_watch);
+                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
+                    gotStatus(getString(R.string.status_DISCONNECTED));
                     break;
             }
         });
     }
     void sendFileDetailsRequest(Library.LibItem libItem, String ipAddress){
-        executorService.submit(()-> commsBT.sendFileDetails(libItem, ipAddress));
+        if(cantSendRequest()){return;}
+        executorService.submit(()-> commsBT.sendRequestFileDetails(libItem, ipAddress));
     }
     private void sendSyncRequest(){
         Log.d(Main.LOG_TAG, "Main.sendSyncRequest");

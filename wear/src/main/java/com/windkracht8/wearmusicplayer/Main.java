@@ -187,14 +187,14 @@ public class Main extends Activity{
             main_song_title.setText(mediaMetadata.title);
             main_song_artist.setText(mediaMetadata.artist);
             if(mediaController.hasPreviousMediaItem()){
-                main_previous.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+                main_previous.setColorFilter(getColor(R.color.white));
             }else{
-                main_previous.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                main_previous.setColorFilter(getColor(R.color.icon_disabled));
             }
             if(mediaController.hasNextMediaItem()){
-                main_next.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+                main_next.setColorFilter(getColor(R.color.white));
             }else{
-                main_next.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                main_next.setColorFilter(getColor(R.color.icon_disabled));
             }
         }
         @Override
@@ -242,7 +242,7 @@ public class Main extends Activity{
                 main_song_title.setText(track.title);
                 main_song_artist.setText(track.artist.name);
                 if(library.tracks.size()>1){
-                    main_next.setColorFilter(getColor(R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+                    main_next.setColorFilter(getColor(R.color.white));
                 }
             }
             main_library.setText(R.string.library);
@@ -272,8 +272,8 @@ public class Main extends Activity{
                 main_song_artist.setText("");
                 main_library.setText(R.string.scanning);
                 mediaController.clearMediaItems();
-                main_previous.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
-                main_next.setColorFilter(getColor(R.color.icon_disabled), android.graphics.PorterDuff.Mode.SRC_IN);
+                main_previous.setColorFilter(getColor(R.color.icon_disabled));
+                main_next.setColorFilter(getColor(R.color.icon_disabled));
             });
         }
     }
