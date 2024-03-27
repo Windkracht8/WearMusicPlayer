@@ -68,7 +68,7 @@ class Item extends ConstraintLayout{
     }
 
     void clearStatus(){
-        libItem.status = Library.LibItem.Status.UNKNOWN;
+        libItem.clearStatus();
         items.forEach(Item::clearStatus);
         newStatus();
     }
@@ -114,14 +114,6 @@ class Item extends ConstraintLayout{
             item_status.setText(String.valueOf((progress * 100) / libItem.length));
             item_status.setBackgroundResource(0);
         });
-    }
-    void updateProgressDone(Main main, String path){
-        if(libItem.path.equals(path)){
-            libItem.status = Library.LibItem.Status.FULL;
-            main.runOnUiThread(this::newStatus);
-            return;
-        }
-        items.forEach((i)-> i.updateProgressDone(main, path));
     }
     private void onLabelPressed(){
         if(!isDir) return;

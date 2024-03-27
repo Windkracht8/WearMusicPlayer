@@ -12,18 +12,18 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Library{
+class Library{
     private static String exStorageDir;
-    LibDir dir_music;
+    static LibDir dir_music;
 
-    void scanFiles(Main main){
+    static void scanFiles(Main main){
         if(!Main.hasReadPermission) return;
         exStorageDir = Environment.getExternalStorageDirectory().toString();
         dir_music = new LibDir(URI.create(exStorageDir + "/Music"));
         scanFilesDir(dir_music);
         main.libraryFilesScanned();
     }
-    private void scanFilesDir(LibDir libDir){
+    private static void scanFilesDir(LibDir libDir){
         File[] files = (new File(exStorageDir + "/" + libDir.path)).listFiles();
         if(files == null) return;
         for(File file : files){
@@ -39,7 +39,7 @@ public class Library{
         libDir.sort();
     }
 
-    void updateLibWithFilesOnWatch(Main main, JSONArray filesOnWatch){
+    static void updateLibWithFilesOnWatch(Main main, JSONArray filesOnWatch){
         ArrayList<String> pathsOnWatch = new ArrayList<>();
         try{
             for(int i = 0; i < filesOnWatch.length(); i++){
@@ -48,47 +48,54 @@ public class Library{
                 pathsOnWatch.add(Uri.decode(path));
             }
             updateDirWithFilesOnWatch(pathsOnWatch, dir_music);
+            checkStatuses(dir_music);
             main.libraryNewStatuses();
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Library.updateLibWithFilesOnWatch: " + e.getMessage());
         }
     }
-    private void updateDirWithFilesOnWatch(ArrayList<String> pathsOnWatch, LibDir directory){
-        for(LibDir subdir : directory.libDirs){
-            updateDirWithFilesOnWatch(pathsOnWatch, subdir);
+    private static void updateDirWithFilesOnWatch(ArrayList<String> pathsOnWatch, LibDir libDir){
+        libDir.status = LibItem.Status.UNKNOWN;
+        for(LibDir libSubdir : libDir.libDirs){
+            updateDirWithFilesOnWatch(pathsOnWatch, libSubdir);
         }
-        boolean partial = false;
-        boolean full = !directory.libTracks.isEmpty();
-        for(LibTrack libTrack : directory.libTracks){
+        for(LibTrack libTrack : libDir.libTracks){
             if(pathsOnWatch.contains(libTrack.path)){
                 libTrack.status = LibItem.Status.FULL;
-                partial = true;
             }else{
                 libTrack.status = LibItem.Status.NOT;
+            }
+        }
+    }
+
+    private static boolean isTrack(String name){
+        return name.endsWith(".mp3") || name.endsWith(".m4a");
+    }
+    private static void checkStatuses(LibDir libDir){
+        boolean partial = false;
+        boolean full = !libDir.libTracks.isEmpty();
+        for(LibTrack libTrack : libDir.libTracks){
+            if(libTrack.status == LibItem.Status.FULL){
+                partial = true;
+            }else{
                 full = false;
             }
         }
-        for(LibDir libDir : directory.libDirs){
-            if(libDir.status == LibItem.Status.FULL){
+        for(LibDir libSubDir : libDir.libDirs){
+            checkStatuses(libSubDir);
+            if(libSubDir.status == LibItem.Status.FULL){
                 partial = true;
-            }else if(libDir.status == LibItem.Status.PARTIAL){
-                partial = true;
-                full = false;
             }else{
                 full = false;
             }
         }
         if(full){
-            directory.status = LibItem.Status.FULL;
+            libDir.status = LibItem.Status.FULL;
         }else if(partial){
-            directory.status = LibItem.Status.PARTIAL;
+            libDir.status = LibItem.Status.PARTIAL;
         }else{
-            directory.status = LibItem.Status.NOT;
+            libDir.status = LibItem.Status.NOT;
         }
-    }
-
-    private boolean isTrack(String name){
-        return name.endsWith(".mp3") || name.endsWith(".m4a");
     }
 
     static class LibItem implements Comparable<LibItem>{
@@ -113,23 +120,24 @@ public class Library{
             }
             name = depth == -1 ? path : path.substring(path.lastIndexOf("/")+1);
         }
-
-        @Override
-        public int compareTo(LibItem libItem){
-            return name.compareTo(libItem.name);
+        void clearStatus(){
+            status = Status.UNKNOWN;
         }
+        void setStatus(Main main, Status status){
+            this.status = status;
+            checkStatuses(dir_music);
+            main.libraryNewStatuses();
+        }
+        @Override
+        public int compareTo(LibItem libItem){return name.compareTo(libItem.name);}
     }
     static class LibTrack extends LibItem{
-        private LibTrack(URI uri){
-            super(uri);
-        }
+        private LibTrack(URI uri){super(uri);}
     }
     static class LibDir extends LibItem{
         final ArrayList<LibTrack> libTracks = new ArrayList<>();
         final ArrayList<LibDir> libDirs = new ArrayList<>();
-        private LibDir(URI uri){
-            super(uri);
-        }
+        private LibDir(URI uri){super(uri);}
         private void sort(){
             Collections.sort(libTracks);
             Collections.sort(libDirs);

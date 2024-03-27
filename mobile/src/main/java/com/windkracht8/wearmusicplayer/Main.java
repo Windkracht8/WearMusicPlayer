@@ -35,7 +35,6 @@ public class Main extends AppCompatActivity{
     static final String LOG_TAG = "WearMusicPlayer";
     private CommsBT commsBT = null;
     private CommsWifi commsWifi = null;
-    private final Library library = new Library();
     static SharedPreferences sharedPreferences;
     static SharedPreferences.Editor sharedPreferences_editor;
     ExecutorService executorService;
@@ -46,7 +45,7 @@ public class Main extends AppCompatActivity{
     private LinearLayout main_ll_BT_log;
     private LinearLayout main_ll;
     private final ArrayList<Item> items = new ArrayList<>();
-    private Item itemDelete;
+    Item itemInProgress;
     private final ArrayList<String> prevStatuses = new ArrayList<>();
     private static boolean hasBTPermission = false;
     static boolean hasReadPermission = false;
@@ -85,7 +84,7 @@ public class Main extends AppCompatActivity{
         commsWifi = new CommsWifi(this);
 
         requestPermissions();
-        executorService.submit(() -> library.scanFiles(this));
+        executorService.submit(() -> Library.scanFiles(this));
         startBT();
         //commsWifi.startP2PWifi(this);//TODO:test
     }
@@ -96,12 +95,12 @@ public class Main extends AppCompatActivity{
     void libraryFilesScanned(){
         runOnUiThread(()->{
             findViewById(R.id.main_loading).setVisibility(View.GONE);
-            for(Library.LibDir libDir : library.dir_music.libDirs){
+            for(Library.LibDir libDir : Library.dir_music.libDirs){
                 Item item = new Item(this, libDir);
                 items.add(item);
                 main_ll.addView(item);
             }
-            for(Library.LibTrack libTrack : library.dir_music.libTracks){
+            for(Library.LibTrack libTrack : Library.dir_music.libTracks){
                 Item item = new Item(this, libTrack);
                 items.add(item);
                 main_ll.addView(item);
@@ -169,7 +168,7 @@ public class Main extends AppCompatActivity{
             ){
                 if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
                     hasReadPermission = true;
-                    executorService.submit(() -> library.scanFiles(this));
+                    executorService.submit(() -> Library.scanFiles(this));
                 }
                 break;
             }
@@ -241,7 +240,7 @@ public class Main extends AppCompatActivity{
                 builder.setTitle(R.string.alert_delete_title);
                 builder.setMessage(R.string.alert_delete_message);
                 builder.setPositiveButton(R.string.alert_delete_positive, (dialog, which)-> {
-                    itemDelete = item;
+                    itemInProgress = item;
                     executorService.submit(()-> commsBT.sendRequestDeleteFile(item.libItem.path));
                     dialog.dismiss();
                 });
@@ -374,7 +373,7 @@ public class Main extends AppCompatActivity{
                     JSONArray tracks = responseDataSync.getJSONArray("tracks");
                     long freeSpaceSync = responseDataSync.getLong("freeSpace");
                     runOnUiThread(()->gotFreeSpace(freeSpaceSync));
-                    executorService.submit(()->library.updateLibWithFilesOnWatch(this, tracks));
+                    executorService.submit(()->Library.updateLibWithFilesOnWatch(this, tracks));
                     gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
                     break;
                 case "fileDetails":
@@ -393,16 +392,16 @@ public class Main extends AppCompatActivity{
                     }
                     JSONObject responseData = response.getJSONObject("responseData");
                     long freeSpaceFileDetails = responseData.getLong("freeSpace");
-                    runOnUiThread(() -> gotFreeSpace(freeSpaceFileDetails));
-                    String path_done = responseData.getString("path");
-                    runOnUiThread(()->items.forEach((i)->i.updateProgressDone(this, path_done)));
+                    runOnUiThread(()->{
+                        gotFreeSpace(freeSpaceFileDetails);
+                        itemInProgress.libItem.setStatus(this, Library.LibItem.Status.FULL);
+                    });
                     gotStatus(getString(R.string.received_file));
                     commsWifi.canSendNext = true;
                     break;
                 case "deleteFile":
                     if(response.getString("responseData").equals("OK")){
-                        itemDelete.libItem.status = Library.LibItem.Status.NOT;
-                        runOnUiThread(()->itemDelete.newStatus());
+                        itemInProgress.libItem.setStatus(this, Library.LibItem.Status.NOT);
                         gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
                         break;
                     }else{

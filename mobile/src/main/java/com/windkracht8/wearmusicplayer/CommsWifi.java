@@ -85,6 +85,7 @@ class CommsWifi{
         isSendingFile = true;
         canSendNext = false;
         main.sendFileDetailsRequest(item.libItem, ipAddress);
+        main.itemInProgress = item;
 
         try(ServerSocket serverSocket = new ServerSocket(PORT_NUMBER)){
             Socket socket = serverSocket.accept();
@@ -97,6 +98,7 @@ class CommsWifi{
                     if(numBytes < 0){
                         Log.e(Main.LOG_TAG, "CommsWifi.sendFile read error");
                         item.clearStatus();
+                        main.libraryNewStatuses();
                         socket.close();
                         isSendingFile = false;
                         stop();
