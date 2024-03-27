@@ -235,8 +235,8 @@ public class Main extends Activity{
         }
     }
     void libraryReady(){
-        loadTracks(library.tracks);
         runOnUiThread(()-> {
+            loadTracks(library.tracks);
             if(!library.tracks.isEmpty()){
                 Library.Track track = library.tracks.get(0);
                 main_song_title.setText(track.title);

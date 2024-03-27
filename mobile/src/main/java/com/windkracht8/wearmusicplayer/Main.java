@@ -78,7 +78,7 @@ public class Main extends AppCompatActivity{
             Log.d(Main.LOG_TAG, version);
             gotStatus(version);
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "CommsBTLog getPackageInfo Exception: " + e.getMessage());
+            Log.e(Main.LOG_TAG, "Main.onCreate getPackageInfo Exception: " + e.getMessage());
         }
 
         commsBT = new CommsBT(this);
@@ -407,6 +407,7 @@ public class Main extends AppCompatActivity{
                         break;
                     }else{
                         Log.e(LOG_TAG, "Main.gotResponse deleteFile");
+                        gotStatus(response.getString("responseData"));
                         toast(R.string.fail_delete_file);
                     }
                     break;
