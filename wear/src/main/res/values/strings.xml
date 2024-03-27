@@ -15,7 +15,8 @@
     <string name="loading">loading</string>
     <string name="scanning">scanning</string>
     <string name="library">library</string>
-    <string name="confirm_close">Stop playing and close?</string>
+    <string name="confirm_close_transfer">Stop transfer and close?</string>
+    <string name="confirm_close_play">Stop playing and close?</string>
     <string name="yes">yes</string>
     <string name="back">back</string>
     <string name="open_wmp">Open Music Player</string>

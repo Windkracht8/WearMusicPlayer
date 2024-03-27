@@ -388,9 +388,15 @@ public class Main extends Activity{
                 menu.requestSVFocus();
             }
         }else{
-            if(mediaController.isPlaying()){
+            if(CommsWifi.isReceiving){
                 AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
-                builder.setMessage(R.string.confirm_close);
+                builder.setMessage(R.string.confirm_close_transfer);
+                builder.setPositiveButton(R.string.yes, (dialog, which) -> System.exit(0));
+                builder.setNegativeButton(R.string.back, (dialog, which) -> dialog.dismiss());
+                builder.create().show();
+            }else if(mediaController.isPlaying()){
+                AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
+                builder.setMessage(R.string.confirm_close_play);
                 builder.setPositiveButton(R.string.yes, (dialog, which) -> System.exit(0));
                 builder.setNegativeButton(R.string.back, (dialog, which) -> dialog.dismiss());
                 builder.create().show();
