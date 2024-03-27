@@ -14,7 +14,8 @@ import java.net.Socket;
 
 class CommsWifi{
     private static ConnectivityManager connectivityManager;
-    static void receiveFile(Main main, String path, long length, String ip, int port) {
+    static boolean isReceiving = false;
+    static void receiveFile(Main main, String path, long length, String ip, int port){
         Log.d(Main.LOG_TAG, "CommsWifi path: " + path);
         Log.d(Main.LOG_TAG, "CommsWifi length: " + length);
         Log.d(Main.LOG_TAG, "CommsWifi ip: " + ip);
@@ -52,6 +53,7 @@ class CommsWifi{
     }
     private static void readFileFromStream(Main main, String path, long length, String ip, int port){
         Log.d(Main.LOG_TAG, "CommsWifi.readFileFromStream");
+        isReceiving = true;
         long bytesDone = 0;
         try(Socket socket = new Socket(ip, port)){
             InputStream inputStream = socket.getInputStream();
@@ -70,6 +72,7 @@ class CommsWifi{
                         Log.e(Main.LOG_TAG, "CommsWifi.receiveFile read error");
                         main.commsFileFailed(path);
                         connectivityManager.bindProcessToNetwork(null);
+                        isReceiving = false;
                         return;
                     }
                     fileOutputStream.write(buffer, 0, numBytes);
@@ -80,6 +83,7 @@ class CommsWifi{
                     if(bytesDone >= length){
                         main.commsFileDone(path);
                         connectivityManager.bindProcessToNetwork(null);
+                        isReceiving = false;
                         return;
                     }
                 }
@@ -96,6 +100,7 @@ class CommsWifi{
         //if we get here it failed
         main.commsFileFailed(path);
         connectivityManager.bindProcessToNetwork(null);
+        isReceiving = false;
     }
     private static void sleep100(){
         try{
