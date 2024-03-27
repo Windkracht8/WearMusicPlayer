@@ -6,12 +6,12 @@
   <path
       android:pathData="m161.31,70.61 l-58.67,29.38 58.67,29.38z"
       android:strokeWidth="10.9399"
-      android:strokeColor="#fff"/>
+      android:strokeColor="@color/icon_disabled"/>
   <path
       android:pathData="M116.27,70.61 L57.67,100 116.27,129.39Z"
       android:strokeWidth="10.9342"
-      android:strokeColor="#fff"/>
+      android:strokeColor="@color/icon_disabled"/>
   <path
       android:pathData="M44.78,61.75h12.9v76.25h-12.9z"
-      android:fillColor="#fff"/>
+      android:fillColor="@color/icon_disabled"/>
 </vector>
