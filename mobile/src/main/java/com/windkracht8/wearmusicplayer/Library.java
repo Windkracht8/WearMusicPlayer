@@ -73,20 +73,20 @@ class Library{
     }
     private static void checkStatuses(LibDir libDir){
         boolean partial = false;
-        boolean full = !libDir.libTracks.isEmpty();
+        boolean full = true;
         for(LibTrack libTrack : libDir.libTracks){
-            if(libTrack.status == LibItem.Status.FULL){
-                partial = true;
-            }else{
+            if(libTrack.status == LibItem.Status.NOT){
                 full = false;
+            }else{
+                partial = true;
             }
         }
         for(LibDir libSubDir : libDir.libDirs){
             checkStatuses(libSubDir);
-            if(libSubDir.status == LibItem.Status.FULL){
-                partial = true;
-            }else{
+            if(libSubDir.status == LibItem.Status.NOT){
                 full = false;
+            }else{
+                partial = true;
             }
         }
         if(full){
