@@ -1,7 +1,10 @@
 package com.windkracht8.wearmusicplayer;
 
+import android.app.PendingIntent;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -18,6 +21,7 @@ import java.util.Collections;
 
 class Library{
     static String exStorageDir;
+    static File filePendingDelete;
     final ArrayList<Track> tracks = new ArrayList<>();
     final ArrayList<Artist> artists = new ArrayList<>();
     final ArrayList<Album> albums = new ArrayList<>();
@@ -48,7 +52,8 @@ class Library{
                 MediaStore.Audio.Media.ARTIST,
                 MediaStore.Audio.Media.ALBUM,
                 MediaStore.Audio.Media.ALBUM_ARTIST,
-                MediaStore.Audio.Media.CD_TRACK_NUMBER
+                MediaStore.Audio.Media.CD_TRACK_NUMBER,
+                MediaStore.Audio.Media.DISC_NUMBER
         };
 
         try(Cursor cursor = main.getContentResolver().query(
@@ -72,6 +77,7 @@ class Library{
             int ALBUM = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM);
             int ALBUM_ARTIST = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ARTIST);
             int CD_TRACK_NUMBER = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.CD_TRACK_NUMBER);
+            int DISC_NUMBER = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISC_NUMBER);
 
             while(cursor.moveToNext()){
                 Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, cursor.getLong(ID));
@@ -82,7 +88,8 @@ class Library{
                         cursor.getString(ARTIST),
                         cursor.getString(ALBUM),
                         cursor.getString(ALBUM_ARTIST),
-                        cursor.getString(CD_TRACK_NUMBER)
+                        cursor.getString(CD_TRACK_NUMBER),
+                        cursor.getString(DISC_NUMBER)
                 );
             }
         }
@@ -112,74 +119,88 @@ class Library{
                 (path1, uri) -> scanMediaStore(main)
         );
     }
-    boolean ensurePath(Main main, String path){
+    String ensurePath(Main main, String path){
         File file = new File(exStorageDir + "/" + path);
         try{
             if(file.exists()){
-                Log.i(Main.LOG_TAG, "Library.ensurePath: path exists");
-                return false;
+                Log.e(Main.LOG_TAG, "Library.ensurePath: file exists");
+                main.toast(R.string.fail_file_exists);
+                return main.getString(R.string.fail_file_exists);
             }
 
             File parent = file.getParentFile();
             if(parent == null){
                 Log.e(Main.LOG_TAG, "Library.ensurePath: getParentFile == null");
-                main.toast(R.string.fail_create_file);
-                return false;
+                main.toast(R.string.fail_create_parent);
+                return main.getString(R.string.fail_create_parent);
             }
             if(!parent.exists()){
                 if(!parent.mkdirs()){
                     Log.e(Main.LOG_TAG, "Library.ensurePath: mkdirs");
-                    main.toast(R.string.fail_create_file);
-                    return false;
+                    main.toast(R.string.fail_create_dirs);
+                    return main.getString(R.string.fail_create_dirs);
                 }
             }
             if(!file.createNewFile()){
                 Log.e(Main.LOG_TAG, "Library.ensurePath: createNewFile");
                 main.toast(R.string.fail_create_file);
-                return false;
+                return main.getString(R.string.fail_create_file);
             }
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Library.ensurePath exception: " + e.getMessage());
             main.toast(R.string.fail_create_file);
-            return false;
+            return e.getMessage();
         }
-        return true;
+        return null;
     }
     void addFile(Main main, String path){
         File file = new File(exStorageDir + "/" + path);
         scanFile(main, file);
     }
-    private void scanFile(Main main, File file){
+    void scanFile(Main main, File file){
         MediaScannerConnection.scanFile(main,
                 new String[]{file.toString()},
                 null,
                 (path1, uri) -> scanMediaStore(main)
         );
+        filePendingDelete = null;
     }
     String deleteFile(Main main, String path){
-        File file = new File(exStorageDir + "/" + path);
-        Log.d(Main.LOG_TAG, "Library.deleteFile: " + exStorageDir + "/" + path);
-        try{
-            if(!file.exists()){
-                Log.i(Main.LOG_TAG, "Library.deleteFile: path does not exists");
-                return "OK";
-            }
-            if(!file.canWrite()){
-                Log.e(Main.LOG_TAG, "Library.deleteFile: cannot write");
-                main.toast(R.string.fail_delete_file);
-                return "delete not allowed";
-            }
-            if(!file.delete()){
-                Log.e(Main.LOG_TAG, "Library.deleteFile: delete");
-                main.toast(R.string.fail_delete_file);
-                return "delete failed";
-            }
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Library.deleteFile Exception: " + e.getMessage());
-            main.toast(R.string.fail_delete_file);
-            return e.getMessage();
+        filePendingDelete = new File(exStorageDir + "/" + path);
+        if(!filePendingDelete.exists()){
+            Log.i(Main.LOG_TAG, "Library.deleteFile: path does not exists");
+            return "OK";
         }
-        scanFile(main, file);
+        Uri uri = getUriForPath(path);
+        if(uri == null) return main.getString(R.string.fail_technical);
+        if(main.checkUriPermission(
+                uri
+                ,android.os.Process.myPid()
+                ,android.os.Process.myUid()
+                ,Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            ) == PackageManager.PERMISSION_DENIED
+        ){
+            PendingIntent pendingIntent = MediaStore.createDeleteRequest(
+                    main.getContentResolver()
+                    ,new ArrayList<>(Collections.singletonList(uri))
+            );
+            try{
+                main.startIntentSenderForResult(
+                        pendingIntent.getIntentSender()
+                        ,5, null, 0, 0, 0
+                );
+            }catch(Exception e){
+                Log.e(Main.LOG_TAG, "Library.deleteFile: startIntentSenderForResult: " + e.getMessage());
+                return main.getString(R.string.fail_technical);
+            }
+            return "PENDING";
+        }
+        if(!filePendingDelete.delete()){
+            Log.e(Main.LOG_TAG, "Library.deleteFile: delete failed");
+            main.toast(R.string.fail_delete_file);
+            return main.getString(R.string.fail_delete_file);
+        }
+        scanFile(main, filePendingDelete);
         return "OK";
     }
     class Track implements Comparable<Track>{
@@ -189,11 +210,14 @@ class Library{
         final Artist artist;
         private final Album album;
         private final String track_no;
-        private Track(Context context, Uri uri, String path, String title, String artistName, String albumName, String albumArtist, String track_no){
+        private final String disc_no;
+        private Track(Context context, Uri uri, String path, String title, String artistName
+                ,String albumName, String albumArtist, String track_no, String disc_no){
             this.uri = uri;
             this.path = path.substring(exStorageDir.length()+1);
             this.title = title;
             this.track_no = track_no;
+            this.disc_no = disc_no;
 
             artist = getArtistForNewTrack(this, artistName);
             album = getAlbumForNewTrack(context, this, albumName, albumArtist);
@@ -214,6 +238,10 @@ class Library{
         public int compareTo(Track track){
             int compare = album.name.compareTo(track.album.name);
             if(compare != 0) return compare;
+            if(disc_no != null && track.disc_no != null){
+                compare = disc_no.compareTo(track.disc_no);
+                if(compare != 0) return compare;
+            }
             if(track_no != null && track.track_no != null){
                 try{
                     compare = Integer.valueOf(track_no).compareTo(Integer.valueOf(track.track_no));
@@ -285,5 +313,16 @@ class Library{
             }
         }
         return new Album(track, albumName, albumArtist);
+    }
+    private Uri getUriForPath(String path){
+        Log.d(Main.LOG_TAG, "getUriForPath: " + path);
+        for(Track track : tracks){
+            Log.d(Main.LOG_TAG, "track.path: " + track.path);
+            if(track.path.equals(path)){
+                Log.d(Main.LOG_TAG, "found it");
+                return track.uri;
+            }
+        }
+        return null;
     }
 }

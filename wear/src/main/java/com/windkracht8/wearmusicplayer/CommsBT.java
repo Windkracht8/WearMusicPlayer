@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 class CommsBT{
@@ -53,9 +54,9 @@ class CommsBT{
                 case "fileDetails":
                     JSONObject requestData = requestMessage.getJSONObject("requestData");
                     String path = requestData.getString("path");
-                    if(!Main.library.ensurePath(main, path)){
-                        Log.e(Main.LOG_TAG, "CommsBT.gotRequest: failed to create directory");
-                        sendResponse("fileDetails", "failed to create directory");
+                    String reason = Main.library.ensurePath(main, path);
+                    if(reason != null){
+                        sendResponse("fileDetails", reason);
                         return;
                     }
                     long length = requestData.getLong("length");
@@ -67,7 +68,9 @@ class CommsBT{
                     break;
                 case "deleteFile":
                     String delPath = requestMessage.getString("requestData");
-                    sendResponse("deleteFile", Main.library.deleteFile(main, delPath));
+                    String result = Main.library.deleteFile(main, delPath);
+                    if(!Objects.equals(result, "PENDING"))
+                        sendResponse("deleteFile", result);
                     break;
                 default:
                     Log.e(Main.LOG_TAG, "CommsBT.gotRequest Unknown requestType: " + requestType);

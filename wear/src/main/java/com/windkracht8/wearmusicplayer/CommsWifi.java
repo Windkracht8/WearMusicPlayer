@@ -70,7 +70,8 @@ class CommsWifi{
                     int numBytes = inputStream.read(buffer);
                     if(numBytes < 0){
                         Log.e(Main.LOG_TAG, "CommsWifi.receiveFile read error");
-                        main.commsFileFailed(path);
+                        main.toast(R.string.fail_read_wifi);
+                        main.commsFileFailed(path, R.string.fail_read_wifi);
                         connectivityManager.bindProcessToNetwork(null);
                         isReceiving = false;
                         return;
@@ -87,18 +88,20 @@ class CommsWifi{
                         return;
                     }
                 }
-                main.commsFileFailed(path);
+                main.toast(R.string.fail_read_wifi);
+                main.commsFileFailed(path, R.string.fail_read_wifi);
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "CommsWifi.receiveFile FileOutputStream exception: " + e.getMessage());
-                main.toast(R.string.fail_create_file);
+                main.toast(R.string.fail_write_file);
+                main.commsFileFailed(path, R.string.fail_write_file);
             }
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "CommsWifi.receiveFile Socket exception: " + e);
             Log.e(Main.LOG_TAG, "CommsWifi.receiveFile Socket exception: " + e.getMessage());
             main.toast(R.string.fail_wifi);
+            main.commsFileFailed(path, R.string.fail_wifi);
         }
         //if we get here it failed
-        main.commsFileFailed(path);
         connectivityManager.bindProcessToNetwork(null);
         isReceiving = false;
     }
