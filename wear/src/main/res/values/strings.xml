@@ -40,8 +40,15 @@
     <string name="fail_respond">Failed to respond to phone</string>
     <string name="fail_wifi">Wifi connection failed</string>
     <string name="fail_wifi_fast">Failed to request connection over wifi</string>
+    <string name="fail_file_exists">File already exists</string>
+    <string name="fail_create_parent">Failed to create parent folder</string>
+    <string name="fail_create_dirs">Failed to create directories</string>
     <string name="fail_create_file">Failed to create file</string>
+    <string name="fail_read_wifi">Error in receiving file</string>
+    <string name="fail_write_file">Failed to write to file</string>
     <string name="fail_delete_file">Failed to delete file</string>
+    <string name="fail_no_permission">No permission</string>
+    <string name="fail_technical">Technical error</string>
     <string name="fail_scan_media">Problem with finding tracks</string>
     <string name="fail_load_tracks">Failed to load tracks</string>
 

@@ -378,16 +378,17 @@ public class Main extends AppCompatActivity{
                     break;
                 case "fileDetails":
                     executorService.submit(commsWifi::stop);
-                    Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + response.get("responseData"));
+                    String fileDetailsError = response.getString("responseData");
+                    Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + fileDetailsError);
                     toast(R.string.fail_send_file);
-                    gotError(getString(R.string.fail_send_file));
+                    gotError(getString(R.string.fail_send_file) + ": " + fileDetailsError);
                     break;
                 case "fileBinary":
                     Object responseDataFileDetails = response.get("responseData");
                     if(responseDataFileDetails instanceof String){
                         Log.e(LOG_TAG, "Main.gotResponse fileBinary responseData: " + responseDataFileDetails);
                         toast(R.string.fail_send_file);
-                        gotError(getString(R.string.fail_send_file));
+                        gotError(getString(R.string.fail_send_file) + ": " + responseDataFileDetails);
                         break;
                     }
                     JSONObject responseData = response.getJSONObject("responseData");

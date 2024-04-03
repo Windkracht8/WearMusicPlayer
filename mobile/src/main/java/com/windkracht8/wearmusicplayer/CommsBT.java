@@ -125,6 +125,7 @@ public class CommsBT{
     }
 
     void startComms(){
+        if(bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON) return;
         Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
         Log.d(Main.LOG_TAG, "CommsBT.startComms " + wmp_device_addresses.size() + "/" + devices.size());
         closeConnection = false;

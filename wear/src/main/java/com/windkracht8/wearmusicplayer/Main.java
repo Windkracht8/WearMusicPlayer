@@ -3,8 +3,10 @@ package com.windkracht8.wearmusicplayer;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Build;
@@ -282,6 +284,7 @@ public class Main extends Activity{
         super.onDestroy();
         commsBT.stopComms();
         mediaController.release();
+        ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();
     }
     private void requestPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
@@ -372,10 +375,32 @@ public class Main extends Activity{
         runOnUiThread(()-> main_progress.setVisibility(View.GONE));
         executorService.submit(()-> commsBT.sendFileBinaryResponse(path));
     }
-    void commsFileFailed(String path){
+    void commsFileFailed(String path, int reason){
         executorService.submit(()-> library.deleteFile(this, path));
         runOnUiThread(()-> main_progress.setVisibility(View.GONE));
-        executorService.submit(()-> commsBT.sendResponse("fileBinary", "failed"));
+        executorService.submit(()-> commsBT.sendResponse("fileBinary", getString(reason)));
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == 5){
+            if(resultCode == 0){
+                Log.i(Main.LOG_TAG, "Main.onActivityResult: file delete permission denied");
+                executorService.submit(()-> commsBT.sendResponse(
+                        "deleteFile"
+                        ,getString(R.string.fail_no_permission))
+                );
+            }else{
+                executorService.submit(()-> commsBT.sendResponse(
+                        "deleteFile"
+                        ,"OK")
+                );
+                executorService.submit(()-> library.scanFile(
+                        this
+                        ,Library.filePendingDelete)
+                );
+            }
+        }
     }
 
     @Override
