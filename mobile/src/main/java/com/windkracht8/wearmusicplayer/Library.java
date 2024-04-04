@@ -83,10 +83,11 @@ class Library{
         }
         for(LibDir libSubDir : libDir.libDirs){
             checkStatuses(libSubDir);
-            if(libSubDir.status == LibItem.Status.NOT){
-                full = false;
-            }else{
+            if(libSubDir.status != LibItem.Status.NOT){
                 partial = true;
+            }
+            if(libSubDir.status != LibItem.Status.FULL){
+                full = false;
             }
         }
         if(full){
