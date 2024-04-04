@@ -167,14 +167,14 @@ public class Main extends Activity{
                 if(mediaController.getMediaItemCount() == 0)
                     loadTracks(library.tracks);
             }catch(Exception e){
-                Log.e(LOG_TAG, "onStart exception: " + e.getMessage());
+                Log.e(LOG_TAG, "Main.onStart exception: " + e.getMessage());
             }
         },MoreExecutors.directExecutor());
     }
     private final Player.Listener playerListener = new Player.Listener(){
         @Override
         public void onIsPlayingChanged(boolean isPlaying){
-            Log.d(LOG_TAG, "onIsPlayingChanged " + isPlaying);
+            Log.d(LOG_TAG, "Main.onIsPlayingChanged " + isPlaying);
             if(isPlaying){
                 main_play_pause.setImageResource(R.drawable.icon_pause);
                 updateTimer();
@@ -184,7 +184,7 @@ public class Main extends Activity{
         }
         @Override
         public void onMediaMetadataChanged(@NonNull MediaMetadata mediaMetadata){
-            Log.d(LOG_TAG, "onMediaMetadataChanged " + mediaMetadata.title);
+            Log.d(LOG_TAG, "Main.onMediaMetadataChanged " + mediaMetadata.title);
             if(mediaMetadata.title == null) return;
             main_song_title.setText(mediaMetadata.title);
             main_song_artist.setText(mediaMetadata.artist);
@@ -201,8 +201,8 @@ public class Main extends Activity{
         }
         @Override
         public void onPlayerError(PlaybackException error){
-            Log.d(LOG_TAG, "onPlayerError: " + error);
-            Log.d(LOG_TAG, "onPlayerError: " + error.getMessage());
+            Log.d(LOG_TAG, "Main.onPlayerError: " + error);
+            Log.d(LOG_TAG, "Main.onPlayerError: " + error.getMessage());
         }
     };
 
@@ -224,7 +224,7 @@ public class Main extends Activity{
 
     private void loadTracks(ArrayList<Library.Track> tracks){
         if(mediaController == null || tracks.isEmpty()) return;
-        Log.d(Main.LOG_TAG, "loadTracks: " + tracks.size());
+        Log.d(Main.LOG_TAG, "Main.loadTracks: " + tracks.size());
         mediaController.clearMediaItems();
         try{
             for(Library.Track track : tracks){
@@ -232,7 +232,7 @@ public class Main extends Activity{
             }
             mediaController.prepare();
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "loadTracks exception: " + e.getMessage());
+            Log.e(Main.LOG_TAG, "Main.loadTracks exception: " + e.getMessage());
             Toast.makeText(this, R.string.fail_load_tracks, Toast.LENGTH_SHORT).show();
         }
     }
@@ -339,7 +339,6 @@ public class Main extends Activity{
         }
         for(int i=0; i<permissions.length; i++){
             if(permissions[i].equals(Manifest.permission.BLUETOOTH_CONNECT) ||
-                    permissions[i].equals(Manifest.permission.BLUETOOTH_SCAN) ||
                     permissions[i].equals(Manifest.permission.BLUETOOTH)){
                 if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
                     hasBTPermission = true;
@@ -352,6 +351,7 @@ public class Main extends Activity{
         }
     }
     private void initBT(){
+        Log.d(LOG_TAG, "Main.initBT " + hasBTPermission);
         if(!hasBTPermission) return;
         executorService.submit(()-> commsBT.startComms());
     }
@@ -360,7 +360,7 @@ public class Main extends Activity{
         runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
     }
     void commsFileStart(String path){
-        Log.d(LOG_TAG, "commsFileStart " + path);
+        Log.d(LOG_TAG, "Main.commsFileStart " + path);
         runOnUiThread(()-> main_progress.show(path));
     }
     void commsProgress(int progress){
@@ -370,7 +370,7 @@ public class Main extends Activity{
         runOnUiThread(()-> main_progress.setConnectionInfo(value));
     }
     void commsFileDone(String path){
-        Log.d(LOG_TAG, "commsFileDone " + path);
+        Log.d(LOG_TAG, "Main.commsFileDone " + path);
         executorService.submit(()-> library.addFile(this, path));
         runOnUiThread(()-> main_progress.setVisibility(View.GONE));
         executorService.submit(()-> commsBT.sendFileBinaryResponse(path));
@@ -439,7 +439,7 @@ public class Main extends Activity{
 
     private void onMainClick(){
         //We need to do this to make sure that we can listen for onTouch on main
-        Log.i(LOG_TAG, "onMainClick");
+        Log.i(LOG_TAG, "Main.onMainClick");
     }
 
     void addOnTouch(View v){
