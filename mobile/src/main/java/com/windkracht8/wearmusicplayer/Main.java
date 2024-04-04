@@ -80,7 +80,6 @@ public class Main extends AppCompatActivity{
             Log.e(Main.LOG_TAG, "Main.onCreate getPackageInfo Exception: " + e.getMessage());
         }
 
-        commsBT = new CommsBT(this);
         commsWifi = new CommsWifi(this);
 
         requestPermissions();
@@ -112,6 +111,7 @@ public class Main extends AppCompatActivity{
     }
     private void startBT(){
         if(!hasBTPermission) return;
+        if(commsBT == null) commsBT = new CommsBT(this);
         executorService.submit(() -> commsBT.startComms());
     }
 
