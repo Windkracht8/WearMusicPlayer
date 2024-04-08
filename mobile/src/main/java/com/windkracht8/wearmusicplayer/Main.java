@@ -118,8 +118,8 @@ public class Main extends AppCompatActivity{
     private void requestPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
             hasReadPermission = hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_SCAN)
-                    && hasPermission(android.Manifest.permission.BLUETOOTH_CONNECT);
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                    && hasPermission(android.Manifest.permission.BLUETOOTH_SCAN);
             if(!hasReadPermission || !hasBTPermission){
                 ActivityCompat.requestPermissions(this
                         ,new String[]{
@@ -132,8 +132,8 @@ public class Main extends AppCompatActivity{
             }
         }else if(Build.VERSION.SDK_INT >= 31){
             hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_SCAN)
-                    && hasPermission(android.Manifest.permission.BLUETOOTH_CONNECT);
+            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                    && hasPermission(android.Manifest.permission.BLUETOOTH_SCAN);
             if(!hasReadPermission || !hasBTPermission){
                 ActivityCompat.requestPermissions(this
                         ,new String[]{
@@ -211,9 +211,18 @@ public class Main extends AppCompatActivity{
     }
 
     private void onIconClick(){
+        if(commsBT == null){
+            requestPermissions();
+            return;
+        }
+
         switch(commsBT.status){
             case CONNECTING:
                 commsBT.updateStatus(CommsBT.Status.CONNECT_TIMEOUT);
+                commsBT.stopComms();
+                break;
+            case CONNECTED:
+                commsBT.updateStatus(CommsBT.Status.DISCONNECTED);
                 commsBT.stopComms();
                 break;
             case SEARCHING:
@@ -225,10 +234,6 @@ public class Main extends AppCompatActivity{
             case DISCONNECTED:
                 startBT();
                 break;
-            case CONNECTED:
-                commsBT.status = CommsBT.Status.DISCONNECTED;
-                commsBT.stopComms();
-                main_icon.setColorFilter(getColor(R.color.icon_disabled));
         }
     }
 

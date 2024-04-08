@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@SuppressLint("MissingPermission")//Permissions are handled in initBT
+@SuppressLint("MissingPermission")//Permissions are handled in startBT
 public class CommsBT{
     private final String WMP_UUID = "6f34da3f-188a-4c8c-989c-2baacf8ea6e1";
     private final BluetoothAdapter bluetoothAdapter;
