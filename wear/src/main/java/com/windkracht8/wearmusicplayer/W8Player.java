@@ -61,10 +61,6 @@ public class W8Player extends MediaSessionService{
             @NonNull MediaSession session,
             boolean startInForegroundRequired
     ){
-        if(android.os.Build.VERSION.SDK_INT >= 33){
-            super.onUpdateNotification(session, startInForegroundRequired);
-            return;
-        }
         NotificationCompat.Builder notificationBuilder1 = new NotificationCompat.Builder(
                 getBaseContext()
                 ,channel_id
