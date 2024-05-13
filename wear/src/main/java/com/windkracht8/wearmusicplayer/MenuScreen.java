@@ -1,6 +1,5 @@
 package com.windkracht8.wearmusicplayer;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,7 +20,7 @@ import java.util.ArrayList;
 public abstract class MenuScreen extends Fragment{
     TextView menu_label;
     private LinearLayout menu_items;
-    private final ArrayList<MenuItem> menuItems = new ArrayList<>();
+    final ArrayList<MenuItem> menuItems = new ArrayList<>();
     private static int itemHeight = 0;
     private static float scalePerPixel;
     private static float bottom_quarter;
@@ -61,13 +60,6 @@ public abstract class MenuScreen extends Fragment{
 
         return rootView;
     }
-    @Override
-    public void onResume(){
-        //TODO: need this?
-        //menu_sv.fullScroll(View.FOCUS_UP);
-        //menu_sv.requestFocus();
-        super.onResume();
-    }
 
     void addMenuItem(MenuItem menuItem){
         menuItems.add(menuItem);
@@ -86,7 +78,7 @@ public abstract class MenuScreen extends Fragment{
         }
     }
     void openTrackList(ArrayList<Library.Track> tracks, int trackIndex){
-        Main.openTrackList(tracks, trackIndex);
+        Main.openTrackList(getContext(), tracks, trackIndex);
         assert getActivity() != null;
         getActivity().finish();
     }

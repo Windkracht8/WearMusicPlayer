@@ -64,7 +64,7 @@ class CommsBT{
                     int port = requestData.getInt("port");
 
                     main.commsFileStart(path);
-                    main.executorService.submit(() -> CommsWifi.receiveFile(main, path, length, ip, port));
+                    Main.executorService.submit(() -> CommsWifi.receiveFile(main, path, length, ip, port));
                     break;
                 case "deleteFile":
                     String delPath = requestMessage.getString("requestData");

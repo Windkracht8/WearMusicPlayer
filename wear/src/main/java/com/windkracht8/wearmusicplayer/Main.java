@@ -143,7 +143,7 @@ public class Main extends Activity{
                 mediaController = controllerFuture.get();
                 mediaController.addListener(playerListener);
                 if(mediaController.getMediaItemCount() == 0)
-                    loadTracks(library.tracks);
+                    loadTracks(this, library.tracks);
             }catch(Exception e){
                 Log.e(LOG_TAG, "Main.onStart exception: " + e.getMessage());
             }
@@ -184,12 +184,12 @@ public class Main extends Activity{
         }
     };
 
-    static void openTrackList(ArrayList<Library.Track> tracks, int index){
-        loadTracks(tracks);
+    static void openTrackList(Context context, ArrayList<Library.Track> tracks, int index){
+        loadTracks(context, tracks);
         mediaController.seekTo(index, 0);
         mediaController.play();
     }
-    private static void loadTracks(ArrayList<Library.Track> tracks){
+    private static void loadTracks(Context context, ArrayList<Library.Track> tracks){
         if(mediaController == null || tracks.isEmpty()) return;
         Log.d(Main.LOG_TAG, "Main.loadTracks: " + tracks.size());
         mediaController.clearMediaItems();
@@ -200,8 +200,7 @@ public class Main extends Activity{
             mediaController.prepare();
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Main.loadTracks exception: " + e.getMessage());
-            //TODO: Need context for Toast
-            //Toast.makeText(, R.string.fail_load_tracks, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, R.string.fail_load_tracks, Toast.LENGTH_SHORT).show();
         }
     }
     private void updateTimer(){
@@ -237,7 +236,7 @@ public class Main extends Activity{
     }
     void libraryReady(){
         runOnUiThread(()-> {
-            loadTracks(library.tracks);
+            loadTracks(this, library.tracks);
             if(!library.tracks.isEmpty()){
                 Library.Track track = library.tracks.get(0);
                 main_song_title.setText(track.title);
@@ -246,7 +245,7 @@ public class Main extends Activity{
                     main_next.setColorFilter(getColor(R.color.white));
                 }
             }
-            main_library.setText(R.string.library);
+            main_library.setText(getString(R.string.library).toLowerCase());
         });
     }
 
