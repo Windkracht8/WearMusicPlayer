@@ -20,7 +20,7 @@ public class MenuScreenArtist extends MenuScreen{
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
         Library.Artist artist = Main.library.artists.get(artistIndex);
         menu_label.setText(artist.name);
-        for(int trackIndex = 0; trackIndex < Main.library.artists.size(); trackIndex++){
+        for(int trackIndex = 0; trackIndex < artist.artist_tracks.size(); trackIndex++){
             MenuItem menuItem = new MenuItem(
                     inflater
                     ,artist.artist_tracks.get(trackIndex).title
