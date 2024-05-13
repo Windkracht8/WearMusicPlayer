@@ -54,6 +54,7 @@ public class Main extends Activity{
     private TextView main_song_title;
     private TextView main_song_artist;
     private TextView main_library;
+    private ImageView main_loading;
     private Progress main_progress;
 
     static ExecutorService executorService;
@@ -92,6 +93,7 @@ public class Main extends Activity{
 
         setContentView(R.layout.main);
         main_progress = findViewById(R.id.main_progress);
+        main_loading = findViewById(R.id.main_loading);
         main_timer = findViewById(R.id.main_timer);
         main_previous = findViewById(R.id.main_previous);
         main_play_pause = findViewById(R.id.main_play_pause);
@@ -117,9 +119,10 @@ public class Main extends Activity{
             }
         });
         main_next.setOnClickListener(v -> mediaController.seekToNext());
-        findViewById(R.id.main_library).setOnClickListener(v->
-                startActivity(new Intent(this, MenuActivity.class))
-        );
+        findViewById(R.id.main_library).setOnClickListener(v->{
+            main_loading.setVisibility(View.VISIBLE);
+            startActivity(new Intent(this, MenuActivity.class));
+        });
 
         if(heightPixels < 68 * displayMetrics.scaledDensity + 144 * displayMetrics.density){
             main_song_title.setLines(1);
@@ -134,6 +137,7 @@ public class Main extends Activity{
     @Override
     public void onStart(){
         super.onStart();
+        main_loading.setVisibility(View.GONE);
         ComponentName cn = new ComponentName(this, W8Player.class);
         SessionToken st = new SessionToken(this, cn);
         ListenableFuture<MediaController> controllerFuture = new MediaController.Builder(this, st).buildAsync();
@@ -149,6 +153,7 @@ public class Main extends Activity{
             }
         },MoreExecutors.directExecutor());
     }
+
     private final Player.Listener playerListener = new Player.Listener(){
         @Override
         public void onIsPlayingChanged(boolean isPlaying){
