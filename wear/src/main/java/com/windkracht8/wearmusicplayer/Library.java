@@ -20,25 +20,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 class Library{
+    private final Main main;
     static String exStorageDir;
     static File filePendingDelete;
     final ArrayList<Track> tracks = new ArrayList<>();
     final ArrayList<Artist> artists = new ArrayList<>();
     final ArrayList<Album> albums = new ArrayList<>();
 
-    static int libraryScanVersion = 0;
-
-    Library(){
+    Library(Main main){
+        this.main = main;
         exStorageDir = Environment.getExternalStorageDirectory().toString();
     }
-    JSONArray getTracks(Main main){
+    JSONArray getTracks(){
         JSONArray array = new JSONArray();
         for(Track track : tracks){
             array.put(track.toJson(main));
         }
         return array;
     }
-    void scanMediaStore(Main main){
+    void scanMediaStore(){
         if(!Main.hasReadPermission) return;
         Log.d(Main.LOG_TAG, "Library.scanMediaStore");
         tracks.clear();
@@ -106,20 +106,20 @@ class Library{
         }
 
         Log.d(Main.LOG_TAG, "Library.scanMediaStore ready");
-        libraryScanVersion++;
         main.libraryReady();
     }
-    void scanFiles(Main main){
+    void scanFiles(){
         Log.d(Main.LOG_TAG, "Library.scanFiles");
+        main.librarySetScanning();
         ArrayList<String> paths = new ArrayList<>();
         paths.add(exStorageDir);
         MediaScannerConnection.scanFile(main,
                 paths.toArray(new String[0]),
                 null,
-                (path1, uri) -> scanMediaStore(main)
+                (path1, uri) -> scanMediaStore()
         );
     }
-    String ensurePath(Main main, String path){
+    String ensurePath(String path){
         File file = new File(exStorageDir + "/" + path);
         try{
             if(file.exists()){
@@ -153,19 +153,19 @@ class Library{
         }
         return null;
     }
-    void addFile(Main main, String path){
+    void addFile(String path){
         File file = new File(exStorageDir + "/" + path);
-        scanFile(main, file);
+        scanFile(file);
     }
-    void scanFile(Main main, File file){
+    void scanFile(File file){
         MediaScannerConnection.scanFile(main,
                 new String[]{file.toString()},
                 null,
-                (path1, uri) -> scanMediaStore(main)
+                (path1, uri) -> scanMediaStore()
         );
         filePendingDelete = null;
     }
-    String deleteFile(Main main, String path){
+    String deleteFile(String path){
         filePendingDelete = new File(exStorageDir + "/" + path);
         if(!filePendingDelete.exists()){
             Log.i(Main.LOG_TAG, "Library.deleteFile: path does not exists");
@@ -200,7 +200,7 @@ class Library{
             main.toast(R.string.fail_delete_file);
             return main.getString(R.string.fail_delete_file);
         }
-        scanFile(main, filePendingDelete);
+        scanFile(filePendingDelete);
         return "OK";
     }
     class Track implements Comparable<Track>{

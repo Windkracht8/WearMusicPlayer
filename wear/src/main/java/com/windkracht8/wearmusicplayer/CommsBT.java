@@ -54,7 +54,7 @@ class CommsBT{
                 case "fileDetails":
                     JSONObject requestData = requestMessage.getJSONObject("requestData");
                     String path = requestData.getString("path");
-                    String reason = Main.library.ensurePath(main, path);
+                    String reason = Main.library.ensurePath(path);
                     if(reason != null){
                         sendResponse("fileDetails", reason);
                         return;
@@ -68,7 +68,7 @@ class CommsBT{
                     break;
                 case "deleteFile":
                     String delPath = requestMessage.getString("requestData");
-                    String result = Main.library.deleteFile(main, delPath);
+                    String result = Main.library.deleteFile(delPath);
                     if(!Objects.equals(result, "PENDING"))
                         sendResponse("deleteFile", result);
                     break;
@@ -83,7 +83,7 @@ class CommsBT{
     }
     private void onReceiveSync(){
         try{
-            JSONArray tracks = Main.library.getTracks(main);
+            JSONArray tracks = Main.library.getTracks();
             long freeSpace = new File(Library.exStorageDir).getFreeSpace();
             JSONObject responseData = new JSONObject();
             responseData.put("tracks", tracks);
