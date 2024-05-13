@@ -71,8 +71,7 @@
         android:id="@+id/main_song_title"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginLeft="@dimen/ll_in_sc_padding"
-        android:layout_marginRight="@dimen/ll_in_sc_padding"
+        android:layout_marginHorizontal="10dp"
         android:gravity="center"
         android:lines="2"
         android:autoSizeTextType="uniform"
@@ -106,56 +105,6 @@
         app:layout_constraintBottom_toBottomOf="parent" />
     <com.windkracht8.wearmusicplayer.Progress
         android:id="@+id/main_progress"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:background="#000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.wearmusicplayer.MenuLibrary
-        android:id="@+id/main_menu_library"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:background="#000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.wearmusicplayer.MenuArtists
-        android:id="@+id/main_menu_artists"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:background="#000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.wearmusicplayer.MenuArtist
-        android:id="@+id/main_menu_artist"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:background="#000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.wearmusicplayer.MenuAlbums
-        android:id="@+id/main_menu_albums"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:background="#000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-    <com.windkracht8.wearmusicplayer.MenuAlbum
-        android:id="@+id/main_menu_album"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"

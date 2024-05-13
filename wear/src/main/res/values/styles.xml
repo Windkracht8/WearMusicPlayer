@@ -12,7 +12,10 @@
         <item name="android:colorAccent">@color/w8blue</item>
         <item name="android:colorControlActivated">@color/w8blue</item>
         <item name="android:textColor">#fff</item>
-        <item name="android:background">#0000</item>
+        <item name="android:background">#000</item>
+    </style>
+    <style name="wmp_with_back" parent="wmp">
+        <item name="android:windowSwipeToDismiss">true</item>
     </style>
     <style name="wmp_alert">
         <item name="android:gravity">center</item>

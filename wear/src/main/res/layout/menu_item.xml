@@ -10,13 +10,15 @@
         android:id="@+id/menu_item_primary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#0000"
         android:gravity="center"
-        android:textSize="20sp" />
+        android:textSize="20sp"/>
     <TextView
         android:id="@+id/menu_item_secondary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#0000"
         android:gravity="center"
         android:textColor="@color/w8blue"
-        android:textSize="14sp" />
+        android:textSize="14sp"/>
 </LinearLayout>
