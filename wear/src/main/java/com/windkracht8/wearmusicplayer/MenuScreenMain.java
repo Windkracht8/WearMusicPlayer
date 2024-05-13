@@ -17,7 +17,11 @@ public class MenuScreenMain extends MenuScreen{
     ){
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
         menu_label.setText(getString(R.string.library));
-        MenuItem menuItem = new MenuItem(inflater, getString(R.string.albums), String.valueOf(Main.library.albums.size()));
+        MenuItem menuItem = new MenuItem(inflater, getString(R.string.all), String.valueOf(Main.library.tracks.size()));
+        menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenAll()));
+        addMenuItem(menuItem);
+
+        menuItem = new MenuItem(inflater, getString(R.string.albums), String.valueOf(Main.library.albums.size()));
         menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenAlbums()));
         addMenuItem(menuItem);
 

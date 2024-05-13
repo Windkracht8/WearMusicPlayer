@@ -20,5 +20,13 @@ public class MenuItem extends LinearLayout{
             menu_item_secondary.setText(secondary);
         }
     }
+    void setPrimary(String value){
+        TextView menu_item_primary = findViewById(R.id.menu_item_primary);
+        menu_item_primary.setText(value);
+    }
+    void setSecondary(String value){
+        TextView menu_item_secondary = findViewById(R.id.menu_item_secondary);
+        menu_item_secondary.setText(value);
+    }
 }
 

@@ -14,7 +14,7 @@
     <string name="main_forward_desc">next song</string>
     <string name="loading">loading</string>
     <string name="scanning">scanning</string>
-    <string name="library">library</string>
+    <string name="library">Library</string>
     <string name="confirm_close_transfer">Stop transfer and close?</string>
     <string name="confirm_close_play">Stop playing and close?</string>
     <string name="yes">yes</string>
@@ -29,12 +29,11 @@
     <string name="connection_info_Wifi">Wi-Fi (fast)</string>
 
     <!-- menu library -->
-    <string name="menu_library_label">Library</string>
     <string name="rescan">Rescan</string>
+    <string name="all">All</string>
+    <string name="randomise">Randomise</string>
 
     <!-- fail -->
-    <string name="fail_oops">Oops</string>
-    <string name="fail_show_menu">Failed to show Menu</string>
     <string name="fail_show_progress">Failed to show Progress</string>
     <string name="fail_request">Problem with request from phone</string>
     <string name="fail_respond">Failed to respond to phone</string>
