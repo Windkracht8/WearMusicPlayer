@@ -18,6 +18,7 @@ import androidx.fragment.app.FragmentManager;
 import java.util.ArrayList;
 
 public abstract class MenuScreen extends Fragment{
+    private ScrollView menu_sv;
     TextView menu_label;
     private LinearLayout menu_items;
     final ArrayList<MenuItem> menuItems = new ArrayList<>();
@@ -33,7 +34,7 @@ public abstract class MenuScreen extends Fragment{
             @Nullable Bundle savedInstanceState
     ){
         View rootView = inflater.inflate(R.layout.menu_screen, container, false);
-        ScrollView menu_sv = rootView.findViewById(R.id.menu_sv);
+        menu_sv = rootView.findViewById(R.id.menu_sv);
         menu_label = rootView.findViewById(R.id.menu_label);
         menu_label.setMinimumHeight(Main.vh25);
         menu_items = rootView.findViewById(R.id.menu_items);
@@ -59,6 +60,11 @@ public abstract class MenuScreen extends Fragment{
         menu_sv.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> scaleMenuItems(scrollY));
 
         return rootView;
+    }
+    @Override
+    public void onResume(){
+        super.onResume();
+        menu_sv.requestFocus();
     }
 
     void addMenuItem(MenuItem menuItem){

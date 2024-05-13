@@ -20,7 +20,7 @@ public class MenuScreenAlbum extends MenuScreen{
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
         Library.Album album = Main.library.albums.get(albumIndex);
         menu_label.setText(album.name);
-        for(int trackIndex = 0; trackIndex < Main.library.albums.size(); trackIndex++){
+        for(int trackIndex = 0; trackIndex < album.album_tracks.size(); trackIndex++){
             MenuItem menuItem = new MenuItem(
                     inflater
                     ,album.album_tracks.get(trackIndex).title
