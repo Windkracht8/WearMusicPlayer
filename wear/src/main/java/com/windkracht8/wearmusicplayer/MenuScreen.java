@@ -9,15 +9,16 @@ import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
 import java.util.ArrayList;
 
 public abstract class MenuScreen extends Fragment{
+    static MenuScreenInterface menuScreenInterface;
     private ScrollView menu_sv;
     TextView menu_label;
     private LinearLayout menu_items;
@@ -58,30 +59,26 @@ public abstract class MenuScreen extends Fragment{
             });
         }
         menu_sv.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> scaleMenuItems(scrollY));
-
         return rootView;
     }
     @Override
     public void onResume(){
         super.onResume();
         menu_sv.requestFocus();
+        if(menuScreenInterface != null) menuScreenInterface.hideLoading();
+    }
+    void openMenuScreen(MenuScreen menuScreen){
+        if(menuScreenInterface != null){
+            menuScreenInterface.openMenuScreen(menuScreen);
+        }else{
+            Log.e(Main.LOG_TAG, "MenuScreen.openMenuScreen no menuScreenInterface");
+            Toast.makeText(getContext(), R.string.fail_technical, Toast.LENGTH_SHORT).show();
+        }
     }
 
     void addMenuItem(MenuItem menuItem){
         menuItems.add(menuItem);
         menu_items.addView(menuItem);
-    }
-    void openMenuScreen(MenuScreen menuScreen){
-        try{
-            assert getActivity() != null;
-            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-            fragmentManager.beginTransaction()
-                    .add(R.id.fragmentContainerView, menuScreen, menuScreen.getClass().getSimpleName())
-                    .addToBackStack(menuScreen.getClass().getSimpleName())
-                    .commit();
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Unexpected error: " + e.getMessage());
-        }
     }
     void openTrackList(ArrayList<Library.Track> tracks, int trackIndex){
         Main.openTrackList(getContext(), tracks, trackIndex);
@@ -111,5 +108,9 @@ public abstract class MenuScreen extends Fragment{
             menuItem.setScaleX(scale);
             menuItem.setScaleY(scale);
         }
+    }
+    public interface MenuScreenInterface{
+        void openMenuScreen(MenuScreen menuScreen);
+        void hideLoading();
     }
 }

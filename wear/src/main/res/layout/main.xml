@@ -19,54 +19,54 @@
         android:textColor="@color/w8blue"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"/>
     <ImageView
         android:id="@+id/main_volume_down"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="@dimen/minTouchSize"
+        android:layout_height="@dimen/minTouchSize"
         android:src="@drawable/icon_volume_low"
+        android:contentDescription="@string/main_volume_down_desc"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/main_volume_up"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/main_volume_down_desc" />
+        app:layout_constraintTop_toTopOf="parent"/>
     <ImageView
         android:id="@+id/main_volume_up"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="@dimen/minTouchSize"
+        android:layout_height="@dimen/minTouchSize"
         android:src="@drawable/icon_volume"
+        android:contentDescription="@string/main_volume_up_desc"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@id/main_volume_down"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/main_volume_up_desc" />
+        app:layout_constraintTop_toTopOf="parent"/>
     <ImageView
         android:id="@+id/main_previous"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="@dimen/minTouchSize"
+        android:layout_height="@dimen/minTouchSize"
         android:layout_marginStart="10dp"
         android:src="@drawable/icon_previous"
+        android:contentDescription="@string/main_back_desc"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_volume_down"
-        android:contentDescription="@string/main_back_desc" />
+        app:layout_constraintTop_toBottomOf="@id/main_volume_down"/>
     <ImageView
         android:id="@+id/main_play_pause"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="@dimen/minTouchSize"
+        android:layout_height="@dimen/minTouchSize"
         android:src="@drawable/icon_play"
+        android:contentDescription="@string/main_play_pause_desc"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_volume_down"
-        android:contentDescription="@string/main_play_pause_desc" />
+        app:layout_constraintTop_toBottomOf="@id/main_volume_down"/>
     <ImageView
         android:id="@+id/main_next"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="@dimen/minTouchSize"
+        android:layout_height="@dimen/minTouchSize"
         android:layout_marginEnd="10dp"
         android:src="@drawable/icon_next"
+        android:contentDescription="@string/main_forward_desc"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_volume_up"
-        android:contentDescription="@string/main_forward_desc" />
+        app:layout_constraintTop_toBottomOf="@id/main_volume_up"/>
     <TextView
         android:id="@+id/main_song_title"
         android:layout_width="match_parent"
@@ -78,13 +78,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_play_pause"
-        app:layout_constraintBottom_toTopOf="@id/main_song_artist" />
+        app:layout_constraintBottom_toTopOf="@id/main_song_artist"/>
     <TextView
         android:id="@+id/main_song_artist"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
+        android:layout_marginHorizontal="20dp"
         android:gravity="center"
         android:textColor="@color/w8blue"
         android:maxLines="1"
@@ -92,27 +91,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_song_title"
-        app:layout_constraintBottom_toTopOf="@id/main_library" />
+        app:layout_constraintBottom_toTopOf="@id/main_library"/>
     <TextView
         android:id="@+id/main_library"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="@dimen/minTouchSize"
         android:gravity="center"
         android:text="@string/loading"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"/>
     <ImageView
         android:id="@+id/main_loading"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        android:src="@drawable/splash_screen"
+        android:background="#000"
+        android:scaleType="center"
+        android:contentDescription="@string/main_loading_desc"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"/>
     <com.windkracht8.wearmusicplayer.Progress
         android:id="@+id/main_progress"
         android:layout_width="match_parent"
@@ -122,5 +123,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

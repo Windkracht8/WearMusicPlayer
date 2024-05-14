@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android" >
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-    <uses-feature android:name="android.hardware.type.watch" />
+        android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+    <uses-feature android:name="android.hardware.type.watch"/>
     <application
         android:allowBackup="true"
         android:icon="@mipmap/icon"
@@ -20,7 +20,7 @@
         android:theme="@style/wmp_splash" >
         <meta-data
             android:name="com.google.android.wearable.standalone"
-            android:value="true" />
+            android:value="true"/>
         <activity
             android:name=".Main"
             android:taskAffinity="com.windkracht8.wearmusicplayer.Main"
@@ -28,20 +28,20 @@
             android:exported="true"
             android:theme="@style/wmp_splash" >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
         <activity
             android:name=".MenuActivity"
             android:taskAffinity=".Main"
-            android:theme="@style/wmp_with_back" />
+            android:theme="@style/wmp_with_back"/>
         <service
             android:name="com.windkracht8.wearmusicplayer.W8Player"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false" >
             <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="androidx.media3.session.MediaSessionService"/>
             </intent-filter>
         </service>
     </application>

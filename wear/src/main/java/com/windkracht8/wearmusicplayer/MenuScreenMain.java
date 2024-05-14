@@ -1,5 +1,6 @@
 package com.windkracht8.wearmusicplayer;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +35,12 @@ public class MenuScreenMain extends MenuScreen{
         addMenuItem(menuItem);
 
         return rootView;
+    }
+    @Override
+    public void onAttach(@NonNull Context context){
+        super.onAttach(context);
+        if(context instanceof MenuScreenInterface)
+            menuScreenInterface = (MenuScreenInterface) context;
     }
     private void rescan(){
         Main.rescan();

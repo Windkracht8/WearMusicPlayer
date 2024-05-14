@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.AnimatedVectorDrawable;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -120,7 +121,9 @@ public class Main extends Activity{
         });
         main_next.setOnClickListener(v -> mediaController.seekToNext());
         findViewById(R.id.main_library).setOnClickListener(v->{
+            main_loading.setBackgroundResource(R.drawable.icon_animate);
             main_loading.setVisibility(View.VISIBLE);
+            ((AnimatedVectorDrawable) main_loading.getBackground()).start();
             startActivity(new Intent(this, MenuActivity.class));
         });
 
