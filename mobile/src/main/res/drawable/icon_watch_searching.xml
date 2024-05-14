@@ -1,11 +1,12 @@
-<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt" >
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
     <aapt:attr name="android:drawable">
         <vector
             android:height="200dp"
             android:width="200dp"
             android:viewportHeight="200"
-            android:viewportWidth="200" >
+            android:viewportWidth="200">
             <path
                 android:pathData="M100.25,100m-62.5,0a62.5,62.5 0,1 1,125 0a62.5,62.5 0,1 1,-125 0"
                 android:strokeWidth="12.5"
@@ -20,7 +21,7 @@
                 android:name="rotationGroup"
                 android:pivotX="100"
                 android:pivotY="100"
-                android:rotation="0" >
+                android:rotation="0">
                 <path
                     android:pathData="M72.5,52.37A55,55 0,0 1,100 45v55z">
                     <aapt:attr name="android:fillColor">
@@ -30,8 +31,8 @@
                             android:endX="100"
                             android:endY="72.5"
                             android:type="linear">
-                            <item android:offset="0" android:color="#002BD2E3"/>
-                            <item android:offset="1" android:color="#FF2BD2E3"/>
+                            <item android:offset="0" android:color="@color/transparent"/>
+                            <item android:offset="1" android:color="@color/w8blue"/>
                         </gradient>
                     </aapt:attr>
                 </path>
@@ -45,7 +46,7 @@
                 android:repeatCount="infinite"
                 android:propertyName="rotation"
                 android:valueFrom="0"
-                android:valueTo="360" />
+                android:valueTo="360"/>
         </aapt:attr>
     </target>
 </animated-vector>

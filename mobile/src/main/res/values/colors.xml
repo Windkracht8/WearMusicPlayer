@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="w8blue">#FF2BD2E3</color>
+    <color name="transparent">#0000</color>
     <color name="background">#FFF</color>
     <color name="text">#000</color>
     <color name="icon_disabled">#666</color>

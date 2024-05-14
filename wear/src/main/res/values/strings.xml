@@ -12,6 +12,7 @@
     <string name="main_back_desc">previous song</string>
     <string name="main_play_pause_desc">play or pause</string>
     <string name="main_forward_desc">next song</string>
+    <string name="main_loading_desc">loading screen</string>
     <string name="loading">loading</string>
     <string name="scanning">scanning</string>
     <string name="library">Library</string>
