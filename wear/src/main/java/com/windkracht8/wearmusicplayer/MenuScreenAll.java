@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class MenuScreenAll extends MenuScreen{
-    private ArrayList<Library.Track> tracks = new ArrayList<>();
+    private ArrayList<Library.Track> tracks;
     @Override
     public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
@@ -25,7 +25,7 @@ public class MenuScreenAll extends MenuScreen{
         menuItem.setOnClickListener((v)-> randomise());
         addMenuItem(menuItem);
 
-        tracks = Main.library.tracks;
+        tracks = new ArrayList<>(Main.library.tracks);
         for(int trackIndex = 0; trackIndex < tracks.size(); trackIndex++){
             Library.Track track = tracks.get(trackIndex);
             MenuItem menuItemTrack = new MenuItem(inflater, track.title, track.artist.name);
