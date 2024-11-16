@@ -25,4 +25,5 @@ java {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.21'
 }
