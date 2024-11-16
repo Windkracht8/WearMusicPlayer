@@ -127,6 +127,7 @@ public class Main extends Activity{
             startActivity(new Intent(this, MenuActivity.class));
         });
 
+        //TODO: scaledDensity in DisplayMetrics has been deprecated
         if(heightPixels < 68 * displayMetrics.scaledDensity + 144 * displayMetrics.density){
             main_song_title.setLines(1);
         }
@@ -378,6 +379,7 @@ public class Main extends Activity{
         }
     }
 
+    //TODO: onBackPressed() in Activity has been deprecated
     @Override
     public void onBackPressed(){
         if(CommsWifi.isReceiving){
