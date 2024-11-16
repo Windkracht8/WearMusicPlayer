@@ -42,6 +42,7 @@ class CommsWifi{
         try{
             if(Build.VERSION.SDK_INT >= 29){
                 ConnectivityManager connectivityManager = (ConnectivityManager)main.getSystemService(Main.CONNECTIVITY_SERVICE);
+                //TODO: getIpAddress() in WifiInfo has been deprecated
                 ipAddress = ((WifiInfo)Objects.requireNonNull((Objects.requireNonNull(connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork()))).getTransportInfo())).getIpAddress();
             }else{
                 WifiManager wifiManager = (WifiManager) main.getSystemService(Context.WIFI_SERVICE);
@@ -130,64 +131,4 @@ class CommsWifi{
         isSendingFile = false;
         handler.postDelayed(()-> main.executorService.submit(this::sendFile), 100);
     }
-
-/*
-    private CommsP2PWifi commsP2PWifi;
-    void startP2PWifi(Main main){
-        commsP2PWifi = new CommsP2PWifi(main);
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        main.registerReceiver(commsP2PWifi, intentFilter);
-        commsP2PWifi.start();
-    }
-    void stopP2PWifi(Main main){
-        main.unregisterReceiver(commsP2PWifi);
-        commsP2PWifi = null;
-    }
-
-    private class CommsP2PWifi extends BroadcastReceiver {
-        private WifiP2pManager wifiP2pManager;
-        private WifiP2pManager.Channel channel;
-
-        private CommsP2PWifi(Main main){
-            wifiP2pManager = (WifiP2pManager) main.getSystemService(Context.WIFI_P2P_SERVICE);
-            channel = wifiP2pManager.initialize(main, main.getMainLooper(), null);
-        }
-        private void start(){
-            wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener(){
-                @Override
-                public void onSuccess(){
-                    Log.d(Main.LOG_TAG, "CommsP2PWifi.start.discoverPeers.onSuccess");
-                }
-                @Override
-                public void onFailure(int reasonCode){
-                    Log.d(Main.LOG_TAG, "CommsP2PWifi.start.discoverPeers.onFailure " + reasonCode);
-                }
-            });
-
-        }
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            if(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)){
-                Log.d(Main.LOG_TAG, "CommsWifi.onReceive WIFI_P2P_STATE_CHANGED_ACTION");
-                // Check to see if Wi-Fi is enabled and notify appropriate activity
-            }else if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
-                Log.d(Main.LOG_TAG, "CommsWifi.onReceive WIFI_P2P_PEERS_CHANGED_ACTION");
-                // Call WifiP2pManager.requestPeers() to get a list of current peers
-            }else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
-                Log.d(Main.LOG_TAG, "CommsWifi.onReceive WIFI_P2P_CONNECTION_CHANGED_ACTION");
-                // Respond to new connection or disconnections
-            }else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
-                Log.d(Main.LOG_TAG, "CommsWifi.onReceive WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
-                // Respond to this device's wifi state changing
-            }
-        }
-    }
-*/
 }
