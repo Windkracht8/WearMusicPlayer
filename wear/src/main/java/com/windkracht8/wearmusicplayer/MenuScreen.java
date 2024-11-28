@@ -57,8 +57,8 @@ public abstract class MenuScreen extends Fragment{
                     scaleMenuItems(0);
                 }
             });
+            menu_sv.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> scaleMenuItems(scrollY));
         }
-        menu_sv.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> scaleMenuItems(scrollY));
         return rootView;
     }
     @Override
