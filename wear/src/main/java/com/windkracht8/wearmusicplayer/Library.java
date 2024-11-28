@@ -39,8 +39,8 @@ class Library{
         return array;
     }
     void scanMediaStore(){
+        Log.d(Main.LOG_TAG, "Library.scanMediaStore " + Main.hasReadPermission);
         if(!Main.hasReadPermission) return;
-        Log.d(Main.LOG_TAG, "Library.scanMediaStore");
         tracks.clear();
         artists.clear();
         albums.clear();

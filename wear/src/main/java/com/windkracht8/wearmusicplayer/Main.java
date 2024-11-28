@@ -70,7 +70,7 @@ public class Main extends Activity{
     static int vh75;
 
     static Library library;
-    private CommsBT commsBT = null;
+    private CommsBT commsBT;
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")//registerReceiver is wrapped in SDK_INT, still complains
     @Override
@@ -95,6 +95,7 @@ public class Main extends Activity{
         setContentView(R.layout.main);
         main_progress = findViewById(R.id.main_progress);
         main_loading = findViewById(R.id.main_loading);
+        main_loading.setBackgroundResource(R.drawable.icon_animate);
         main_timer = findViewById(R.id.main_timer);
         main_previous = findViewById(R.id.main_previous);
         main_play_pause = findViewById(R.id.main_play_pause);
@@ -120,8 +121,7 @@ public class Main extends Activity{
             }
         });
         main_next.setOnClickListener(v -> mediaController.seekToNext());
-        findViewById(R.id.main_library).setOnClickListener(v->{
-            main_loading.setBackgroundResource(R.drawable.icon_animate);
+        main_library.setOnClickListener(v->{
             main_loading.setVisibility(View.VISIBLE);
             ((AnimatedVectorDrawable) main_loading.getBackground()).start();
             startActivity(new Intent(this, MenuActivity.class));
@@ -232,19 +232,20 @@ public class Main extends Activity{
         executorService.submit(() -> library.scanFiles());
     }
     void librarySetScanning(){
-        if(!mediaController.isPlaying()){
-            runOnUiThread(()->{
-                main_song_title.setText("");
-                main_song_artist.setText("");
-                main_library.setText(R.string.scanning);
-                mediaController.clearMediaItems();
-                main_previous.setColorFilter(getColor(R.color.icon_disabled));
-                main_next.setColorFilter(getColor(R.color.icon_disabled));
-            });
-        }
+        Log.d(LOG_TAG, "Main.librarySetScanning");
+        runOnUiThread(()-> {
+            if(mediaController.isPlaying()) return;
+            main_song_title.setText("");
+            main_song_artist.setText("");
+            main_library.setText(R.string.scanning);
+            mediaController.clearMediaItems();
+            main_previous.setColorFilter(getColor(R.color.icon_disabled));
+            main_next.setColorFilter(getColor(R.color.icon_disabled));
+        });
     }
     void libraryReady(){
         runOnUiThread(()-> {
+            if(mediaController != null && mediaController.isPlaying()) return;
             loadTracks(this, library.tracks);
             if(!library.tracks.isEmpty()){
                 Library.Track track = library.tracks.get(0);

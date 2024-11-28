@@ -23,8 +23,7 @@ public class MenuActivity extends FragmentActivity implements MenuScreen.MenuScr
     @Override
     public void openMenuScreen(MenuScreen menuScreen){
         try{
-            menu_loading.setVisibility(View.VISIBLE);
-            menu_loading_animate.start();
+            animationStart();
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.menu_container, menuScreen, menuScreen.getClass().getSimpleName())
                     .addToBackStack(menuScreen.getClass().getSimpleName())
@@ -35,7 +34,12 @@ public class MenuActivity extends FragmentActivity implements MenuScreen.MenuScr
         }
     }
     @Override
-    public void hideLoading(){
+    public void animationStart(){
+        menu_loading_animate.start();
+        menu_loading.setVisibility(View.VISIBLE);
+    }
+    @Override
+    public void animationStop(){
         menu_loading.setVisibility(View.GONE);
         menu_loading_animate.stop();
     }

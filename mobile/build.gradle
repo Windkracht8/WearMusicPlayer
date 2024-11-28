@@ -6,8 +6,8 @@ android {
         minSdk 26
         targetSdk 35
         compileSdk 35
-        versionCode 112
-        versionName "1.5"
+        versionCode 113
+        versionName "1.6"
     }
     buildTypes {
         release {
@@ -25,5 +25,7 @@ java {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.21'
+    //Remove this and get a duplicate class error. Keep in sync with Kotlin compiler version.
+    //noinspection DifferentStdlibGradleVersion
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.0'
 }
