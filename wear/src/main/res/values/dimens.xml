@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="menu_item_bg_border">5dp</dimen>
-    <dimen name="minTouchSize">48dp</dimen>
+    <dimen name="minTouchSize">50dp</dimen>
 </resources>
