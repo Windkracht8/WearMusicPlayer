@@ -33,8 +33,8 @@ import java.util.concurrent.Executors;
 
 public class Main extends AppCompatActivity{
     static final String LOG_TAG = "WearMusicPlayer";
-    private CommsBT commsBT = null;
-    private CommsWifi commsWifi = null;
+    private CommsBT commsBT;
+    private CommsWifi commsWifi;
     static SharedPreferences sharedPreferences;
     static SharedPreferences.Editor sharedPreferences_editor;
     ExecutorService executorService;
@@ -85,7 +85,6 @@ public class Main extends AppCompatActivity{
         requestPermissions();
         executorService.submit(() -> Library.scanFiles(this));
         startBT();
-        //commsWifi.startP2PWifi(this);//TODO:test
     }
 
     void toast(int message){
@@ -230,6 +229,7 @@ public class Main extends AppCompatActivity{
                 commsBT.stopComms();
                 break;
             case CONNECT_TIMEOUT:
+            case SEARCH_EMPTY:
             case SEARCH_TIMEOUT:
             case DISCONNECTED:
                 startBT();
@@ -321,6 +321,13 @@ public class Main extends AppCompatActivity{
                     prevStatuses.clear();
                     gotStatus(getString(R.string.status_SEARCHING));
                     break;
+                case SEARCH_EMPTY:
+                    main_icon.setBackgroundResource(R.drawable.icon_watch);
+                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
+                    gotFreeSpace(0);
+                    gotError(getString(R.string.status_SEARCH_EMPTY));
+                    items.forEach(Item::clearStatus);
+                    break;
                 case SEARCH_TIMEOUT:
                     main_icon.setBackgroundResource(R.drawable.icon_watch);
                     main_icon.setColorFilter(getColor(R.color.icon_disabled));
@@ -349,6 +356,7 @@ public class Main extends AppCompatActivity{
                     main_icon.setBackgroundResource(R.drawable.icon_watch);
                     main_icon.setColorFilter(getColor(R.color.icon_disabled));
                     gotStatus(getString(R.string.status_DISCONNECTED));
+                    items.forEach(Item::clearStatus);
                     break;
             }
         });

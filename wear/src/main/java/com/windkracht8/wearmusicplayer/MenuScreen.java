@@ -65,7 +65,7 @@ public abstract class MenuScreen extends Fragment{
     public void onResume(){
         super.onResume();
         menu_sv.requestFocus();
-        if(menuScreenInterface != null) menuScreenInterface.hideLoading();
+        if(menuScreenInterface != null) menuScreenInterface.animationStop();
     }
     void openMenuScreen(MenuScreen menuScreen){
         if(menuScreenInterface != null){
@@ -81,6 +81,7 @@ public abstract class MenuScreen extends Fragment{
         menu_items.addView(menuItem);
     }
     void openTrackList(ArrayList<Library.Track> tracks, int trackIndex){
+        menuScreenInterface.animationStart();
         Main.openTrackList(getContext(), tracks, trackIndex);
         assert getActivity() != null;
         getActivity().finish();
@@ -111,6 +112,7 @@ public abstract class MenuScreen extends Fragment{
     }
     public interface MenuScreenInterface{
         void openMenuScreen(MenuScreen menuScreen);
-        void hideLoading();
+        void animationStart();
+        void animationStop();
     }
 }

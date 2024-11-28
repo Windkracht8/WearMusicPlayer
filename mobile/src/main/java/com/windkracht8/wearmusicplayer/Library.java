@@ -30,8 +30,9 @@ class Library{
             if(file.getName().startsWith(".")) continue;
             if(file.isDirectory()){
                 LibDir libDir_sub = new LibDir(file.toURI());
-                libDir.libDirs.add(libDir_sub);
                 scanFilesDir(libDir_sub);
+                if(libDir_sub.libDirs.isEmpty() && libDir_sub.libTracks.isEmpty()) continue;
+                libDir.libDirs.add(libDir_sub);
             }
             if(!isTrack(file.getName())) continue;
             libDir.libTracks.add(new LibTrack(file.toURI()));

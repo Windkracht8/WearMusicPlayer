@@ -7,6 +7,13 @@ buildscript {
         classpath 'com.android.tools.build:gradle:8.7.2'
     }
 }
+/*
+Settings > Kotlin Compiler
+    Kotlin compiler version: 2.1.0
+    Language version: 2.0
+    API version: 2.0
+    Target JVM version: 21 (same as gradle JDK and java.toolchain.languageVersion)
+*/
 
 allprojects {
     repositories {

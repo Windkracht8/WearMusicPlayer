@@ -36,7 +36,7 @@ public class CommsBT{
     private final Main main;
 
     enum Status{INIT, CONNECTING, CONNECT_TIMEOUT, SEARCHING,
-        SEARCH_TIMEOUT, CONNECTED, DISCONNECTED, FATAL}
+        SEARCH_EMPTY, SEARCH_TIMEOUT, CONNECTED, DISCONNECTED, FATAL}
     Status status = Status.INIT;
     private boolean closeConnection = false;
     private Set<String> wmp_device_addresses = new HashSet<>();
@@ -128,6 +128,10 @@ public class CommsBT{
         if(bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON) return;
         Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
         Log.d(Main.LOG_TAG, "CommsBT.startComms " + wmp_device_addresses.size() + "/" + devices.size());
+        if(devices.isEmpty()){
+            updateStatus(Status.SEARCH_EMPTY);
+            return;
+        }
         closeConnection = false;
         devices_connect_pending = 0;
         devices_fetch_pending = 0;

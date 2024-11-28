@@ -19,9 +19,13 @@
 
     <!-- CommsBT -->
     <string name="status_SEARCHING">Starting search for watch.</string>
+    <string name="status_SEARCH_EMPTY">There are no devices connected. To connect, make sure you
+        have a bluetooth connection with the watch, keep the app on the watch open. Then tab the
+        icon to try again.</string>
     <string name="status_SEARCH_TIMEOUT">Did not find the watch. To connect, make sure you have a
         bluetooth connection with the watch, keep the app on the watch open.
-        Then tab the icon to try again.</string>
+        Then tab the icon to try again. The first time connecting it can take a great number of
+        tries. Patience you must have.</string>
     <string name="status_CONNECT_TIMEOUT">Watch not found. To connect, make sure you have a
         bluetooth connection with the watch, keep the app on the watch open. Tab the icon to
         try again or search for a new device.</string>
