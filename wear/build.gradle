@@ -4,7 +4,7 @@ android {
     defaultConfig {
         applicationId 'com.windkracht8.wearmusicplayer'
         minSdk 30
-        //Wear OS, we have to target SDK 34 and not latest
+        //Wear OS, latest is 34
         //noinspection OldTargetApi
         targetSdk 34
         compileSdk 35
@@ -18,10 +18,9 @@ android {
         }
     }
     namespace 'com.windkracht8.wearmusicplayer'
-}
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    compileOptions{
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 dependencies {

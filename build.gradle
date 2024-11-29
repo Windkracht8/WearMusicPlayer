@@ -12,9 +12,10 @@ Settings > Kotlin Compiler
     Kotlin compiler version: 2.1.0
     Language version: 2.0
     API version: 2.0
-    Target JVM version: 21 (same as gradle JDK and java.toolchain.languageVersion)
+    Target JVM version: 17
+File > Project Structure > Project
+	Gradle Version: 8.11.1
 */
-
 allprojects {
     repositories {
         google()
