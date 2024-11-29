@@ -16,16 +16,15 @@ android {
         }
     }
     namespace 'com.windkracht8.wearmusicplayer'
-}
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    compileOptions{
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
-    //Remove this and get a duplicate class error. Keep in sync with Kotlin compiler version.
+    //Remove this and get a duplicate class error.
     //noinspection DifferentStdlibGradleVersion
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.0'
 }

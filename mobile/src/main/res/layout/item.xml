@@ -14,7 +14,8 @@
             android:id="@+id/item_status"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:gravity="center" />
+            android:gravity="center"
+            android:contentDescription="@string/item_status_desc" />
         <TextView
             android:id="@+id/item_label"
             android:layout_width="match_parent"
