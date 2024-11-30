@@ -39,6 +39,7 @@ class Item extends ConstraintLayout{
             items.add(item);
             item_items.addView(item);
         }
+        item_status.setContentDescription(getContext().getString(R.string.item_status_desc) + libItem.name);
     }
     Item(Main main, Library.LibTrack libTrack){
         super(main);
