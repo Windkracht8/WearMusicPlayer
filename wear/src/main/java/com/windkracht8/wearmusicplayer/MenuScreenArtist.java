@@ -1,6 +1,7 @@
 package com.windkracht8.wearmusicplayer;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,17 +19,21 @@ public class MenuScreenArtist extends MenuScreen{
             @Nullable Bundle savedInstanceState
     ){
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
-        Library.Artist artist = Main.library.artists.get(artistIndex);
-        menu_label.setText(artist.name);
-        for(int trackIndex = 0; trackIndex < artist.artist_tracks.size(); trackIndex++){
-            MenuItem menuItem = new MenuItem(
-                    inflater
-                    ,artist.artist_tracks.get(trackIndex).title
-                    ,artist.artist_tracks.get(trackIndex).artist.name
-            );
-            int finalTrackIndex = trackIndex;
-            menuItem.setOnClickListener((v)-> openTrackList(artist.artist_tracks, finalTrackIndex));
-            addMenuItem(menuItem);
+        try{
+            Library.Artist artist = Main.library.artists.get(artistIndex);
+            menu_label.setText(artist.name);
+            for(int trackIndex = 0; trackIndex < artist.artist_tracks.size(); trackIndex++){
+                MenuItem menuItem = new MenuItem(
+                        inflater
+                        ,artist.artist_tracks.get(trackIndex).title
+                        ,artist.artist_tracks.get(trackIndex).artist.name
+                );
+                int finalTrackIndex = trackIndex;
+                menuItem.setOnClickListener((v)-> openTrackList(artist.artist_tracks, finalTrackIndex));
+                addMenuItem(menuItem);
+            }
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "Failed to get library artist: " + e.getMessage());
         }
         return rootView;
     }

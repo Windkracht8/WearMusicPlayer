@@ -1,6 +1,7 @@
 package com.windkracht8.wearmusicplayer;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,13 +26,17 @@ public class MenuScreenAll extends MenuScreen{
         menuItem.setOnClickListener((v)-> randomise());
         addMenuItem(menuItem);
 
-        tracks = new ArrayList<>(Main.library.tracks);
-        for(int trackIndex = 0; trackIndex < tracks.size(); trackIndex++){
-            Library.Track track = tracks.get(trackIndex);
-            MenuItem menuItemTrack = new MenuItem(inflater, track.title, track.artist.name);
-            int finalTrackIndex = trackIndex;
-            menuItemTrack.setOnClickListener((v)-> openTrackList(tracks, finalTrackIndex));
-            addMenuItem(menuItemTrack);
+        try{
+            tracks = new ArrayList<>(Main.library.tracks);
+            for(int trackIndex = 0; trackIndex < tracks.size(); trackIndex++){
+                Library.Track track = tracks.get(trackIndex);
+                MenuItem menuItemTrack = new MenuItem(inflater, track.title, track.artist.name);
+                int finalTrackIndex = trackIndex;
+                menuItemTrack.setOnClickListener((v)-> openTrackList(tracks, finalTrackIndex));
+                addMenuItem(menuItemTrack);
+            }
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "Failed to get library tracks: " + e.getMessage());
         }
         return rootView;
     }
