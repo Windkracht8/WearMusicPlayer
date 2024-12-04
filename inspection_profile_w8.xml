@@ -1,18 +1,15 @@
-<component name="InspectionProjectProfileManager">
-  <profile version="1.0">
-    <option name="myName" value="Windkracht8" />
-    <inspection_tool class="AndroidLintViewConstructor" enabled="false" level="WARNING" enabled_by_default="false" />
-    <inspection_tool class="RedundantFieldInitialization" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="onlyWarnOnNull" value="true" />
-    </inspection_tool>
-    <inspection_tool class="SizeReplaceableByIsEmpty" enabled="false" level="WARNING" enabled_by_default="false" />
-    <inspection_tool class="UnnecessaryFinalOnLocalVariableOrParameter" enabled="true" level="WARNING" enabled_by_default="true" />
-    <inspection_tool class="UnnecessaryThis" enabled="true" level="WARNING" enabled_by_default="true" />
-    <inspection_tool class="UnusedLibrary" enabled="true" level="WARNING" enabled_by_default="true" />
-    <inspection_tool class="WeakerAccess" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="SUGGEST_PACKAGE_LOCAL_FOR_MEMBERS" value="true" />
-      <option name="SUGGEST_PACKAGE_LOCAL_FOR_TOP_CLASSES" value="true" />
-      <option name="SUGGEST_PRIVATE_FOR_INNERS" value="true" />
-    </inspection_tool>
-  </profile>
-</component>
+<profile version="1.0">
+  <option name="myName" value="Windkracht8" />
+  <inspection_tool class="AndroidLintViewConstructor" enabled="false" level="WARNING" enabled_by_default="false" />
+  <inspection_tool class="RedundantFieldInitialization" enabled="false" level="WARNING" enabled_by_default="false">
+    <option name="onlyWarnOnNull" value="true" />
+  </inspection_tool>
+  <inspection_tool class="UnnecessaryFinalOnLocalVariableOrParameter" enabled="true" level="WARNING" enabled_by_default="true" />
+  <inspection_tool class="UnnecessaryThis" enabled="true" level="WARNING" enabled_by_default="true" />
+  <inspection_tool class="UnusedLibrary" enabled="true" level="WARNING" enabled_by_default="true" />
+  <inspection_tool class="WeakerAccess" enabled="true" level="WARNING" enabled_by_default="true">
+    <option name="SUGGEST_PACKAGE_LOCAL_FOR_MEMBERS" value="true" />
+    <option name="SUGGEST_PACKAGE_LOCAL_FOR_TOP_CLASSES" value="true" />
+    <option name="SUGGEST_PRIVATE_FOR_INNERS" value="true" />
+  </inspection_tool>
+</profile>

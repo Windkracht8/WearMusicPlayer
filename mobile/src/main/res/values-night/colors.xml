@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="w8blue">#FF2BD2E3</color>
     <color name="background">#000</color>
     <color name="text">#FFF</color>
     <color name="icon_disabled">#666</color>
+    <color name="bgItem">#222</color>
     <color name="error">@android:color/holo_red_light</color>
 </resources>
