@@ -4,39 +4,48 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <TextView
-        android:id="@+id/main_available"
-        android:layout_width="80sp"
-        android:layout_height="80sp"
-        android:gravity="center"
-        android:autoSizeTextType="uniform"
-        android:maxLines="1"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
     <ImageView
         android:id="@+id/main_icon"
-        android:layout_width="80sp"
-        android:layout_height="80sp"
+        android:layout_width="70sp"
+        android:layout_height="70sp"
         android:contentDescription="@string/main_icon_desc"
-        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/icon_watch" />
-    <ScrollView
-        android:id="@+id/main_sv_BT_log"
+    <TextView
+        android:id="@+id/main_available"
+        android:layout_width="70sp"
+        android:layout_height="70sp"
+        android:background="#0000"
+        android:gravity="center"
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="8sp"
+        android:autoSizeMaxTextSize="20sp"
+        android:maxLines="1"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <TextView
+        android:id="@+id/main_device"
         android:layout_width="0dp"
-        android:layout_height="80sp"
-        android:contentDescription="@string/main_sv_BT_log_desc"
+        android:layout_height="wrap_content"
+        android:minHeight="35sp"
+        android:text="@string/connect"
+        android:gravity="center_vertical"
+        android:textSize="18sp"
+        app:layout_constraintStart_toEndOf="@id/main_icon"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+    <TextView
+        android:id="@+id/main_status"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minHeight="35sp"
+        android:gravity="center_vertical"
+        android:textSize="14sp"
         app:layout_constraintStart_toEndOf="@+id/main_icon"
-        app:layout_constraintTop_toTopOf="parent" >
-        <LinearLayout
-            android:id="@+id/main_ll_BT_log"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-    </ScrollView>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/main_device"/>
     <TextView
         android:id="@+id/main_loading"
         android:layout_width="match_parent"
@@ -46,7 +55,7 @@
         android:text="@string/main_loading_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_icon" />
+        app:layout_constraintTop_toBottomOf="@id/main_status" />
     <ScrollView
         android:id="@+id/main_sv"
         android:layout_width="match_parent"
@@ -63,4 +72,15 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
     </ScrollView>
+    <ImageView
+        android:id="@+id/main_loading_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#000"
+        android:scaleType="center"
+        android:contentDescription="@string/loading_desc"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/main_status" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -7,21 +7,17 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,22 +27,22 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Main extends AppCompatActivity{
+public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
     static final String LOG_TAG = "WearMusicPlayer";
-    private CommsBT commsBT;
+    static CommsBT commsBT;
     private CommsWifi commsWifi;
     static SharedPreferences sharedPreferences;
     static SharedPreferences.Editor sharedPreferences_editor;
-    ExecutorService executorService;
+    static ExecutorService executorService;
 
     private TextView main_available;
+    private TextView main_device;
     private ImageView main_icon;
-    private ScrollView main_sv_BT_log;
-    private LinearLayout main_ll_BT_log;
+    private TextView main_status;
     private LinearLayout main_ll;
+    private ImageView main_loading_icon;
     private final ArrayList<Item> items = new ArrayList<>();
     Item itemInProgress;
-    private final ArrayList<String> prevStatuses = new ArrayList<>();
     private static boolean hasBTPermission = false;
     static boolean hasReadPermission = false;
 
@@ -62,23 +58,13 @@ public class Main extends AppCompatActivity{
         main_available = findViewById(R.id.main_available);
         main_icon = findViewById(R.id.main_icon);
         main_icon.setOnClickListener(view -> onIconClick());
-        main_sv_BT_log = findViewById(R.id.main_sv_BT_log);
-        main_ll_BT_log = findViewById(R.id.main_ll_BT_log);
+        main_icon.setColorFilter(getColor(R.color.icon_disabled));
+        main_device = findViewById(R.id.main_device);
+        main_status = findViewById(R.id.main_status);
         main_ll = findViewById(R.id.main_ll);
-
-        try{
-            PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-            String version;
-            if(android.os.Build.VERSION.SDK_INT >= 28){
-                version = String.format("Version %s (%s)", packageInfo.versionName, packageInfo.getLongVersionCode());
-            }else{
-                version = String.format("Version %s (%s)", packageInfo.versionName, packageInfo.versionCode);
-            }
-            Log.d(Main.LOG_TAG, version);
-            gotStatus(version);
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Main.onCreate getPackageInfo Exception: " + e.getMessage());
-        }
+        main_loading_icon = findViewById(R.id.main_loading_icon);
+        main_loading_icon.setBackgroundResource(R.drawable.icon_animate);
+        ((AnimatedVectorDrawable) main_loading_icon.getBackground()).start();
 
         commsWifi = new CommsWifi(this);
 
@@ -87,9 +73,6 @@ public class Main extends AppCompatActivity{
         startBT();
     }
 
-    void toast(int message){
-        runOnUiThread(()->Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show());
-    }
     void libraryFilesScanned(){
         runOnUiThread(()->{
             findViewById(R.id.main_loading).setVisibility(View.GONE);
@@ -109,8 +92,12 @@ public class Main extends AppCompatActivity{
         runOnUiThread(()->items.forEach(Item::newStatus));
     }
     private void startBT(){
-        if(!hasBTPermission) return;
-        if(commsBT == null) commsBT = new CommsBT(this);
+        if(!hasBTPermission){
+            onBTStartDone();
+            return;
+        }
+        commsBT = new CommsBT(this);
+        commsBT.addListener(this);
         executorService.submit(() -> commsBT.startComms());
     }
 
@@ -180,8 +167,7 @@ public class Main extends AppCompatActivity{
                     hasBTPermission = true;
                     startBT();
                 }else{
-                    updateStatus(CommsBT.Status.FATAL);
-                    gotError(getString(R.string.fail_BT_denied));
+                    onBTError(R.string.fail_BT_denied);
                 }
                 break;
             }
@@ -210,35 +196,15 @@ public class Main extends AppCompatActivity{
     }
 
     private void onIconClick(){
-        if(commsBT == null){
-            requestPermissions();
-            return;
-        }
-
+        if(commsBT == null) return;
         switch(commsBT.status){
-            case CONNECTING:
-                commsBT.updateStatus(CommsBT.Status.CONNECT_TIMEOUT);
-                commsBT.stopComms();
-                break;
-            case CONNECTED:
-                commsBT.updateStatus(CommsBT.Status.DISCONNECTED);
-                commsBT.stopComms();
-                break;
-            case SEARCHING:
-                commsBT.updateStatus(CommsBT.Status.SEARCH_TIMEOUT);
-                commsBT.stopComms();
-                break;
-            case CONNECT_TIMEOUT:
-            case SEARCH_EMPTY:
-            case SEARCH_TIMEOUT:
-            case DISCONNECTED:
-                startBT();
-                break;
+            case CONNECTED -> commsBT.disconnect();
+            case DISCONNECTED -> startActivity(new Intent(this, DeviceSelect.class));
         }
     }
 
     void onItemStatusPressed(Item item){
-        if(cantSendRequest()){return;}
+        if(cantSendRequest()) return;
         switch(item.libItem.status){
             case FULL:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -261,123 +227,110 @@ public class Main extends AppCompatActivity{
     }
 
     private boolean cantSendRequest(){
-        if(commsBT != null && commsBT.status == CommsBT.Status.CONNECTED){
-            return false;
-        }
-        gotError(getString(R.string.first_connect));
+        if(commsBT != null && commsBT.status == CommsBT.Status.CONNECTED) return false;
+        main_status.setText(R.string.fail_BT);
         return true;
     }
 
-    void gotStatus(String status){
-        if(prevStatuses.contains(status)){
-            return;
-        }
-        prevStatuses.add(status);
-        if(prevStatuses.size()>2) prevStatuses.remove(0);
-
-        runOnUiThread(()-> {
-            TextView tv = new TextView(this);
-            tv.setText(status);
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-            main_ll_BT_log.addView(tv);
-            tv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout(){
-                    tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                    main_sv_BT_log.fullScroll(View.FOCUS_DOWN);
-                }
-            });
-        });
-    }
-    void gotError(String error){
-        Log.d(Main.LOG_TAG, "Main.gotError: " + error);
-        runOnUiThread(()-> {
-            TextView tv = new TextView(this);
-            tv.setText(error);
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-            tv.setTextColor(getColor(R.color.error));
-            main_ll_BT_log.addView(tv);
-            tv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener(){
-                @Override
-                public void onGlobalLayout(){
-                    tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                    main_sv_BT_log.fullScroll(View.FOCUS_DOWN);
-                }
-            });
-        });
-    }
-    void updateStatus(CommsBT.Status status){
-        runOnUiThread(()-> {
-            switch(status){
-                case FATAL:
-                    main_icon.setBackgroundResource(R.drawable.icon_watch);
-                    main_icon.setColorFilter(getColor(R.color.error));
-                    return;
-                case SEARCHING:
-                    main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
-                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
-                    gotFreeSpace(0);
-                    ((AnimatedVectorDrawable) main_icon.getBackground()).start();
-                    prevStatuses.clear();
-                    gotStatus(getString(R.string.status_SEARCHING));
-                    break;
-                case SEARCH_EMPTY:
-                    main_icon.setBackgroundResource(R.drawable.icon_watch);
-                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
-                    gotFreeSpace(0);
-                    gotError(getString(R.string.status_SEARCH_EMPTY));
-                    items.forEach(Item::clearStatus);
-                    break;
-                case SEARCH_TIMEOUT:
-                    main_icon.setBackgroundResource(R.drawable.icon_watch);
-                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
-                    gotFreeSpace(0);
-                    gotError(getString(R.string.status_SEARCH_TIMEOUT));
-                    items.forEach(Item::clearStatus);
-                    break;
-                case CONNECTING:
-                    main_icon.setBackgroundResource(R.drawable.icon_watch_searching);
-                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
-                    gotFreeSpace(0);
-                    ((AnimatedVectorDrawable) main_icon.getBackground()).start();
-                    break;
-                case CONNECT_TIMEOUT:
-                    main_icon.setBackgroundResource(R.drawable.icon_watch);
-                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
-                    gotStatus(getString(R.string.status_CONNECT_TIMEOUT));
-                    break;
-                case CONNECTED:
-                    main_icon.setBackgroundResource(R.drawable.icon_watch);
-                    main_icon.setColorFilter(getColor(R.color.text));
-                    gotStatus(getString(R.string.status_CONNECTED));
-                    sendSyncRequest();
-                    break;
-                case DISCONNECTED:
-                    main_icon.setBackgroundResource(R.drawable.icon_watch);
-                    main_icon.setColorFilter(getColor(R.color.icon_disabled));
-                    gotStatus(getString(R.string.status_DISCONNECTED));
-                    items.forEach(Item::clearStatus);
-                    break;
-            }
-        });
-    }
     void sendFileDetailsRequest(Library.LibItem libItem, String ipAddress){
-        if(cantSendRequest()){return;}
+        if(cantSendRequest()) return;
         executorService.submit(()-> commsBT.sendRequestFileDetails(libItem, ipAddress));
     }
     private void sendSyncRequest(){
         Log.d(Main.LOG_TAG, "Main.sendSyncRequest");
-        if(cantSendRequest()){return;}
+        if(cantSendRequest()) return;
         try{
             JSONObject requestData = new JSONObject();
             executorService.submit(()->commsBT.sendRequest("sync", requestData));
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Main.sendSyncRequest Exception: " + e.getMessage());
-            toast(R.string.fail_sync);
+            onBTError(R.string.fail_sync);
         }
     }
 
-    void gotResponse(JSONObject response){
+    private void gotFreeSpace(long freeSpace){
+        main_available.setText(bytesToHuman(freeSpace));
+    }
+    private String bytesToHuman(long bytes){
+        long GB = 1073741824;
+        long MB = 1048576;
+        long KB = 1024;
+        if(bytes > GB*10){
+            double gbs = (double) bytes/GB;
+            return String.format(Locale.getDefault(), "%.0f GB", gbs);
+        }else if(bytes > GB*5){
+            double gbs = (double) bytes/GB;
+            return String.format(Locale.getDefault(), "%.3f GB", gbs);
+        }else if(bytes > MB){
+            double mbs = (double) bytes/MB;
+            return String.format(Locale.getDefault(), "%.0f MB", mbs);
+        }else if(bytes > KB){
+            double kbs = (double) bytes/KB;
+            return String.format(Locale.getDefault(), "%.0f KB", kbs);
+        }
+        return bytes + " B";
+    }
+
+    private String rps(int resource, String string){return getString(resource) + " " + string;}
+
+    @Override
+    public void onBTStartDone(){
+        Log.d(LOG_TAG, "Main.onBTStartDone");
+        runOnUiThread(()->{
+            if(commsBT != null  && commsBT.status == CommsBT.Status.DISCONNECTED){
+                startActivity(new Intent(this, DeviceSelect.class));
+            }
+            main_loading_icon.setVisibility(View.GONE);
+        });
+    }
+    @Override
+    public void onBTConnecting(String deviceName){
+        Log.d(LOG_TAG, "Main.onBTConnecting");
+        runOnUiThread(()-> {
+            main_icon.setColorFilter(getColor(R.color.text));
+            main_device.setTextColor(getColor(R.color.text));
+            main_device.setText(rps(R.string.connecting_to, deviceName));
+        });
+    }
+    @Override
+    public void onBTConnectFailed(){
+        runOnUiThread(()->{
+            main_icon.setColorFilter(getColor(R.color.error));
+            main_device.setTextColor(getColor(R.color.error));
+            main_device.setText(R.string.fail_BT);
+        });
+    }
+    @Override
+    public void onBTConnected(String deviceName){
+        runOnUiThread(()->{
+            main_icon.setColorFilter(getColor(R.color.text));
+            main_device.setTextColor(getColor(R.color.text));
+            main_device.setText(rps(R.string.connected_to, deviceName));
+            sendSyncRequest();
+        });
+    }
+    @Override
+    public void onBTDisconnected(){
+        runOnUiThread(()->{
+            main_available.setText("");
+            main_icon.setColorFilter(getColor(R.color.icon_disabled));
+            main_device.setTextColor(getColor(R.color.text));
+            main_device.setText(R.string.disconnected);
+            main_status.setText("");
+            items.forEach(Item::clearStatus);
+        });
+    }
+    @Override
+    public void onBTSending(String requestType){
+        runOnUiThread(()->{
+            switch(requestType){
+                case "fileDetails"-> main_status.setText(R.string.sending_file);
+                case "deleteFile"-> main_status.setText(R.string.deleting_file);
+            }
+        });
+    }
+    @Override
+    public void onBTResponse(JSONObject response){
         try{
             String requestType = response.getString("requestType");
             switch(requestType){
@@ -387,21 +340,18 @@ public class Main extends AppCompatActivity{
                     long freeSpaceSync = responseDataSync.getLong("freeSpace");
                     runOnUiThread(()->gotFreeSpace(freeSpaceSync));
                     executorService.submit(()->Library.updateLibWithFilesOnWatch(this, tracks));
-                    gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
                     break;
                 case "fileDetails":
-                    executorService.submit(commsWifi::stop);
+                    commsWifi.stop();
                     String fileDetailsError = response.getString("responseData");
                     Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + fileDetailsError);
-                    toast(R.string.fail_send_file);
-                    gotError(getString(R.string.fail_send_file) + ": " + fileDetailsError);
+                    onBTError(R.string.fail_send_file);
                     break;
                 case "fileBinary":
                     Object responseDataFileDetails = response.get("responseData");
                     if(responseDataFileDetails instanceof String){
                         Log.e(LOG_TAG, "Main.gotResponse fileBinary responseData: " + responseDataFileDetails);
-                        toast(R.string.fail_send_file);
-                        gotError(getString(R.string.fail_send_file) + ": " + responseDataFileDetails);
+                        onBTError(R.string.fail_send_file);
                         break;
                     }
                     JSONObject responseData = response.getJSONObject("responseData");
@@ -410,50 +360,32 @@ public class Main extends AppCompatActivity{
                         gotFreeSpace(freeSpaceFileDetails);
                         itemInProgress.libItem.setStatus(this, Library.LibItem.Status.FULL);
                     });
-                    gotStatus(getString(R.string.received_file));
+                    main_status.setText(R.string.received_file);
                     commsWifi.canSendNext = true;
                     break;
                 case "deleteFile":
                     if(response.getString("responseData").equals("OK")){
                         itemInProgress.libItem.setStatus(this, Library.LibItem.Status.NOT);
-                        gotStatus(String.format("%s %s", getString(R.string.received_response), requestType));
+                        main_status.setText(R.string.deleted_file);
                         break;
                     }else{
                         Log.e(LOG_TAG, "Main.gotResponse deleteFile");
-                        gotStatus(response.getString("responseData"));
-                        toast(R.string.fail_delete_file);
+                        onBTError(R.string.fail_delete_file);
                     }
                     break;
             }
         }catch(Exception e){
             Log.e(LOG_TAG, "Main.gotResponse: " + e.getMessage());
-            toast(R.string.fail_response);
+            onBTError(R.string.fail_response);
         }
     }
-    private void gotFreeSpace(long freeSpace){
-        if(freeSpace == 0){
-            main_available.setText("");
-            return;
-        }
-        main_available.setText(bytesToHuman(freeSpace));
-    }
-    private String bytesToHuman(long bytes){
-        long GB = 1073741824;
-        long MB = 1048576;
-        long KB = 1024;
-        if(bytes > GB*10){
-            double gbs = (double) bytes / GB;
-            return String.format(Locale.getDefault(), "%.0f GB", gbs);
-        }else if(bytes > GB*5){
-            double gbs = (double) bytes/GB;
-            return String.format(Locale.getDefault(), "%.3f GB", gbs);
-        }else if(bytes > MB){
-            double gbs = (double) bytes/MB;
-            return String.format(Locale.getDefault(), "%.0f MB", gbs);
-        }else if(bytes > KB){
-            double gbs = (double) bytes/KB;
-            return String.format(Locale.getDefault(), "%.0f KB", gbs);
-        }
-        return bytes + "B";
+    @Override
+    public void onBTError(int message){
+        runOnUiThread(()->{
+            main_icon.setColorFilter(getColor(R.color.error));
+            main_device.setTextColor(getColor(R.color.error));
+            main_device.setText(message);
+            main_status.setText("");
+        });
     }
 }

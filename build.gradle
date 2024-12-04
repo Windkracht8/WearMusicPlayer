@@ -4,14 +4,14 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.2'
+        classpath 'com.android.tools.build:gradle:8.7.3'
     }
 }
 /*
 Settings > Kotlin Compiler
     Kotlin compiler version: 2.1.0
-    Language version: 2.0
-    API version: 2.0
+    Language version: 1.9
+    API version: 1.9
     Target JVM version: 17
 File > Project Structure > Project
 	Gradle Version: 8.11.1

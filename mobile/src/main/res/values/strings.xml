@@ -2,11 +2,17 @@
     <string name="app_name" translatable="false">Wear Music Player</string>
 
     <!-- main ui -->
+    <string name="loading_desc">loading icon</string>
     <string name="main_icon_desc">icon</string>
-    <string name="main_loading_text">loading file list</string>
-    <string name="main_sv_BT_log_desc">Bluetooth log</string>
-    <string name="main_sv_desc">File overview</string>
     <string name="item_status_desc">status</string>
+    <string name="main_loading_text">loading file list</string>
+    <string name="main_sv_desc">File overview</string>
+    <string name="connect">Tap icon to connect with watch</string>
+
+    <string name="device_select_title">To connect, open the app on the watch and select your watch
+        from the list below</string>
+    <string name="device_connect_instruct">keep the app on the watch open while trying to
+        connect</string>
 
     <string name="alert_exit_title">Upload in progress</string>
     <string name="alert_exit_message">Stop sending file and close?</string>
@@ -19,34 +25,19 @@
     <string name="alert_delete_negative">Cancel</string>
 
     <!-- CommsBT -->
-    <string name="status_SEARCHING">Starting search for watch.</string>
-    <string name="status_SEARCH_EMPTY">There are no devices connected. To connect, make sure you
-        have a bluetooth connection with the watch, keep the app on the watch open. Then tab the
-        icon to try again.</string>
-    <string name="status_SEARCH_TIMEOUT">Did not find the watch. To connect, make sure you have a
-        bluetooth connection with the watch, keep the app on the watch open.
-        Then tab the icon to try again. The first time connecting it can take a great number of
-        tries. Patience you must have.</string>
-    <string name="status_CONNECT_TIMEOUT">Watch not found. To connect, make sure you have a
-        bluetooth connection with the watch, keep the app on the watch open. Tab the icon to
-        try again or search for a new device.</string>
-    <string name="status_CONNECTED">Connected</string>
-    <string name="status_DISCONNECTED">Disconnected</string>
-    <string name="try_connect_to">Trying to connect to:</string>
-    <string name="found_new">Found new Watch:</string>
-    <string name="looks_like">Looks like a watch:</string>
-    <string name="send_request">Send request:</string>
-    <string name="send_file">Send file:</string>
+    <string name="connecting_to">Connecting to</string>
+    <string name="connected_to">Connected to</string>
+    <string name="disconnected">Disconnected, tap icon to connect</string>
+    <string name="sending_file">Sending file</string>
     <string name="received_file">File received by watch</string>
-    <string name="received_response">Received response:</string>
-    <string name="send_error">Send error:</string>
-    <string name="response_error">Response error:</string>
-    <string name="incomplete_message">Received incomplete message</string>
-    <string name="first_connect">First connect with watch</string>
-    <string name="fail_BT_denied">No Bluetooth permission. Close and reopen app,
-        then allow nearby devices.</string>
+    <string name="deleting_file">Deleting file</string>
+    <string name="deleted_file">File deleted on watch</string>
+
+    <string name="fail_BT_denied">No Bluetooth permission. Close app, allow nearby devices, try
+        again.</string>
     <string name="fail_BT_off">Bluetooth turned off</string>
-    <string name="fail_BT_connect">Bluetooth connection failed</string>
+    <string name="fail_BT_no_devices">No bluetooth devices, pair your watch first</string>
+    <string name="fail_BT">That did not work, tap icon to connect with watch</string>
 
     <!-- CommsWifi -->
     <string name="no_wifi">To send a file, first connect to a wifi network</string>

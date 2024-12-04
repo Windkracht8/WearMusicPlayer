@@ -389,7 +389,7 @@ public class Main extends Activity{
             builder.setPositiveButton(R.string.yes, (dialog, which) -> System.exit(0));
             builder.setNegativeButton(R.string.back, (dialog, which) -> dialog.dismiss());
             builder.create().show();
-        }else if(mediaController.isPlaying()){
+        }else if(mediaController != null && mediaController.isPlaying()){
             AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
             builder.setMessage(R.string.confirm_close_play);
             builder.setPositiveButton(R.string.yes, (dialog, which) -> System.exit(0));

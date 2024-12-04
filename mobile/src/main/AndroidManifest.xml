@@ -26,5 +26,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".DeviceSelect"
+            android:taskAffinity=".Main"/>
+        <activity
+            android:name=".DeviceConnect"
+            android:taskAffinity=".Main"/>
     </application>
 </manifest>

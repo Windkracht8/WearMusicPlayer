@@ -60,7 +60,7 @@ class CommsWifi{
         closeConnection = false;
         item.updateProgress(main, 0);
         itemQueue.add(item);
-        main.executorService.submit(this::sendFile);
+        Main.executorService.submit(this::sendFile);
     }
     private void sendFile(){
         if(itemQueue.isEmpty()){
@@ -69,7 +69,7 @@ class CommsWifi{
         }
         if(isSendingFile || !canSendNext){
             handler.removeCallbacksAndMessages(null);
-            handler.postDelayed(()-> main.executorService.submit(this::sendFile), 100);
+            handler.postDelayed(()-> Main.executorService.submit(this::sendFile), 100);
             return;
         }
         Item item = itemQueue.get(0);
@@ -78,7 +78,7 @@ class CommsWifi{
 
         String ipAddress = getIpAddress();
         if(ipAddress.equals("0.0.0.0")){
-            main.gotError(main.getString(R.string.no_wifi));
+            main.onBTError(R.string.no_wifi);
             return;
         }
         Log.d(Main.LOG_TAG, "CommsWifi.sendFile " + libItem.name);
@@ -129,6 +129,6 @@ class CommsWifi{
             stop();
         }
         isSendingFile = false;
-        handler.postDelayed(()-> main.executorService.submit(this::sendFile), 100);
+        handler.postDelayed(()-> Main.executorService.submit(this::sendFile), 100);
     }
 }
