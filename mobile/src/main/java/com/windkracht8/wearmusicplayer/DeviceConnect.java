@@ -3,6 +3,7 @@ package com.windkracht8.wearmusicplayer;
 import android.content.Intent;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,7 +24,11 @@ public class DeviceConnect extends FragmentActivity implements CommsBT.CommsBTIn
         icon.setBackgroundResource(R.drawable.icon_watch_searching);
         ((AnimatedVectorDrawable) icon.getBackground()).start();
 
-        Main.commsBT.addListener(this);
+        try{
+            Main.commsBT.addListener(this);
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "DeviceConnect.onCreate Failed to add as a listener: " + e.getMessage());
+        }
     }
     @Override
     public void onBTStartDone(){}

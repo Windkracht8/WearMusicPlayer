@@ -68,40 +68,12 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
 
         commsWifi = new CommsWifi(this);
 
-        requestPermissions();
-        executorService.submit(() -> Library.scanFiles(this));
+        checkPermissions();
         startBT();
+        executorService.submit(() -> Library.scanFiles(this));
     }
 
-    void libraryFilesScanned(){
-        runOnUiThread(()->{
-            findViewById(R.id.main_loading).setVisibility(View.GONE);
-            for(Library.LibDir libDir : Library.dir_music.libDirs){
-                Item item = new Item(this, libDir);
-                items.add(item);
-                main_ll.addView(item);
-            }
-            for(Library.LibTrack libTrack : Library.dir_music.libTracks){
-                Item item = new Item(this, libTrack);
-                items.add(item);
-                main_ll.addView(item);
-            }
-        });
-    }
-    void libraryNewStatuses(){
-        runOnUiThread(()->items.forEach(Item::newStatus));
-    }
-    private void startBT(){
-        if(!hasBTPermission){
-            onBTStartDone();
-            return;
-        }
-        commsBT = new CommsBT(this);
-        commsBT.addListener(this);
-        executorService.submit(() -> commsBT.startComms());
-    }
-
-    private void requestPermissions(){
+    private void checkPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
             hasReadPermission = hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
@@ -175,6 +147,36 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
     }
     private boolean hasPermission(String permission){
         return ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    void libraryFilesScanned(){
+        runOnUiThread(()->{
+            findViewById(R.id.main_loading).setVisibility(View.GONE);
+            for(Library.LibDir libDir : Library.dir_music.libDirs){
+                Item item = new Item(this, libDir);
+                items.add(item);
+                main_ll.addView(item);
+            }
+            for(Library.LibTrack libTrack : Library.dir_music.libTracks){
+                Item item = new Item(this, libTrack);
+                items.add(item);
+                main_ll.addView(item);
+            }
+        });
+    }
+    void libraryNewStatuses(){
+        runOnUiThread(()->items.forEach(Item::newStatus));
+    }
+    private void startBT(){
+        if(!hasBTPermission){
+            onBTStartDone();
+            return;
+        }
+        if(commsBT == null){
+            commsBT = new CommsBT(this);
+            commsBT.addListener(this);
+        }
+        executorService.submit(() -> commsBT.startComms());
     }
 
     @Override
