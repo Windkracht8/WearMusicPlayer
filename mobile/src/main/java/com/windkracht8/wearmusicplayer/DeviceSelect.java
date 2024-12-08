@@ -36,7 +36,7 @@ public class DeviceSelect extends FragmentActivity implements CommsBT.CommsBTInt
         try{
             Main.commsBT.addListener(this);
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Failed to add as a listener: " + e.getMessage());
+            Log.e(Main.LOG_TAG, "DeviceSelect.onCreate Failed to add as a listener: " + e.getMessage());
         }
         Main.executorService.submit(this::loadDevices);
     }

@@ -53,10 +53,8 @@ class CommsBT{
 
         IntentFilter btIntentFilter = new IntentFilter();
         btIntentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        btIntentFilter.addAction(BluetoothDevice.ACTION_UUID);
         BroadcastReceiver btBroadcastReceiver = new BroadcastReceiver(){
             public void onReceive(Context context, Intent intent){
-                if(disconnect) return;
                 if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())){
                     int btState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                     if(btState == BluetoothAdapter.STATE_TURNING_OFF){
