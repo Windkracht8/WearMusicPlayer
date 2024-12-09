@@ -1,10 +1,7 @@
 package com.windkracht8.wearmusicplayer;
 
-import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.os.Build;
+import android.net.LinkAddress;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -14,6 +11,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -38,21 +36,16 @@ class CommsWifi{
         handler.removeCallbacksAndMessages(null);
     }
     private String getIpAddress(){
-        int ipAddress = 0;
-        try{
-            if(Build.VERSION.SDK_INT >= 29){
-                ConnectivityManager connectivityManager = (ConnectivityManager)main.getSystemService(Main.CONNECTIVITY_SERVICE);
-                //TODO: getIpAddress() in WifiInfo has been deprecated
-                ipAddress = ((WifiInfo)Objects.requireNonNull((Objects.requireNonNull(connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork()))).getTransportInfo())).getIpAddress();
-            }else{
-                WifiManager wifiManager = (WifiManager) main.getSystemService(Context.WIFI_SERVICE);
-                ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+        ConnectivityManager connectivityManager = (ConnectivityManager)main.getSystemService(Main.CONNECTIVITY_SERVICE);
+        List<LinkAddress> linkAddresses = Objects.requireNonNull(connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork())).getLinkAddresses();
+        for(LinkAddress linkAddress : linkAddresses){
+            byte[] address = linkAddress.getAddress().getAddress();
+            if(address.length == 4){
+                return String.format(Locale.US, "%d.%d.%d.%d",
+                        address[0], address[1], address[2], address[3]);
             }
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "CommsWifi.getIpAddress: " + e.getMessage());
         }
-        return String.format(Locale.US, "%d.%d.%d.%d", (ipAddress & 0xff),
-                (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
+        return "0.0.0.0";
     }
     void queueFile(Item item){
         Log.d(Main.LOG_TAG, "CommsWifi.queueFile " + item.libItem.name);

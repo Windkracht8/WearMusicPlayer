@@ -6,7 +6,7 @@ android {
         minSdk 26
         targetSdk 35
         compileSdk 35
-        versionCode 118
+        versionCode 119
         versionName "1.7"
     }
     buildTypes {
@@ -24,6 +24,7 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
     //Remove this and get a duplicate class error.
     //noinspection DifferentStdlibGradleVersion
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.0'

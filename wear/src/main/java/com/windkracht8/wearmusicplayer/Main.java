@@ -18,6 +18,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -127,8 +128,7 @@ public class Main extends Activity{
             startActivity(new Intent(this, MenuActivity.class));
         });
 
-        //TODO: scaledDensity in DisplayMetrics has been deprecated
-        if(heightPixels < 68 * displayMetrics.scaledDensity + 144 * displayMetrics.density){
+        if(heightPixels < getResources().getDimensionPixelSize(R.dimen._200dp)){
             main_song_title.setLines(1);
         }
 
@@ -228,8 +228,13 @@ public class Main extends Activity{
         handler.postDelayed(this::updateTimer, 1000-(pos%1000));
     }
 
-    static void rescan(){
-        executorService.submit(() -> library.scanFiles());
+    static void rescan(Context context){
+        try{
+            executorService.submit(() -> library.scanFiles());
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "Main.rescan exception: " + e.getMessage());
+            Toast.makeText(context, R.string.fail_rescan, Toast.LENGTH_SHORT).show();
+        }
     }
     void librarySetScanning(){
         Log.d(LOG_TAG, "Main.librarySetScanning");
@@ -380,9 +385,15 @@ public class Main extends Activity{
         }
     }
 
-    //TODO: onBackPressed() in Activity has been deprecated
     @Override
-    public void onBackPressed(){
+    public boolean onKeyDown(int keyCode, KeyEvent event){
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            onBack();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+    private void onBack(){
         if(CommsWifi.isReceiving){
             AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
             builder.setMessage(R.string.confirm_close_transfer);
@@ -411,7 +422,7 @@ public class Main extends Activity{
         @Override
         public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY){
             if(Math.abs(velocityX) < Math.abs(velocityY)) return false;
-            if(velocityX > 0) onBackPressed();
+            if(velocityX > 0) onBack();
             return true;
         }
     };

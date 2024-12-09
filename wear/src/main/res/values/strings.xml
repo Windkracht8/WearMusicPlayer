@@ -51,5 +51,6 @@
     <string name="fail_technical">Technical error</string>
     <string name="fail_scan_media">Problem with finding tracks</string>
     <string name="fail_load_tracks">Failed to load tracks</string>
+    <string name="fail_rescan">Problem, try again later, maybe restart</string>
 
 </resources>

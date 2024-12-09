@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.splashscreen.SplashScreen;
 
 import android.Manifest;
 import android.content.Context;
@@ -43,11 +44,14 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
     private ImageView main_loading_icon;
     private final ArrayList<Item> items = new ArrayList<>();
     Item itemInProgress;
+    private boolean showSplash = true;
     private static boolean hasBTPermission = false;
     static boolean hasReadPermission = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
+        SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
+        splashScreen.setKeepOnScreenCondition(() -> showSplash);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
@@ -71,6 +75,7 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
         checkPermissions();
         startBT();
         executorService.submit(() -> Library.scanFiles(this));
+        showSplash = false;
     }
 
     private void checkPermissions(){
