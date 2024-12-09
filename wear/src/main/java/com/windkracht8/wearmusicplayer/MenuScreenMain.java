@@ -62,7 +62,7 @@ public class MenuScreenMain extends MenuScreen{
             menuScreenInterface = (MenuScreenInterface) context;
     }
     private void rescan(){
-        Main.rescan();
+        Main.rescan(getContext());
         assert getActivity() != null;
         getActivity().finish();
     }

@@ -2,4 +2,5 @@
 <resources>
     <dimen name="menu_item_bg_border">5dp</dimen>
     <dimen name="minTouchSize">50dp</dimen>
+    <dimen name="_200dp">200dp</dimen>
 </resources>
