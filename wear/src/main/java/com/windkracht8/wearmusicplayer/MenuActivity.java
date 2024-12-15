@@ -9,7 +9,7 @@ import android.widget.Toast;
 
 import androidx.fragment.app.FragmentActivity;
 
-public class MenuActivity extends FragmentActivity implements MenuScreen.MenuScreenInterface{
+public class MenuActivity extends FragmentActivity implements MenuInterface{
     private ImageView menu_loading;
     private AnimatedVectorDrawable menu_loading_animate;
     @Override

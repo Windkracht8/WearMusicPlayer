@@ -27,7 +27,8 @@ class CommsWifi{
 
     CommsWifi(Main main){
         this.main = main;
-        handler = new Handler(Looper.getMainLooper());
+        Looper.prepare();
+        handler = new Handler();
     }
     void stop(){
         closeConnection = true;
@@ -53,7 +54,7 @@ class CommsWifi{
         closeConnection = false;
         item.updateProgress(main, 0);
         itemQueue.add(item);
-        Main.executorService.submit(this::sendFile);
+        sendFile();
     }
     private void sendFile(){
         if(itemQueue.isEmpty()){
@@ -62,7 +63,7 @@ class CommsWifi{
         }
         if(isSendingFile || !canSendNext){
             handler.removeCallbacksAndMessages(null);
-            handler.postDelayed(()-> Main.executorService.submit(this::sendFile), 100);
+            handler.postDelayed(this::sendFile, 100);
             return;
         }
         Item item = itemQueue.get(0);
@@ -122,6 +123,6 @@ class CommsWifi{
             stop();
         }
         isSendingFile = false;
-        handler.postDelayed(()-> Main.executorService.submit(this::sendFile), 100);
+        handler.postDelayed(this::sendFile, 100);
     }
 }

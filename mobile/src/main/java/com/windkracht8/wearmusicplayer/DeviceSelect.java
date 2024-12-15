@@ -16,6 +16,7 @@ import androidx.fragment.app.FragmentActivity;
 import org.json.JSONObject;
 
 import java.util.Set;
+import java.util.concurrent.Executors;
 
 @SuppressLint("MissingPermission")//Handled by main
 public class DeviceSelect extends FragmentActivity implements CommsBT.CommsBTInterface{
@@ -38,7 +39,7 @@ public class DeviceSelect extends FragmentActivity implements CommsBT.CommsBTInt
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "DeviceSelect.onCreate Failed to add as a listener: " + e.getMessage());
         }
-        Main.executorService.submit(this::loadDevices);
+        Executors.newCachedThreadPool().execute(this::loadDevices);
     }
 
     private void loadDevices(){

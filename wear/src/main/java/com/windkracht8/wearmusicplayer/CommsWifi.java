@@ -112,4 +112,7 @@ class CommsWifi{
             Log.e(Main.LOG_TAG, "CommsWifi.sleep100 exception: " + e.getMessage());
         }
     }
+    public static void stop(){
+        connectivityManager = null;
+    }
 }

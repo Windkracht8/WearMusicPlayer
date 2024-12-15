@@ -3,7 +3,6 @@ package com.windkracht8.wearmusicplayer;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -47,8 +46,8 @@ public class Main extends Activity{
     static final String LOG_TAG = "WearMusicPlayer";
     static boolean isScreenRound;
     private boolean showSplash = true;
-    private boolean hasBTPermission = false;
-    static boolean hasReadPermission = false;
+    private static boolean hasBTPermission = false;
+    private static boolean hasReadPermission = false;
     private TextView main_timer;
     private ImageView main_previous;
     private ImageView main_play_pause;
@@ -59,11 +58,11 @@ public class Main extends Activity{
     private ImageView main_loading;
     private Progress main_progress;
 
-    static ExecutorService executorService;
+    private ExecutorService executorService;
     private Handler handler;
     private GestureDetector gestureDetector;
     private AudioManager audioManager;
-    private static MediaController mediaController;
+    private MediaController mediaController;
 
     static int heightPixels;
     static int vh25;
@@ -73,9 +72,14 @@ public class Main extends Activity{
     static Library library;
     private CommsBT commsBT;
 
+    static ArrayList<Library.Track> openTrackList = new ArrayList<>();
+    static int openTrackListTrack = -1;
+    static boolean doRescan = false;
+
     @SuppressLint("UnspecifiedRegisterReceiverFlag")//registerReceiver is wrapped in SDK_INT, still complains
     @Override
     protected void onCreate(Bundle savedInstanceState){
+        Log.d(LOG_TAG, "Main.onCreate");
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         splashScreen.setKeepOnScreenCondition(() -> showSplash);
         super.onCreate(savedInstanceState);
@@ -87,7 +91,6 @@ public class Main extends Activity{
         vw20 = (int) (widthPixels * .2);
         vh75 = (int) (heightPixels * .75);
 
-        executorService = Executors.newFixedThreadPool(4);
         handler = new Handler(Looper.getMainLooper());
         gestureDetector = new GestureDetector(this, simpleOnGestureListener, handler);
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -132,32 +135,49 @@ public class Main extends Activity{
             main_song_title.setLines(1);
         }
 
-        commsBT = new CommsBT(this);
         requestPermissions();
-        executorService.submit(() -> library.scanMediaStore());
-        initBT();
+        if(hasReadPermission) runInBackground(() -> library.scanMediaStore());
+        commsBT = new CommsBT(this);
+        if(hasBTPermission) runInBackground(()-> commsBT.start());
         showSplash = false;
     }
     @Override
+    public void onRestart(){
+        Log.d(LOG_TAG, "Main.onRestart");
+        super.onRestart();
+        if(doRescan){
+            runInBackground(() -> library.scanFiles());
+            doRescan = false;
+        }else if(openTrackListTrack > -1){
+            loadTracks(openTrackList);
+            mediaController.seekTo(openTrackListTrack, 0);
+            mediaController.play();
+            openTrackListTrack = -1;
+        }
+    }
+    @Override
     public void onStart(){
+        Log.d(LOG_TAG, "Main.onStart");
         super.onStart();
         main_loading.setVisibility(View.GONE);
-        ComponentName cn = new ComponentName(this, W8Player.class);
-        SessionToken st = new SessionToken(this, cn);
-        ListenableFuture<MediaController> controllerFuture = new MediaController.Builder(this, st).buildAsync();
-        controllerFuture.addListener(()-> {
-            Log.d(LOG_TAG, "MediaController is ready");
-            try{
-                mediaController = controllerFuture.get();
-                mediaController.addListener(playerListener);
-                if(mediaController.getMediaItemCount() == 0)
-                    loadTracks(this, library.tracks);
-            }catch(Exception e){
-                Log.e(LOG_TAG, "Main.onStart exception: " + e.getMessage());
-            }
-        },MoreExecutors.directExecutor());
+        if(mediaController == null){
+            ListenableFuture<MediaController> controllerFuture =
+                    new MediaController.Builder(this,
+                            new SessionToken(this,
+                                    new ComponentName(this, W8Player.class))).buildAsync();
+            controllerFuture.addListener(()->{
+                Log.d(LOG_TAG, "Main MediaController is ready");
+                try{
+                    mediaController = controllerFuture.get();
+                    mediaController.addListener(playerListener);
+                    if(mediaController.getMediaItemCount() == 0) loadTracks(library.tracks);
+                }catch(Exception e){
+                    Log.e(LOG_TAG, "Main MediaController exception: " + e.getMessage());
+                }
+            }, MoreExecutors.directExecutor());
+        }
+        if(hasBTPermission) runInBackground(()-> commsBT.start());
     }
-
     private final Player.Listener playerListener = new Player.Listener(){
         @Override
         public void onIsPlayingChanged(boolean isPlaying){
@@ -188,17 +208,44 @@ public class Main extends Activity{
         }
         @Override
         public void onPlayerError(PlaybackException error){
-            Log.d(LOG_TAG, "Main.onPlayerError: " + error);
-            Log.d(LOG_TAG, "Main.onPlayerError: " + error.getMessage());
+            Log.e(LOG_TAG, "Main.onPlayerError: " + error);
+            Log.e(LOG_TAG, "Main.onPlayerError: " + error.getMessage());
         }
     };
-
-    static void openTrackList(Context context, ArrayList<Library.Track> tracks, int index){
-        loadTracks(context, tracks);
-        mediaController.seekTo(index, 0);
-        mediaController.play();
+    @Override
+    public void onResume(){
+        Log.d(LOG_TAG, "Main.onResume");
+        super.onResume();
     }
-    private static void loadTracks(Context context, ArrayList<Library.Track> tracks){
+    @Override
+    public void onPause(){
+        Log.d(LOG_TAG, "Main.onPause");
+        super.onPause();
+    }
+    @Override
+    public void onStop(){
+        Log.d(LOG_TAG, "Main.onStop");
+        super.onStop();
+    }
+    @Override
+    public void onDestroy(){
+        Log.d(LOG_TAG, "Main.onDestroy");
+        super.onDestroy();
+        CommsWifi.stop();
+        if(commsBT != null){
+            commsBT.stop();
+        }
+        if(mediaController != null){
+            mediaController.removeListener(playerListener);
+            mediaController.release();
+        }
+        if(executorService != null){
+            executorService.shutdownNow();
+        }
+        System.exit(0);
+    }
+
+    private void loadTracks(ArrayList<Library.Track> tracks){
         if(mediaController == null || tracks.isEmpty()) return;
         Log.d(Main.LOG_TAG, "Main.loadTracks: " + tracks.size());
         mediaController.clearMediaItems();
@@ -209,11 +256,11 @@ public class Main extends Activity{
             mediaController.prepare();
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Main.loadTracks exception: " + e.getMessage());
-            Toast.makeText(context, R.string.fail_load_tracks, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getBaseContext(), R.string.fail_load_tracks, Toast.LENGTH_SHORT).show();
         }
     }
     private void updateTimer(){
-        if(!mediaController.isPlaying()) return;
+        if(mediaController == null || !mediaController.isPlaying()) return;
         long pos = mediaController.getCurrentPosition();
 
         long tmp = pos % 1000;
@@ -228,14 +275,6 @@ public class Main extends Activity{
         handler.postDelayed(this::updateTimer, 1000-(pos%1000));
     }
 
-    static void rescan(Context context){
-        try{
-            executorService.submit(() -> library.scanFiles());
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Main.rescan exception: " + e.getMessage());
-            Toast.makeText(context, R.string.fail_rescan, Toast.LENGTH_SHORT).show();
-        }
-    }
     void librarySetScanning(){
         Log.d(LOG_TAG, "Main.librarySetScanning");
         runOnUiThread(()-> {
@@ -251,7 +290,7 @@ public class Main extends Activity{
     void libraryReady(){
         runOnUiThread(()-> {
             if(mediaController != null && mediaController.isPlaying()) return;
-            loadTracks(this, library.tracks);
+            loadTracks(library.tracks);
             if(!library.tracks.isEmpty()){
                 Library.Track track = library.tracks.get(0);
                 main_song_title.setText(track.title);
@@ -264,13 +303,6 @@ public class Main extends Activity{
         });
     }
 
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-        commsBT.stopComms();
-        mediaController.release();
-        ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();
-    }
     private void requestPermissions(){
         if(Build.VERSION.SDK_INT >= 33){
             hasReadPermission = hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
@@ -317,7 +349,7 @@ public class Main extends Activity{
             ){
                 if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
                     hasReadPermission = true;
-                    executorService.submit(() -> library.scanMediaStore());
+                    runInBackground(() -> library.scanMediaStore());
                 }
                 break;
             }
@@ -327,7 +359,7 @@ public class Main extends Activity{
                     permissions[i].equals(Manifest.permission.BLUETOOTH)){
                 if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
                     hasBTPermission = true;
-                    initBT();
+                    runInBackground(()-> commsBT.start());
                 }else{
                     hasBTPermission = false;
                 }
@@ -335,15 +367,15 @@ public class Main extends Activity{
             }
         }
     }
-    private void initBT(){
-        Log.d(LOG_TAG, "Main.initBT " + hasBTPermission);
-        if(!hasBTPermission) return;
-        executorService.submit(()-> commsBT.startComms());
-    }
 
     void toast(int message){
         runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
     }
+    private void runInBackground(Runnable runnable){
+        if(executorService == null) executorService = Executors.newCachedThreadPool();
+        executorService.execute(runnable);
+    }
+
     void commsFileStart(String path){
         Log.d(LOG_TAG, "Main.commsFileStart " + path);
         runOnUiThread(()-> main_progress.show(path));
@@ -356,14 +388,14 @@ public class Main extends Activity{
     }
     void commsFileDone(String path){
         Log.d(LOG_TAG, "Main.commsFileDone " + path);
-        executorService.submit(()-> library.addFile(path));
+        runInBackground(()-> library.addFile(path));
         runOnUiThread(()-> main_progress.setVisibility(View.GONE));
-        executorService.submit(()-> commsBT.sendFileBinaryResponse(path));
+        runInBackground(()-> commsBT.sendFileBinaryResponse(path));
     }
     void commsFileFailed(String path, int reason){
-        executorService.submit(()-> library.deleteFile(path));
+        runInBackground(()-> library.deleteFile(path));
         runOnUiThread(()-> main_progress.setVisibility(View.GONE));
-        executorService.submit(()-> commsBT.sendResponse("fileBinary", getString(reason)));
+        runInBackground(()-> commsBT.sendResponse("fileBinary", getString(reason)));
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
@@ -371,16 +403,16 @@ public class Main extends Activity{
         if(requestCode == 5){
             if(resultCode == 0){
                 Log.i(Main.LOG_TAG, "Main.onActivityResult: file delete permission denied");
-                executorService.submit(()-> commsBT.sendResponse(
+                runInBackground(()-> commsBT.sendResponse(
                         "deleteFile"
                         ,getString(R.string.fail_no_permission))
                 );
             }else{
-                executorService.submit(()-> commsBT.sendResponse(
+                runInBackground(()-> commsBT.sendResponse(
                         "deleteFile"
                         ,"OK")
                 );
-                executorService.submit(()-> library.scanFile(Library.filePendingDelete));
+                runInBackground(()-> library.scanFile(Library.filePendingDelete));
             }
         }
     }
@@ -397,17 +429,17 @@ public class Main extends Activity{
         if(CommsWifi.isReceiving){
             AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
             builder.setMessage(R.string.confirm_close_transfer);
-            builder.setPositiveButton(R.string.yes, (dialog, which) -> System.exit(0));
+            builder.setPositiveButton(R.string.yes, (dialog, which) -> finishAndRemoveTask());
             builder.setNegativeButton(R.string.back, (dialog, which) -> dialog.dismiss());
             builder.create().show();
         }else if(mediaController != null && mediaController.isPlaying()){
             AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.wmp_alert));
             builder.setMessage(R.string.confirm_close_play);
-            builder.setPositiveButton(R.string.yes, (dialog, which) -> System.exit(0));
+            builder.setPositiveButton(R.string.yes, (dialog, which) -> finishAndRemoveTask());
             builder.setNegativeButton(R.string.back, (dialog, which) -> dialog.dismiss());
             builder.create().show();
         }else{
-            System.exit(0);
+            finishAndRemoveTask();
         }
     }
 

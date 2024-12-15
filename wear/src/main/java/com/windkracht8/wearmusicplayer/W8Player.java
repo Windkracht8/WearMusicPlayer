@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,31 +24,33 @@ import androidx.wear.ongoing.Status;
 public class W8Player extends MediaSessionService{
     private static final String channel_id = "WearMusicPlayer_CHANNEL";
     private MediaSession mediaSession;
-    private static NotificationManager notificationManager;
+    private NotificationManager notificationManager;
     private OngoingActivity ongoingActivity;
 
     @OptIn(markerClass = UnstableApi.class)
     @Override
     public void onCreate(){
+        Log.d(Main.LOG_TAG, "W8player.onCreate");
         super.onCreate();
         ExoPlayer exoPlayer = new ExoPlayer.Builder(this).build();
         mediaSession = new MediaSession.Builder(this, exoPlayer).build();
 
-        if(notificationManager == null){
-            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.createNotificationChannel(new NotificationChannel(
-                    channel_id
-                    ,getString(R.string.open_wmp)
-                    ,NotificationManager.IMPORTANCE_HIGH)
-            );
-        }
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.createNotificationChannel(new NotificationChannel(
+                channel_id
+                ,getString(R.string.open_wmp)
+                ,NotificationManager.IMPORTANCE_HIGH)
+        );
     }
     @Override
     public void onDestroy(){
+        Log.d(Main.LOG_TAG, "W8player.onDestroy");
         super.onDestroy();
         mediaSession.getPlayer().release();
         mediaSession.release();
+        mediaSession = null;
         notificationManager.cancelAll();
+        notificationManager = null;
     }
     @Nullable
     @Override

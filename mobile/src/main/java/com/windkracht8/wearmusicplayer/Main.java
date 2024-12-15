@@ -34,7 +34,7 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
     private CommsWifi commsWifi;
     static SharedPreferences sharedPreferences;
     static SharedPreferences.Editor sharedPreferences_editor;
-    static ExecutorService executorService;
+    private ExecutorService executorService;
 
     private TextView main_available;
     private TextView main_device;
@@ -57,7 +57,6 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
 
         sharedPreferences = getSharedPreferences("com.windkracht8.wearmusicplayer", Context.MODE_PRIVATE);
         sharedPreferences_editor = sharedPreferences.edit();
-        executorService = Executors.newFixedThreadPool(4);
 
         main_available = findViewById(R.id.main_available);
         main_icon = findViewById(R.id.main_icon);
@@ -70,11 +69,11 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
         main_loading_icon.setBackgroundResource(R.drawable.icon_animate);
         ((AnimatedVectorDrawable) main_loading_icon.getBackground()).start();
 
-        commsWifi = new CommsWifi(this);
+        runInBackground(() -> commsWifi = new CommsWifi(this));
 
         checkPermissions();
         startBT();
-        executorService.submit(() -> Library.scanFiles(this));
+        runInBackground(() -> Library.scanFiles(this));
         showSplash = false;
     }
 
@@ -131,7 +130,7 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
             ){
                 if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
                     hasReadPermission = true;
-                    executorService.submit(() -> Library.scanFiles(this));
+                    runInBackground(() -> Library.scanFiles(this));
                 }
                 break;
             }
@@ -152,6 +151,10 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
     }
     private boolean hasPermission(String permission){
         return ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
+    }
+    private void runInBackground(Runnable runnable){
+        if(executorService == null) executorService = Executors.newCachedThreadPool();
+        executorService.execute(runnable);
     }
 
     void libraryFilesScanned(){
@@ -181,7 +184,7 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
             commsBT = new CommsBT(this);
             commsBT.addListener(this);
         }
-        executorService.submit(() -> commsBT.startComms());
+        runInBackground(() -> commsBT.startComms());
     }
 
     @Override
@@ -190,15 +193,11 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.alert_exit_title);
             builder.setMessage(R.string.alert_exit_message);
-            builder.setPositiveButton(R.string.alert_exit_positive, (dialog, which) -> {
-                finish();
-                System.exit(0);
-            });
+            builder.setPositiveButton(R.string.alert_exit_positive, (dialog, which) -> finishAndRemoveTask());
             builder.setNegativeButton(R.string.alert_exit_negative, (dialog, which) -> dialog.dismiss());
             builder.create().show();
         }else{
-            finish();
-            System.exit(0);
+            finishAndRemoveTask();
         }
     }
 
@@ -219,7 +218,7 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
                 builder.setMessage(R.string.alert_delete_message);
                 builder.setPositiveButton(R.string.alert_delete_positive, (dialog, which)-> {
                     itemInProgress = item;
-                    executorService.submit(()-> commsBT.sendRequestDeleteFile(item.libItem.path));
+                    runInBackground(()-> commsBT.sendRequestDeleteFile(item.libItem.path));
                     dialog.dismiss();
                 });
                 builder.setNegativeButton(R.string.alert_delete_negative, (dialog, which) -> dialog.dismiss());
@@ -228,7 +227,7 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
             case PARTIAL:
                 break;
             case NOT:
-                executorService.submit(()-> commsWifi.queueFile(item));
+                runInBackground(()-> commsWifi.queueFile(item));
                 break;
         }
     }
@@ -241,14 +240,14 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
 
     void sendFileDetailsRequest(Library.LibItem libItem, String ipAddress){
         if(cantSendRequest()) return;
-        executorService.submit(()-> commsBT.sendRequestFileDetails(libItem, ipAddress));
+        runInBackground(()-> commsBT.sendRequestFileDetails(libItem, ipAddress));
     }
     private void sendSyncRequest(){
         Log.d(Main.LOG_TAG, "Main.sendSyncRequest");
         if(cantSendRequest()) return;
         try{
             JSONObject requestData = new JSONObject();
-            executorService.submit(()->commsBT.sendRequest("sync", requestData));
+            runInBackground(()->commsBT.sendRequest("sync", requestData));
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Main.sendSyncRequest Exception: " + e.getMessage());
             onBTError(R.string.fail_sync);
@@ -346,7 +345,7 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
                     JSONArray tracks = responseDataSync.getJSONArray("tracks");
                     long freeSpaceSync = responseDataSync.getLong("freeSpace");
                     runOnUiThread(()->gotFreeSpace(freeSpaceSync));
-                    executorService.submit(()->Library.updateLibWithFilesOnWatch(this, tracks));
+                    runInBackground(()->Library.updateLibWithFilesOnWatch(this, tracks));
                     break;
                 case "fileDetails":
                     commsWifi.stop();
