@@ -1,5 +1,6 @@
 package com.windkracht8.wearmusicplayer;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,7 +19,7 @@ import androidx.fragment.app.Fragment;
 import java.util.ArrayList;
 
 public abstract class MenuScreen extends Fragment{
-    static MenuScreenInterface menuScreenInterface;
+    private MenuInterface menuInterface;
     private ScrollView menu_sv;
     TextView menu_label;
     private LinearLayout menu_items;
@@ -62,14 +63,19 @@ public abstract class MenuScreen extends Fragment{
         return rootView;
     }
     @Override
+    public void onAttach(@NonNull Context context){
+        super.onAttach(context);
+        if(menuInterface == null && context instanceof MenuInterface) menuInterface = (MenuInterface) context;
+    }
+    @Override
     public void onResume(){
         super.onResume();
         menu_sv.requestFocus();
-        if(menuScreenInterface != null) menuScreenInterface.animationStop();
+        if(menuInterface != null) menuInterface.animationStop();
     }
     void openMenuScreen(MenuScreen menuScreen){
-        if(menuScreenInterface != null){
-            menuScreenInterface.openMenuScreen(menuScreen);
+        if(menuInterface != null){
+            menuInterface.openMenuScreen(menuScreen);
         }else{
             Log.e(Main.LOG_TAG, "MenuScreen.openMenuScreen no menuScreenInterface");
             Toast.makeText(getContext(), R.string.fail_technical, Toast.LENGTH_SHORT).show();
@@ -81,8 +87,9 @@ public abstract class MenuScreen extends Fragment{
         menu_items.addView(menuItem);
     }
     void openTrackList(ArrayList<Library.Track> tracks, int trackIndex){
-        menuScreenInterface.animationStart();
-        Main.openTrackList(getContext(), tracks, trackIndex);
+        menuInterface.animationStart();
+        Main.openTrackList = tracks;
+        Main.openTrackListTrack = trackIndex;
         assert getActivity() != null;
         getActivity().finish();
     }
@@ -109,10 +116,5 @@ public abstract class MenuScreen extends Fragment{
             menuItem.setScaleX(scale);
             menuItem.setScaleY(scale);
         }
-    }
-    public interface MenuScreenInterface{
-        void openMenuScreen(MenuScreen menuScreen);
-        void animationStart();
-        void animationStop();
     }
 }

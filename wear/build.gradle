@@ -8,8 +8,8 @@ android {
         //noinspection OldTargetApi
         targetSdk 34
         compileSdk 35
-        versionCode 221
-        versionName '1.9'
+        versionCode 222
+        versionName 'w1.10'
     }
     buildTypes {
         release {

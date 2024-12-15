@@ -64,7 +64,7 @@ class CommsBT{
                     int port = requestData.getInt("port");
 
                     main.commsFileStart(path);
-                    Main.executorService.submit(() -> CommsWifi.receiveFile(main, path, length, ip, port));
+                    CommsWifi.receiveFile(main, path, length, ip, port);
                     break;
                 case "deleteFile":
                     String delPath = requestMessage.getString("requestData");
@@ -135,15 +135,16 @@ class CommsBT{
                 int btState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                 if(btState == BluetoothAdapter.STATE_TURNING_OFF){
                     Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver: stop");
-                    stopComms();
+                    stop();
                 }else if(btState == BluetoothAdapter.STATE_ON){
                     Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver: start");
-                    startComms();
+                    start();
                 }
             }
         }
     };
-    void startComms(){
+    void start(){
+        if(bluetoothAdapter != null) return;
         closeConnection = false;
         BluetoothManager bluetoothManager = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
@@ -156,23 +157,23 @@ class CommsBT{
         commsBTConnect = new CommsBTConnect();
         commsBTConnect.start();
     }
-    void stopComms(){
-        Log.d(Main.LOG_TAG, "CommsBT.stopComms");
+    void stop(){
+        Log.d(Main.LOG_TAG, "CommsBT.stop");
         closeConnection = true;
         try{
             main.unregisterReceiver(btStateReceiver);
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "CommsBT.stopComms unregisterReceiver: " + e.getMessage());
+            Log.i(Main.LOG_TAG, "CommsBT.stopComms unregisterReceiver: " + e.getMessage());
         }
         try{
             if(bluetoothServerSocket != null) bluetoothServerSocket.close();
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "CommsBT.stopComms bluetoothServerSocket: " + e.getMessage());
+            Log.i(Main.LOG_TAG, "CommsBT.stopComms bluetoothServerSocket: " + e.getMessage());
         }
         try{
             if(bluetoothSocket != null) bluetoothSocket.close();
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "CommsBT.stopComms bluetoothSocket: " + e.getMessage());
+            Log.i(Main.LOG_TAG, "CommsBT.stopComms bluetoothSocket: " + e.getMessage());
         }
         commsBTConnect = null;
         commsBTConnected = null;
@@ -197,7 +198,6 @@ class CommsBT{
                 commsBTConnected = new CommsBTConnected();
                 commsBTConnected.start();
             }catch(Exception e){
-                Log.d(Main.LOG_TAG, "CommsBTConnect.run Exception closeConnection:" + closeConnection);
                 if(closeConnection) return;
                 Log.e(Main.LOG_TAG, "CommsBTConnect.run Exception: " + e.getMessage());
             }
@@ -237,13 +237,13 @@ class CommsBT{
             }catch(Exception e){
                 Log.d(Main.LOG_TAG, "CommsBTConnected.process outputStream.write failed: " + e);
                 Log.d(Main.LOG_TAG, "CommsBTConnected.process outputStream.write failed: " + e.getMessage());
-                stopComms();
-                startComms();
+                CommsBT.this.stop();
+                CommsBT.this.start();
                 return;
             }
             if(responseQueue.length() > 0 && !sendNextResponse()){
-                stopComms();
-                startComms();
+                CommsBT.this.stop();
+                CommsBT.this.start();
                 return;
             }
             handler.postDelayed(this::process, 100);

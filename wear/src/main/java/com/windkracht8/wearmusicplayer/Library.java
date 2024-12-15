@@ -39,8 +39,7 @@ class Library{
         return array;
     }
     void scanMediaStore(){
-        Log.d(Main.LOG_TAG, "Library.scanMediaStore " + Main.hasReadPermission);
-        if(!Main.hasReadPermission) return;
+        Log.d(Main.LOG_TAG, "Library.scanMediaStore");
         tracks.clear();
         artists.clear();
         albums.clear();
@@ -203,7 +202,7 @@ class Library{
         scanFile(filePendingDelete);
         return "OK";
     }
-    class Track implements Comparable<Track>{
+    public class Track implements Comparable<Track>{
         final Uri uri;//content://media/external/audio/media/32
         private final String path;//Music/Austrian Death Machine - Jingle Bells.mp3
         final String title;//Jingle Bells
