@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
 
 public class MenuScreenMain extends MenuScreen{
     @Override
@@ -56,7 +57,7 @@ public class MenuScreenMain extends MenuScreen{
     }
     private void rescan(){
         Main.doRescan = true;
-        assert getActivity() != null;
+        if(getActivity() == null) return;
         getActivity().finish();
     }
 }

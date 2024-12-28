@@ -11,10 +11,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -28,20 +28,19 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
+public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     static final String LOG_TAG = "WearMusicPlayer";
-    static CommsBT commsBT;
-    private CommsWifi commsWifi;
     static SharedPreferences sharedPreferences;
     static SharedPreferences.Editor sharedPreferences_editor;
     private ExecutorService executorService;
+    static CommsBT commsBT;
+    private CommsWifi commsWifi;
 
     private TextView main_available;
     private TextView main_device;
     private ImageView main_icon;
     private TextView main_status;
     private LinearLayout main_ll;
-    private ImageView main_loading_icon;
     private final ArrayList<Item> items = new ArrayList<>();
     Item itemInProgress;
     private boolean showSplash = true;
@@ -65,9 +64,6 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
         main_device = findViewById(R.id.main_device);
         main_status = findViewById(R.id.main_status);
         main_ll = findViewById(R.id.main_ll);
-        main_loading_icon = findViewById(R.id.main_loading_icon);
-        main_loading_icon.setBackgroundResource(R.drawable.icon_animate);
-        ((AnimatedVectorDrawable) main_loading_icon.getBackground()).start();
 
         runInBackground(() -> commsWifi = new CommsWifi(this));
 
@@ -75,6 +71,14 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
         startBT();
         runInBackground(() -> Library.scanFiles(this));
         showSplash = false;
+    }
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        if(commsBT != null){
+            commsBT.stopBT();
+            commsBT = null;
+        }
     }
 
     private void checkPermissions(){
@@ -172,40 +176,48 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
             }
         });
     }
-    void libraryNewStatuses(){
-        runOnUiThread(()->items.forEach(Item::newStatus));
-    }
+    void libraryNewStatuses(){runOnUiThread(()->items.forEach(Item::newStatus));}
     private void startBT(){
         if(!hasBTPermission){
             onBTStartDone();
             return;
         }
-        if(commsBT == null){
-            commsBT = new CommsBT(this);
-            commsBT.addListener(this);
-        }
-        runInBackground(() -> commsBT.startComms());
+        commsBT = new CommsBT(this);
+        commsBT.addListener(this);
+        startActivity(new Intent(this, DeviceSelect.class));
+        runInBackground(() -> commsBT.startBT());
     }
 
     @Override
-    public void onBackPressed(){
+    public boolean onKeyDown(int keyCode, KeyEvent event){
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            onBack();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+    private void onBack(){
         if(commsWifi.running){
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.alert_exit_title);
             builder.setMessage(R.string.alert_exit_message);
-            builder.setPositiveButton(R.string.alert_exit_positive, (dialog, which) -> finishAndRemoveTask());
+            builder.setPositiveButton(R.string.alert_exit_positive, (dialog, which) -> finish());
             builder.setNegativeButton(R.string.alert_exit_negative, (dialog, which) -> dialog.dismiss());
             builder.create().show();
         }else{
-            finishAndRemoveTask();
+            finish();
         }
     }
 
     private void onIconClick(){
         if(commsBT == null) return;
         switch(commsBT.status){
-            case CONNECTED -> commsBT.disconnect();
-            case DISCONNECTED -> startActivity(new Intent(this, DeviceSelect.class));
+            case CONNECTING, CONNECTED -> commsBT.stopBT();
+            case DISCONNECTED -> {
+                Intent startDeviceSelect = new Intent(this, DeviceSelect.class);
+                startDeviceSelect.putExtra("restartBT", true);
+                startActivity(startDeviceSelect);
+            }
         }
     }
 
@@ -213,16 +225,8 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
         if(cantSendRequest()) return;
         switch(item.libItem.status){
             case FULL:
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle(R.string.alert_delete_title);
-                builder.setMessage(R.string.alert_delete_message);
-                builder.setPositiveButton(R.string.alert_delete_positive, (dialog, which)-> {
-                    itemInProgress = item;
-                    runInBackground(()-> commsBT.sendRequestDeleteFile(item.libItem.path));
-                    dialog.dismiss();
-                });
-                builder.setNegativeButton(R.string.alert_delete_negative, (dialog, which) -> dialog.dismiss());
-                builder.create().show();
+                itemInProgress = item;
+                runInBackground(()-> commsBT.sendRequestDeleteFile(item.libItem.path));
                 break;
             case PARTIAL:
                 break;
@@ -281,17 +285,23 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
 
     @Override
     public void onBTStartDone(){
-        Log.d(LOG_TAG, "Main.onBTStartDone");
+        if(commsBT == null){
+            onBTError(R.string.fail_BT_denied);
+            return;
+        }
+        if(commsBT.status == CommsBT.Status.CONNECTED) return;
         runOnUiThread(()->{
-            if(commsBT != null  && commsBT.status == CommsBT.Status.DISCONNECTED){
+            main_icon.setBackgroundResource(R.drawable.icon_watch);
+            main_icon.setColorFilter(getColor(R.color.icon_disabled));
+            main_device.setTextColor(getColor(R.color.text));
+            main_device.setText(R.string.connect);
+            if(commsBT.status == CommsBT.Status.DISCONNECTED){
                 startActivity(new Intent(this, DeviceSelect.class));
             }
-            main_loading_icon.setVisibility(View.GONE);
         });
     }
     @Override
     public void onBTConnecting(String deviceName){
-        Log.d(LOG_TAG, "Main.onBTConnecting");
         runOnUiThread(()-> {
             main_icon.setColorFilter(getColor(R.color.text));
             main_device.setTextColor(getColor(R.color.text));
@@ -350,13 +360,13 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
                 case "fileDetails":
                     commsWifi.stop();
                     String fileDetailsError = response.getString("responseData");
-                    Log.e(LOG_TAG, "Main.gotResponse fileDetails responseData: " + fileDetailsError);
+                    Log.e(LOG_TAG, "Main.onBTResponse fileDetails responseData: " + fileDetailsError);
                     onBTError(R.string.fail_send_file);
                     break;
                 case "fileBinary":
                     Object responseDataFileDetails = response.get("responseData");
                     if(responseDataFileDetails instanceof String){
-                        Log.e(LOG_TAG, "Main.gotResponse fileBinary responseData: " + responseDataFileDetails);
+                        Log.e(LOG_TAG, "Main.onBTResponse fileBinary responseData: " + responseDataFileDetails);
                         onBTError(R.string.fail_send_file);
                         break;
                     }
@@ -364,7 +374,7 @@ public class Main extends AppCompatActivity implements CommsBT.CommsBTInterface{
                     long freeSpaceFileDetails = responseData.getLong("freeSpace");
                     runOnUiThread(()->{
                         gotFreeSpace(freeSpaceFileDetails);
-                        itemInProgress.libItem.setStatus(this, Library.LibItem.Status.FULL);
+                        if(itemInProgress != null) itemInProgress.newStatus(this, Library.LibItem.Status.FULL);
                     });
                     main_status.setText(R.string.received_file);
                     commsWifi.canSendNext = true;

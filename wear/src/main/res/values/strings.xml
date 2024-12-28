@@ -33,6 +33,10 @@
     <string name="rescan">Rescan</string>
     <string name="all">All</string>
     <string name="randomise">Randomise</string>
+    <string name="menu_album">album</string>
+    <string name="menu_albums">albums</string>
+    <string name="menu_track">track</string>
+    <string name="menu_tracks">tracks</string>
 
     <!-- fail -->
     <string name="fail_show_progress">Failed to show Progress</string>

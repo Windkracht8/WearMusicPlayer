@@ -6,10 +6,10 @@ import android.content.Intent;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.fragment.app.FragmentActivity;
 
@@ -19,23 +19,24 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 
 @SuppressLint("MissingPermission")//Handled by main
-public class DeviceSelect extends FragmentActivity implements CommsBT.CommsBTInterface{
-    private ImageView loading_icon;
+public class DeviceSelect extends FragmentActivity implements CommsBT.BTInterface{
+    private ImageView device_select_loading;
     private LinearLayout device_select_ll;
-    private LayoutInflater layoutInflater;
+    private boolean restartBT;
 
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.device_select);
-        layoutInflater = getLayoutInflater();
-        loading_icon = findViewById(R.id.device_select_loading);
-        loading_icon.setBackgroundResource(R.drawable.icon_animate);
-        ((AnimatedVectorDrawable) loading_icon.getBackground()).start();
-        device_select_ll = findViewById(R.id.device_select_ll);
+        Intent startDeviceSelect = getIntent();
+        restartBT = startDeviceSelect.getBooleanExtra("restartBT", false);
 
+        setContentView(R.layout.device_select);
+        device_select_loading = findViewById(R.id.device_select_loading);
+        ((AnimatedVectorDrawable) device_select_loading.getBackground()).start();
+        device_select_ll = findViewById(R.id.device_select_ll);
         try{
             Main.commsBT.addListener(this);
+            if(restartBT) Main.commsBT.restartBT();
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "DeviceSelect.onCreate Failed to add as a listener: " + e.getMessage());
         }
@@ -43,25 +44,29 @@ public class DeviceSelect extends FragmentActivity implements CommsBT.CommsBTInt
     }
 
     private void loadDevices(){
+        if(Main.commsBT == null){
+            finishAndRemoveTask();
+            return;
+        }
         Set<BluetoothDevice> bluetoothDevices = Main.commsBT.getDevices();
         if(bluetoothDevices == null || bluetoothDevices.isEmpty()){
-            finish();
+            finishAndRemoveTask();
             return;
         }
         for(BluetoothDevice bluetoothDevice : bluetoothDevices){
             deviceFound(bluetoothDevice);
         }
-        runOnUiThread(()->loading_icon.setVisibility(View.GONE));
+        runOnUiThread(()->device_select_loading.setVisibility(View.GONE));
     }
     private void deviceFound(BluetoothDevice bluetoothDevice){
         runOnUiThread(()->{
-            Device device = new Device(layoutInflater, bluetoothDevice);
+            TextView device = new TextView(this, null, 0, R.style.w8DeviceStyle);
+            device.setText(bluetoothDevice.getName());
             device_select_ll.addView(device);
-            device.setOnClickListener(view -> onDeviceClick((Device) view));
+            device.setOnClickListener(view->{
+                if(Main.commsBT != null) Main.commsBT.connectDevice(bluetoothDevice);
+            });
         });
-    }
-    private void onDeviceClick(Device device){
-        Main.commsBT.connectDevice(device.bluetoothDevice);
     }
     @Override
     public void onBTStartDone(){}
@@ -72,9 +77,9 @@ public class DeviceSelect extends FragmentActivity implements CommsBT.CommsBTInt
         startActivity(startDeviceConnect);
     }
     @Override
-    public void onBTConnectFailed(){finish();}
+    public void onBTConnectFailed(){if(!restartBT) finishAndRemoveTask();}
     @Override
-    public void onBTConnected(String x){finish();}
+    public void onBTConnected(String x){finishAndRemoveTask();}
     @Override
     public void onBTDisconnected(){}
     @Override

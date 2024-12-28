@@ -48,9 +48,7 @@ public class W8Player extends MediaSessionService{
         super.onDestroy();
         mediaSession.getPlayer().release();
         mediaSession.release();
-        mediaSession = null;
         notificationManager.cancelAll();
-        notificationManager = null;
     }
     @Nullable
     @Override
@@ -64,15 +62,6 @@ public class W8Player extends MediaSessionService{
             @NonNull MediaSession session,
             boolean startInForegroundRequired
     ){
-        NotificationCompat.Builder notificationBuilder1 = new NotificationCompat.Builder(
-                getBaseContext()
-                ,channel_id
-        )
-                .setSmallIcon(R.drawable.icon_vector)
-                .setStyle(new MediaStyleNotificationHelper.MediaStyle(session))
-                .setSilent(true);
-        notificationManager.notify(8, notificationBuilder1.build());
-
         if(session.getPlayer().isPlaying()){
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     getBaseContext()

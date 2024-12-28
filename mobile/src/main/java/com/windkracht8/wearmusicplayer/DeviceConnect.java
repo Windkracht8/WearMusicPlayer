@@ -11,7 +11,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import org.json.JSONObject;
 
-public class DeviceConnect extends FragmentActivity implements CommsBT.CommsBTInterface{
+public class DeviceConnect extends FragmentActivity implements CommsBT.BTInterface{
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -21,7 +21,6 @@ public class DeviceConnect extends FragmentActivity implements CommsBT.CommsBTIn
         ((TextView)findViewById(R.id.device_connect_name)).setText(text);
 
         ImageView icon = findViewById(R.id.device_connect_icon);
-        icon.setBackgroundResource(R.drawable.icon_watch_searching);
         ((AnimatedVectorDrawable) icon.getBackground()).start();
 
         try{
@@ -31,13 +30,13 @@ public class DeviceConnect extends FragmentActivity implements CommsBT.CommsBTIn
         }
     }
     @Override
-    public void onBTStartDone(){}
+    public void onBTStartDone(){finishAndRemoveTask();}
     @Override
     public void onBTConnecting(String x){}
     @Override
-    public void onBTConnectFailed(){finish();}
+    public void onBTConnectFailed(){finishAndRemoveTask();}
     @Override
-    public void onBTConnected(String x){finish();}
+    public void onBTConnected(String x){finishAndRemoveTask();}
     @Override
     public void onBTDisconnected(){}
     @Override

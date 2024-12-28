@@ -8,8 +8,8 @@ android {
         //noinspection OldTargetApi
         targetSdk 34
         compileSdk 35
-        versionCode 222
-        versionName 'w1.10'
+        versionCode 231
+        versionName 'w1.13'
     }
     buildTypes {
         release {
@@ -27,8 +27,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
     implementation 'androidx.core:core:1.15.0'
     implementation 'androidx.core:core-splashscreen:1.0.1'
-    implementation 'androidx.media3:media3-exoplayer:1.5.0'
-    implementation 'androidx.media3:media3-session:1.5.0'
+    implementation 'androidx.media3:media3-exoplayer:1.5.1'
+    implementation 'androidx.media3:media3-session:1.5.1'
     implementation 'androidx.wear:wear:1.3.0'
     implementation 'androidx.wear:wear-ongoing:1.0.0'
     implementation 'com.google.android.material:material:1.12.0'

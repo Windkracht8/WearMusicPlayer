@@ -2,9 +2,9 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android" >
     <stroke
         android:width="@dimen/menu_item_bg_border"
-        android:color="#000"/>
+        android:color="@color/black"/>
     <solid
-        android:color="@color/menu_item_bg"/>
+        android:color="@color/bg_item"/>
     <corners
         android:radius="20dp"/>
     <padding

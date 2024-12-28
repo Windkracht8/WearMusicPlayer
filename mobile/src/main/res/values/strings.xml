@@ -19,11 +19,6 @@
     <string name="alert_exit_positive">Stop and close</string>
     <string name="alert_exit_negative">Continue</string>
 
-    <string name="alert_delete_title">Confirm</string>
-    <string name="alert_delete_message">Delete on watch?</string>
-    <string name="alert_delete_positive">Delete</string>
-    <string name="alert_delete_negative">Cancel</string>
-
     <!-- CommsBT -->
     <string name="connecting_to">Connecting to</string>
     <string name="connected_to">Connected to</string>
@@ -33,8 +28,7 @@
     <string name="deleting_file">Deleting file</string>
     <string name="deleted_file">File deleted on watch</string>
 
-    <string name="fail_BT_denied">No Bluetooth permission. Close app, allow nearby devices, try
-        again.</string>
+    <string name="fail_BT_denied">No Bluetooth permission. Allow nearby devices, try again.</string>
     <string name="fail_BT_off">Bluetooth turned off</string>
     <string name="fail_BT_no_devices">No bluetooth devices, pair your watch first</string>
     <string name="fail_BT">That did not work, tap icon to connect with watch</string>

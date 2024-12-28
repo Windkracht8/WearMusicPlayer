@@ -19,8 +19,8 @@ import androidx.fragment.app.Fragment;
 import java.util.ArrayList;
 
 public abstract class MenuScreen extends Fragment{
-    private MenuInterface menuInterface;
-    private ScrollView menu_sv;
+    private MenuActivity menuActivity;
+    ScrollView menu_sv;
     TextView menu_label;
     private LinearLayout menu_items;
     final ArrayList<MenuItem> menuItems = new ArrayList<>();
@@ -60,38 +60,38 @@ public abstract class MenuScreen extends Fragment{
             });
             menu_sv.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> scaleMenuItems(scrollY));
         }
+        menuActivity.addOnTouch(rootView);
         return rootView;
     }
     @Override
     public void onAttach(@NonNull Context context){
         super.onAttach(context);
-        if(menuInterface == null && context instanceof MenuInterface) menuInterface = (MenuInterface) context;
+        try{
+            menuActivity = (MenuActivity) getActivity();
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "MenuScreen.onAttach " + e.getMessage());
+            Toast.makeText(getContext(), R.string.fail_technical, Toast.LENGTH_SHORT).show();
+        }
     }
     @Override
     public void onResume(){
         super.onResume();
         menu_sv.requestFocus();
-        if(menuInterface != null) menuInterface.animationStop();
+        menuActivity.animationStop();
     }
     void openMenuScreen(MenuScreen menuScreen){
-        if(menuInterface != null){
-            menuInterface.openMenuScreen(menuScreen);
-        }else{
-            Log.e(Main.LOG_TAG, "MenuScreen.openMenuScreen no menuScreenInterface");
-            Toast.makeText(getContext(), R.string.fail_technical, Toast.LENGTH_SHORT).show();
-        }
+        menuActivity.openMenuScreen(menuScreen);
     }
-
     void addMenuItem(MenuItem menuItem){
         menuItems.add(menuItem);
         menu_items.addView(menuItem);
+        menuActivity.addOnTouch(menuItem);
     }
     void openTrackList(ArrayList<Library.Track> tracks, int trackIndex){
-        menuInterface.animationStart();
+        menuActivity.animationStart();
         Main.openTrackList = tracks;
         Main.openTrackListTrack = trackIndex;
-        assert getActivity() != null;
-        getActivity().finish();
+        menuActivity.finish();
     }
 
     private void scaleMenuItems(int scrollY){
