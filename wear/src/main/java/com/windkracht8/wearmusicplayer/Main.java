@@ -143,13 +143,10 @@ public class Main extends Activity{
     public void onRestart(){
         super.onRestart();
         if(doRescan){
-            runInBackground(() -> library.scanFiles());
+            runInBackground(()->library.scanFiles());
             doRescan = false;
         }else if(openTrackListTrack > -1){
-            loadTracks(openTrackList);
-            mediaController.seekTo(openTrackListTrack, 0);
-            mediaController.play();
-            openTrackListTrack = -1;
+            runInBackground(()->loadTracks(openTrackList));
         }
     }
     @Override
@@ -165,7 +162,8 @@ public class Main extends Activity{
                 try{
                     mediaController = controllerFuture.get();
                     mediaController.addListener(playerListener);
-                    if(mediaController.getMediaItemCount() == 0) loadTracks(library.tracks);
+                    if(mediaController.getMediaItemCount() == 0)
+                        runInBackground(()-> loadTracks(library.tracks));
                 }catch(Exception e){
                     Log.e(LOG_TAG, "MediaController exception: " + e.getMessage());
                 }
@@ -226,14 +224,24 @@ public class Main extends Activity{
     private void loadTracks(ArrayList<Library.Track> tracks){
         if(mediaController == null || tracks.isEmpty()) return;
         Log.d(Main.LOG_TAG, "Main.loadTracks: " + tracks.size());
-        mediaController.clearMediaItems();
+        ArrayList<MediaItem> mediaItems = new ArrayList<>();
+        tracks.forEach((t)->mediaItems.add(MediaItem.fromUri(t.uri)));
+        runOnUiThread(()->loadMediaItems(mediaItems));
+    }
+    private void loadMediaItems(ArrayList<MediaItem> mediaItems){
+        if(mediaController == null || mediaItems.isEmpty()) return;
+        Log.d(Main.LOG_TAG, "Main.loadMediaItems: " + mediaItems.size());
         try{
-            for(Library.Track track : tracks){
-                mediaController.addMediaItem(MediaItem.fromUri(track.uri));
-            }
+            mediaController.clearMediaItems();
+            mediaController.addMediaItems(mediaItems);
             mediaController.prepare();
+            if(openTrackListTrack > -1){
+                mediaController.seekTo(openTrackListTrack, 0);
+                mediaController.play();
+                openTrackListTrack = -1;
+            }
         }catch(Exception e){
-            Log.e(Main.LOG_TAG, "Main.loadTracks exception: " + e.getMessage());
+            Log.e(Main.LOG_TAG, "Main.loadMediaItems exception: " + e.getMessage());
             Toast.makeText(getBaseContext(), R.string.fail_load_tracks, Toast.LENGTH_SHORT).show();
         }
     }
@@ -268,7 +276,7 @@ public class Main extends Activity{
     void libraryReady(){
         runOnUiThread(()-> {
             if(mediaController != null && mediaController.isPlaying()) return;
-            loadTracks(library.tracks);
+            runInBackground(()->loadTracks(library.tracks));
             if(!library.tracks.isEmpty()){
                 Library.Track track = library.tracks.get(0);
                 main_song_title.setText(track.title);
