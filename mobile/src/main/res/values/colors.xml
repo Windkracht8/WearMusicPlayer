@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="w8blue">#FF2BD2E3</color>
+    <color name="black">#000</color>
     <color name="transparent">#0000</color>
-    <color name="background">#FFF</color>
-    <color name="text">#000</color>
+    <color name="background">@android:color/background_light</color>
+    <color name="bg_item">#DDD</color>
     <color name="icon_disabled">#666</color>
-    <color name="bgItem">#DDD</color>
+    <color name="text">#000</color>
+    <color name="button">#105B65</color>
     <color name="error">@android:color/holo_red_dark</color>
 </resources>

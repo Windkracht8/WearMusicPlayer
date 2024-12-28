@@ -8,8 +8,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
     <uses-feature android:name="android.hardware.type.watch"/>
     <application
@@ -23,8 +22,8 @@
             android:value="true"/>
         <activity
             android:name=".Main"
-            android:taskAffinity="com.windkracht8.wearmusicplayer.Main"
-            android:launchMode="singleTop"
+            android:taskAffinity=".Main"
+            android:launchMode="singleInstance"
             android:exported="true"
             android:theme="@style/wmp_splash" >
             <intent-filter>
@@ -35,9 +34,9 @@
         <activity
             android:name=".MenuActivity"
             android:taskAffinity=".Main"
-            android:theme="@style/wmp_with_back"/>
+            android:theme="@style/wmp"/>
         <service
-            android:name="com.windkracht8.wearmusicplayer.W8Player"
+            android:name=".W8Player"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false" >
             <intent-filter>

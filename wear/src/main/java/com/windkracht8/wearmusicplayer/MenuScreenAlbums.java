@@ -22,8 +22,7 @@ public class MenuScreenAlbums extends MenuScreen{
             for(int index = 0; index < Main.library.albums.size(); index++){
                 Library.Album album = Main.library.albums.get(index);
                 MenuItem menuItem = new MenuItem(inflater, album.name, album.artist);
-                int finalIndex = index;
-                menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenAlbum(finalIndex)));
+                menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenAlbum(album.id)));
                 addMenuItem(menuItem);
             }
         }catch(Exception e){

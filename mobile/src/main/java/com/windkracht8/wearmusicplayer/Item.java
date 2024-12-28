@@ -73,6 +73,10 @@ class Item extends ConstraintLayout{
         items.forEach(Item::clearStatus);
         newStatus();
     }
+    void newStatus(Main main, Library.LibItem.Status status){
+        libItem.status = status;
+        main.runOnUiThread(this::newStatus);
+    }
     void newStatus(){
         switch(libItem.status){
             case FULL:
@@ -103,7 +107,6 @@ class Item extends ConstraintLayout{
                 if(isDir){
                     item_status.setText("");
                 }else{
-                    item_status.setText("");
                     item_status.setBackgroundResource(0);
                 }
                 break;
@@ -111,10 +114,7 @@ class Item extends ConstraintLayout{
         items.forEach(Item::newStatus);
     }
     void updateProgress(Main main, long progress){
-        main.runOnUiThread(()->{
-            item_status.setText(String.valueOf((progress * 100) / libItem.length));
-            item_status.setBackgroundResource(0);
-        });
+        main.runOnUiThread(()->item_status.setText(String.valueOf((progress * 100) / libItem.length)));
     }
     private void onLabelPressed(){
         if(!isDir) return;

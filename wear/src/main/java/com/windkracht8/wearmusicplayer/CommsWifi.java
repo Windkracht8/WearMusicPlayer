@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.net.Socket;
 
 class CommsWifi{
-    private static ConnectivityManager connectivityManager;
     static boolean isReceiving = false;
     static void receiveFile(Main main, String path, long length, String ip, int port){
         Log.d(Main.LOG_TAG, "CommsWifi path: " + path);
@@ -21,9 +20,7 @@ class CommsWifi{
         Log.d(Main.LOG_TAG, "CommsWifi ip: " + ip);
         Log.d(Main.LOG_TAG, "CommsWifi port: " + port);
 
-        if(connectivityManager == null){
-            connectivityManager = (ConnectivityManager)main.getSystemService(Main.CONNECTIVITY_SERVICE);
-        }
+        ConnectivityManager connectivityManager = (ConnectivityManager)main.getSystemService(Main.CONNECTIVITY_SERVICE);
         try{
             connectivityManager.requestNetwork(
                     new NetworkRequest.Builder()
@@ -35,13 +32,13 @@ class CommsWifi{
                             Log.d(Main.LOG_TAG, "CommsWifi.NetworkCallback.onAvailable");
                             connectivityManager.bindProcessToNetwork(network);
                             main.commsConnectionInfo(R.string.connection_info_Wifi);
-                            readFileFromStream(main, path, length, ip, port);
+                            readFileFromStream(main, connectivityManager, path, length, ip, port);
                         }
                         public void onUnavailable(){
                             super.onUnavailable();
                             Log.d(Main.LOG_TAG, "CommsWifi.NetworkCallback.onUnavailable");
                             main.toast(R.string.fail_wifi_fast);
-                            readFileFromStream(main, path, length, ip, port);
+                            readFileFromStream(main, connectivityManager, path, length, ip, port);
                         }
                     }
                     , 2000
@@ -51,7 +48,7 @@ class CommsWifi{
             main.toast(R.string.fail_wifi_fast);
         }
     }
-    private static void readFileFromStream(Main main, String path, long length, String ip, int port){
+    private static void readFileFromStream(Main main, ConnectivityManager connectivityManager, String path, long length, String ip, int port){
         Log.d(Main.LOG_TAG, "CommsWifi.readFileFromStream");
         isReceiving = true;
         long bytesDone = 0;
@@ -111,8 +108,5 @@ class CommsWifi{
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "CommsWifi.sleep100 exception: " + e.getMessage());
         }
-    }
-    public static void stop(){
-        connectivityManager = null;
     }
 }

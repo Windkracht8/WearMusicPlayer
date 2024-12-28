@@ -2,6 +2,8 @@
 <resources>
     <color name="w8blue">#2BD2E3</color>
     <color name="white">#FFF</color>
+    <color name="black">#000</color>
+    <color name="transparent">#0000</color>
     <color name="icon_disabled">#666</color>
-    <color name="menu_item_bg">#222</color>
+    <color name="bg_item">#222</color>
 </resources>

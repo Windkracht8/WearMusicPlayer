@@ -21,8 +21,18 @@ public class MenuScreenArtists extends MenuScreen{
         try{
             for(int index = 0; index < Main.library.artists.size(); index++){
                 Library.Artist artist = Main.library.artists.get(index);
-                String secondary = artist.artist_albums.size() + " albums|" + artist.artist_tracks.size() + " tracks";
-                MenuItem menuItem = new MenuItem(inflater, artist.name, secondary);
+                String second = "";
+                if(artist.albums.size() == 1){
+                    second = "1 " + getString(R.string.menu_album) + " | ";
+                }else if(artist.albums.size() > 1){
+                    second = artist.albums.size() + " " + getString(R.string.menu_albums) + " | ";
+                }
+                if(artist.tracks.size() == 1){
+                    second += "1 " + getString(R.string.menu_track);
+                }else{
+                    second += artist.tracks.size() + " " + getString(R.string.menu_tracks);
+                }
+                MenuItem menuItem = new MenuItem(inflater, artist.name, second);
                 int finalIndex = index;
                 menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenArtist(finalIndex)));
                 addMenuItem(menuItem);

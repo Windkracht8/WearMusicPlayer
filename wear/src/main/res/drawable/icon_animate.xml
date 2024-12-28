@@ -10,38 +10,38 @@
       <path
           android:pathData="M0,72.25H96"
           android:strokeWidth="0.5"
-          android:strokeColor="#ffffff"/>
+          android:strokeColor="#fff"/>
       <path
           android:pathData="M0,64.25H96"
           android:strokeWidth="0.5"
-          android:strokeColor="#ffffff"/>
+          android:strokeColor="#fff"/>
       <path
           android:pathData="M0,56.25H96"
           android:strokeWidth="0.5"
-          android:strokeColor="#ffffff"/>
+          android:strokeColor="#fff"/>
       <path
           android:pathData="M0,48.25H96"
           android:strokeWidth="0.5"
-          android:strokeColor="#ffffff"/>
+          android:strokeColor="#fff"/>
       <path
           android:pathData="M0,40.25H96"
           android:strokeWidth="0.5"
-          android:strokeColor="#ffffff"/>
+          android:strokeColor="#fff"/>
       <path
           android:pathData="M33.248,64.452m-6.548,0a6.548,6.548 0,1 1,13.097 0a6.548,6.548 0,1 1,-13.097 0"
-          android:fillColor="#ffffff"/>
+          android:fillColor="#fff"/>
       <path
           android:pathData="M38.165,64.452V33.352l29.457,-8.191v31.105"
           android:strokeWidth="3.28501"
-          android:strokeColor="#ffffff"/>
+          android:strokeColor="#fff"/>
       <path
           android:pathData="M62.716,56.266m-6.548,0a6.548,6.548 0,1 1,13.097 0a6.548,6.548 0,1 1,-13.097 0"
-          android:fillColor="#ffffff"/>
+          android:fillColor="#fff"/>
       <path
           android:name="bar_horizontal"
           android:pathData="M96,40.25V72.25"
           android:strokeWidth="1"
-          android:strokeColor="#ffffff"/>
+          android:strokeColor="#fff"/>
     </vector>
   </aapt:attr>
   <target android:name="bar_horizontal">

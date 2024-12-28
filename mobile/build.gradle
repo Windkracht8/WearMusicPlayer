@@ -6,8 +6,8 @@ android {
         minSdk 26
         targetSdk 35
         compileSdk 35
-        versionCode 121
-        versionName "m1.8"
+        versionCode 129
+        versionName "m1.12"
     }
     buildTypes {
         release {

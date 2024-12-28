@@ -31,6 +31,10 @@ class Library{
         this.main = main;
         exStorageDir = Environment.getExternalStorageDirectory().toString();
     }
+    Album getAlbum(int id){
+        for(Album album : albums){if(album.id == id){return album;}}
+        return null;
+    }
     JSONArray getTracks(){
         JSONArray array = new JSONArray();
         for(Track track : tracks){
@@ -154,11 +158,11 @@ class Library{
     }
     void addFile(String path){
         File file = new File(exStorageDir + "/" + path);
-        scanFile(file);
+        scanFile(file.toString());
     }
-    void scanFile(File file){
+    void scanFile(String path){
         MediaScannerConnection.scanFile(main,
-                new String[]{file.toString()},
+                new String[]{path},
                 null,
                 (path1, uri) -> scanMediaStore()
         );
@@ -199,7 +203,7 @@ class Library{
             main.toast(R.string.fail_delete_file);
             return main.getString(R.string.fail_delete_file);
         }
-        scanFile(filePendingDelete);
+        scanFile(filePendingDelete.toString());
         return "OK";
     }
     public class Track implements Comparable<Track>{
@@ -207,7 +211,7 @@ class Library{
         private final String path;//Music/Austrian Death Machine - Jingle Bells.mp3
         final String title;//Jingle Bells
         final Artist artist;
-        private final Album album;
+        Album album;
         private final String track_no;
         private final String disc_no;
         private Track(Context context, Uri uri, String path, String title, String artistName
@@ -219,8 +223,10 @@ class Library{
             this.disc_no = disc_no;
 
             artist = getArtistForNewTrack(this, artistName);
-            album = getAlbumForNewTrack(context, this, albumName, albumArtist);
-            artist.addAlbum(album);
+            if(albumName != null && !albumName.equals("Music")){
+                album = getAlbumForNewTrack(context, this, albumName, albumArtist);
+                artist.addAlbum(album);
+            }
             tracks.add(this);
         }
         private JSONObject toJson(Main main){
@@ -235,13 +241,16 @@ class Library{
         }
         @Override
         public int compareTo(Track track){
-            int compare = album.name.compareTo(track.album.name);
-            if(compare != 0) return compare;
+            if(album != null && track.album != null){
+                int compare = album.name.compareTo(track.album.name);
+                if(compare != 0) return compare;
+            }
             if(disc_no != null && track.disc_no != null){
-                compare = disc_no.compareTo(track.disc_no);
+                int compare = disc_no.compareTo(track.disc_no);
                 if(compare != 0) return compare;
             }
             if(track_no != null && track.track_no != null){
+                int compare;
                 try{
                     compare = Integer.valueOf(track_no).compareTo(Integer.valueOf(track.track_no));
                 }catch(Exception e){
@@ -254,74 +263,65 @@ class Library{
     }
     class Artist implements Comparable<Artist>{
         final String name;
-        final ArrayList<Track> artist_tracks = new ArrayList<>();
-        final ArrayList<Album> artist_albums = new ArrayList<>();
+        final ArrayList<Track> tracks = new ArrayList<>();
+        final ArrayList<Album> albums = new ArrayList<>();
         private Artist(Track track, String artistName){
             name = artistName == null ? "<empty>" : artistName;
-            artist_tracks.add(track);
+            tracks.add(track);
             artists.add(this);
         }
         void addAlbum(Album album){
-            if(artist_albums.contains(album)) return;
-            artist_albums.add(album);
+            if(albums.contains(album)) return;
+            albums.add(album);
         }
         @Override
         public int compareTo(Artist artist){
             return name.compareTo(artist.name);
         }
         private void sort(){
-            Collections.sort(artist_tracks);
-            Collections.sort(artist_albums);
+            Collections.sort(tracks);
+            Collections.sort(albums);
         }
     }
     private Artist getArtistForNewTrack(Track track, String artistName){
         for(Artist artist : artists){
             if(artist.name.equals(artistName)){
-                artist.artist_tracks.add(track);
+                artist.tracks.add(track);
                 return artist;
             }
         }
         return new Artist(track, artistName);
     }
     class Album implements Comparable<Album>{
+        final int id;
         final String name;
         String artist;
-        final ArrayList<Track> album_tracks = new ArrayList<>();
+        final ArrayList<Track> tracks = new ArrayList<>();
         private Album(Track track, String albumName, String albumArtist){
+            id = albums.size();
             name = albumName == null ? "<empty>" : albumName;
-            artist = albumArtist;
-            album_tracks.add(track);
+            artist = albumArtist == null ? track.artist.name : albumArtist;
+            tracks.add(track);
             albums.add(this);
         }
         @Override
-        public int compareTo(Album album){
-            return name.compareTo(album.name);
-        }
-        private void sort(){
-            Collections.sort(album_tracks);
-        }
+        public int compareTo(Album album){return name.compareTo(album.name);}
+        private void sort(){Collections.sort(tracks);}
     }
     private Album getAlbumForNewTrack(Context context, Track track, String albumName, String albumArtist){
         for(Album album : albums){
             if(album.name.equals(albumName)){
-                if(album.artist != null && !album.artist.equals(albumArtist)){
+                if(albumArtist != null && album.artist != null && !album.artist.equals(albumArtist)){
                     album.artist = context.getString(R.string.various_artists);
                 }
-                album.album_tracks.add(track);
+                album.tracks.add(track);
                 return album;
             }
         }
         return new Album(track, albumName, albumArtist);
     }
     private Uri getUriForPath(String path){
-        Log.d(Main.LOG_TAG, "getUriForPath: " + path);
-        for(Track track : tracks){
-            Log.d(Main.LOG_TAG, "track.path: " + track.path);
-            if(track.path.equals(path)){
-                Log.d(Main.LOG_TAG, "found it");
-                return track.uri;
-            }
-        }
+        for(Track track : tracks){if(track.path.equals(path)){return track.uri;}}
         return null;
     }
 }

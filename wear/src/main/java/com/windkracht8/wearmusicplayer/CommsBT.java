@@ -9,8 +9,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -23,6 +21,9 @@ import java.io.OutputStream;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 class CommsBT{
     private final UUID WMP_UUID = UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6e1");
@@ -32,14 +33,12 @@ class CommsBT{
     private CommsBTConnect commsBTConnect;
     private CommsBTConnected commsBTConnected;
     private final Main main;
-    private final Handler handler;
 
-    private boolean closeConnection;
+    private boolean disconnect = false;
     private final JSONArray responseQueue = new JSONArray();
 
     CommsBT(Main main){
         this.main = main;
-        handler = new Handler(Looper.getMainLooper());
     }
 
     private void gotRequest(String request){
@@ -135,46 +134,53 @@ class CommsBT{
                 int btState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                 if(btState == BluetoothAdapter.STATE_TURNING_OFF){
                     Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver: stop");
-                    stop();
+                    stopBT();
                 }else if(btState == BluetoothAdapter.STATE_ON){
                     Log.d(Main.LOG_TAG, "CommsBT.btStateReceiver: start");
-                    start();
+                    startBT();
                 }
             }
         }
     };
-    void start(){
-        if(bluetoothAdapter != null) return;
-        closeConnection = false;
-        BluetoothManager bluetoothManager = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
-        bluetoothAdapter = bluetoothManager.getAdapter();
-        if(bluetoothAdapter == null || !bluetoothAdapter.isEnabled()){
-            Log.d(Main.LOG_TAG, "CommsBT.startComms bluetooth disabled");
-            return;
+    void startBT(){
+        Log.d(Main.LOG_TAG, "CommsBT.startBT");
+        disconnect = false;
+        if(bluetoothAdapter == null){
+            BluetoothManager bluetoothManager = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
+            bluetoothAdapter = bluetoothManager.getAdapter();
+            if(bluetoothAdapter == null || !bluetoothAdapter.isEnabled()){
+                Log.d(Main.LOG_TAG, "CommsBT.startBT bluetooth disabled");
+                return;
+            }
+            main.registerReceiver(btStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         }
-        Log.d(Main.LOG_TAG, "CommsBT.startComms");
-        main.registerReceiver(btStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-        commsBTConnect = new CommsBTConnect();
-        commsBTConnect.start();
+        if(commsBTConnect == null){
+            Log.d(Main.LOG_TAG, "CommsBT.startBT start listening");
+            commsBTConnect = new CommsBTConnect();
+            commsBTConnect.start();
+        }
     }
-    void stop(){
-        Log.d(Main.LOG_TAG, "CommsBT.stop");
-        closeConnection = true;
+    void stopBT(){
+        Log.d(Main.LOG_TAG, "CommsBT.stopBT");
+        disconnect = true;
         try{
             main.unregisterReceiver(btStateReceiver);
         }catch(Exception e){
-            Log.i(Main.LOG_TAG, "CommsBT.stopComms unregisterReceiver: " + e.getMessage());
+            Log.i(Main.LOG_TAG, "CommsBT.stopBT unregisterReceiver: " + e.getMessage());
         }
         try{
             if(bluetoothServerSocket != null) bluetoothServerSocket.close();
         }catch(Exception e){
-            Log.i(Main.LOG_TAG, "CommsBT.stopComms bluetoothServerSocket: " + e.getMessage());
+            Log.i(Main.LOG_TAG, "CommsBT.stopBT bluetoothServerSocket: " + e.getMessage());
         }
         try{
             if(bluetoothSocket != null) bluetoothSocket.close();
         }catch(Exception e){
-            Log.i(Main.LOG_TAG, "CommsBT.stopComms bluetoothSocket: " + e.getMessage());
+            Log.i(Main.LOG_TAG, "CommsBT.stopBT bluetoothSocket: " + e.getMessage());
         }
+        bluetoothServerSocket = null;
+        bluetoothSocket = null;
+        bluetoothAdapter = null;
         commsBTConnect = null;
         commsBTConnected = null;
     }
@@ -186,22 +192,21 @@ class CommsBT{
                 Log.d(Main.LOG_TAG, "CommsBTConnect");
                 bluetoothServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("WearMusicPlayer", WMP_UUID);
             }catch(Exception e){
-                if(closeConnection) return;
+                if(disconnect) return;
                 Log.e(Main.LOG_TAG, "CommsBTConnect Exception: " + e.getMessage());
             }
         }
         public void run(){
             try{
                 bluetoothSocket = bluetoothServerSocket.accept();
-                if(closeConnection) return;
+                if(disconnect) return;
                 Log.d(Main.LOG_TAG, "CommsBTConnect.run accepted");
                 commsBTConnected = new CommsBTConnected();
                 commsBTConnected.start();
             }catch(Exception e){
-                if(closeConnection) return;
+                if(disconnect) return;
                 Log.e(Main.LOG_TAG, "CommsBTConnect.run Exception: " + e.getMessage());
             }
-            Log.d(Main.LOG_TAG, "CommsBTConnect.run done");
         }
     }
 
@@ -225,28 +230,24 @@ class CommsBT{
         }
         public void run(){
             Log.d(Main.LOG_TAG, "CommsBTConnected.run");
-            process();
+            process(Executors.newSingleThreadScheduledExecutor());
         }
-        private void process(){
-            if(closeConnection){
-                return;
-            }
+        private void process(ScheduledExecutorService executor){
+            if(disconnect){return;}
             read();
             try{
                 outputStream.write("".getBytes());
             }catch(Exception e){
-                Log.d(Main.LOG_TAG, "CommsBTConnected.process outputStream.write failed: " + e);
-                Log.d(Main.LOG_TAG, "CommsBTConnected.process outputStream.write failed: " + e.getMessage());
-                CommsBT.this.stop();
-                CommsBT.this.start();
+                stopBT();
+                startBT();
                 return;
             }
             if(responseQueue.length() > 0 && !sendNextResponse()){
-                CommsBT.this.stop();
-                CommsBT.this.start();
+                stopBT();
+                startBT();
                 return;
             }
-            handler.postDelayed(this::process, 100);
+            executor.schedule(()->process(executor), 100, TimeUnit.MILLISECONDS);
         }
         private boolean sendNextResponse(){
             try{

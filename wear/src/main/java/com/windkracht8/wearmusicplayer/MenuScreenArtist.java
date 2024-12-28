@@ -22,14 +22,23 @@ public class MenuScreenArtist extends MenuScreen{
         try{
             Library.Artist artist = Main.library.artists.get(artistIndex);
             menu_label.setText(artist.name);
-            for(int trackIndex = 0; trackIndex < artist.artist_tracks.size(); trackIndex++){
+
+            artist.albums.forEach((album)->{
+                String second = getString(R.string.menu_album) + ": " + album.tracks.size() + " ";
+                second += getString(album.tracks.size() == 1 ? R.string.menu_track : R.string.menu_tracks);
+                MenuItem menuItem = new MenuItem(inflater, album.name, second);
+                menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenAlbum(album.id)));
+                addMenuItem(menuItem);
+            });
+            for(int trackIndex = 0; trackIndex < artist.tracks.size(); trackIndex++){
+                Library.Track track = artist.tracks.get(trackIndex);
                 MenuItem menuItem = new MenuItem(
                         inflater
-                        ,artist.artist_tracks.get(trackIndex).title
-                        ,artist.artist_tracks.get(trackIndex).artist.name
+                        ,track.title
+                        ,track.album == null ? null : track.album.name
                 );
                 int finalTrackIndex = trackIndex;
-                menuItem.setOnClickListener((v)-> openTrackList(artist.artist_tracks, finalTrackIndex));
+                menuItem.setOnClickListener((v)-> openTrackList(artist.tracks, finalTrackIndex));
                 addMenuItem(menuItem);
             }
         }catch(Exception e){

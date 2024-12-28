@@ -10,8 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class MenuScreenAlbum extends MenuScreen{
-    private final int albumIndex;
-    MenuScreenAlbum(int albumIndex){this.albumIndex = albumIndex;}
+    private final int albumId;
+    MenuScreenAlbum(int albumId){this.albumId = albumId;}
     @Override
     public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
@@ -20,16 +20,16 @@ public class MenuScreenAlbum extends MenuScreen{
     ){
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
         try{
-            Library.Album album = Main.library.albums.get(albumIndex);
+            Library.Album album = Main.library.getAlbum(albumId);
             menu_label.setText(album.name);
-            for(int trackIndex = 0; trackIndex < album.album_tracks.size(); trackIndex++){
+            for(int trackIndex = 0; trackIndex < album.tracks.size(); trackIndex++){
                 MenuItem menuItem = new MenuItem(
                         inflater
-                        ,album.album_tracks.get(trackIndex).title
+                        ,album.tracks.get(trackIndex).title
                         ,album.artist
                 );
                 int finalTrackIndex = trackIndex;
-                menuItem.setOnClickListener((v)-> openTrackList(album.album_tracks, finalTrackIndex));
+                menuItem.setOnClickListener((v)-> openTrackList(album.tracks, finalTrackIndex));
                 addMenuItem(menuItem);
             }
         }catch(Exception e){

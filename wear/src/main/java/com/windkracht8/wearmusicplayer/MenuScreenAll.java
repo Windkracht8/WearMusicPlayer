@@ -41,6 +41,7 @@ public class MenuScreenAll extends MenuScreen{
         return rootView;
     }
     private void randomise(){
+        if(tracks == null) return;
         Collections.shuffle(tracks);
         for(int i = 1; i < menuItems.size(); i++){
             MenuItem menuItem = menuItems.get(i);
