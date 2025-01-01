@@ -225,7 +225,7 @@ public class Main extends Activity{
         if(mediaController == null || tracks.isEmpty()) return;
         Log.d(Main.LOG_TAG, "Main.loadTracks: " + tracks.size());
         ArrayList<MediaItem> mediaItems = new ArrayList<>();
-        tracks.forEach((t)->mediaItems.add(MediaItem.fromUri(t.uri)));
+        for(int i=0; i<tracks.size(); i++) mediaItems.add(MediaItem.fromUri(tracks.get(i).uri));
         runOnUiThread(()->loadMediaItems(mediaItems));
     }
     private void loadMediaItems(ArrayList<MediaItem> mediaItems){
