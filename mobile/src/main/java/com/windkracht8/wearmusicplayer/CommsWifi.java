@@ -2,6 +2,8 @@ package com.windkracht8.wearmusicplayer;
 
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
+import android.net.LinkProperties;
+import android.net.Network;
 import android.util.Log;
 
 import java.io.FileInputStream;
@@ -38,7 +40,11 @@ class CommsWifi{
     }
     private String getIpAddress(){
         ConnectivityManager connectivityManager = (ConnectivityManager)main.getSystemService(Main.CONNECTIVITY_SERVICE);
-        List<LinkAddress> linkAddresses = Objects.requireNonNull(connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork())).getLinkAddresses();
+        Network network = connectivityManager.getActiveNetwork();
+        if(network == null) return "0.0.0.0";
+        LinkProperties linkProperties = connectivityManager.getLinkProperties(network);
+        if(linkProperties == null) return "0.0.0.0";
+        List<LinkAddress> linkAddresses = linkProperties.getLinkAddresses();
         for(LinkAddress linkAddress : linkAddresses){
             if(linkAddress.getAddress() instanceof Inet4Address){
                 return linkAddress.getAddress().getHostAddress();
