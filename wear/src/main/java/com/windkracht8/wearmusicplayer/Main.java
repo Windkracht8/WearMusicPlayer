@@ -1,7 +1,6 @@
 package com.windkracht8.wearmusicplayer;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -76,9 +75,7 @@ public class Main extends Activity{
     static int openTrackListTrack = -1;
     static boolean doRescan = false;
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")//registerReceiver is wrapped in SDK_INT, still complains
-    @Override
-    protected void onCreate(Bundle savedInstanceState){
+    @Override protected void onCreate(Bundle savedInstanceState){
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         splashScreen.setKeepOnScreenCondition(() -> showSplash);
         super.onCreate(savedInstanceState);
@@ -106,14 +103,15 @@ public class Main extends Activity{
         main_song_artist = findViewById(R.id.main_song_artist);
         main_library = findViewById(R.id.main_library);
 
-        findViewById(R.id.main_volume_down).setOnClickListener(v ->
+        findViewById(R.id.main_volume_down).setOnClickListener(v->
                 audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
         );
-        findViewById(R.id.main_volume_up).setOnClickListener(v ->
+        findViewById(R.id.main_volume_up).setOnClickListener(v->
                 audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
         );
-        main_previous.setOnClickListener(v -> mediaController.seekToPrevious());
-        main_play_pause.setOnClickListener(v -> {
+        main_previous.setOnClickListener(v->{if(mediaController != null) mediaController.seekToPrevious();});
+        main_play_pause.setOnClickListener(v->{
+            if(mediaController == null) return;
             if(mediaController.isPlaying()){
                 main_play_pause.setImageResource(R.drawable.icon_pause);
                 mediaController.pause();
@@ -122,7 +120,7 @@ public class Main extends Activity{
                 mediaController.play();
             }
         });
-        main_next.setOnClickListener(v ->{if(mediaController != null) mediaController.seekToNext();});
+        main_next.setOnClickListener(v->{if(mediaController != null) mediaController.seekToNext();});
         main_library.setOnClickListener(v->{
             main_loading.setVisibility(View.VISIBLE);
             ((AnimatedVectorDrawable) main_loading.getBackground()).start();
@@ -134,16 +132,16 @@ public class Main extends Activity{
         }
 
         requestPermissions();
-        if(hasReadPermission) runInBackground(() -> library.scanMediaStore());
+        if(hasReadPermission) runInBackground(library::scanMediaStore);
         commsBT = new CommsBT(this);
-        if(hasBTPermission) runInBackground(()-> commsBT.startBT());
+        if(hasBTPermission) runInBackground(commsBT::startBT);
         showSplash = false;
     }
     @Override
     public void onRestart(){
         super.onRestart();
         if(doRescan){
-            runInBackground(()->library.scanFiles());
+            runInBackground(library::scanFiles);
             doRescan = false;
         }else if(openTrackListTrack > -1){
             runInBackground(()->loadTracks(openTrackList));
@@ -169,7 +167,7 @@ public class Main extends Activity{
                 }
             }, MoreExecutors.directExecutor());
         }
-        if(hasBTPermission) runInBackground(()-> commsBT.startBT());
+        if(hasBTPermission) runInBackground(()->commsBT.startBT());
     }
     private final Player.Listener playerListener = new Player.Listener(){
         @Override
@@ -177,9 +175,10 @@ public class Main extends Activity{
             Log.d(LOG_TAG, "Main.onIsPlayingChanged " + isPlaying);
             if(isPlaying){
                 main_play_pause.setImageResource(R.drawable.icon_pause);
-                updateTimer();
+                updateTimer.run();
             }else{
                 main_play_pause.setImageResource(R.drawable.icon_play);
+                handler.removeCallbacksAndMessages(null);
             }
         }
         @Override
@@ -208,9 +207,10 @@ public class Main extends Activity{
     @Override
     public void onDestroy(){
         super.onDestroy();
-        if(commsBT != null){
-            commsBT.stopBT();
-        }
+        runInBackground(()->{
+            if(commsBT != null) commsBT.stopBT();
+            commsBT = null;
+        });
         if(mediaController != null){
             mediaController.removeListener(playerListener);
             mediaController.release();
@@ -245,7 +245,7 @@ public class Main extends Activity{
             Toast.makeText(getBaseContext(), R.string.fail_load_tracks, Toast.LENGTH_SHORT).show();
         }
     }
-    private void updateTimer(){
+    private final Runnable updateTimer = new Runnable(){@Override public void run(){
         if(mediaController == null || !mediaController.isPlaying()) return;
         long pos = mediaController.getCurrentPosition();
 
@@ -258,8 +258,8 @@ public class Main extends Activity{
         pretty = minutes + ":" + pretty;
 
         main_timer.setText(pretty);
-        handler.postDelayed(this::updateTimer, 1000-(pos%1000));
-    }
+        handler.postDelayed(updateTimer, 1000-(pos%1000));
+    }};
 
     void librarySetScanning(){
         Log.d(LOG_TAG, "Main.librarySetScanning");

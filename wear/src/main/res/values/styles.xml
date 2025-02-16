@@ -5,7 +5,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
         <item name="postSplashScreenTheme">@style/wmp</item>
     </style>
-    <style name="wmp" parent="Theme.AppCompat">
+    <style name="wmp" parent="Theme.Material3.Dark">
         <!-- this is set to false so that we can handle back swipes -->
         <item name="android:windowSwipeToDismiss" tools:ignore="WearBackNavigation">false</item>
         <item name="android:buttonStyle">@style/Widget.AppCompat.Button.Borderless.Colored</item>

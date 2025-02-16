@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <ImageView
@@ -56,18 +57,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_status" />
+    <Button
+        android:id="@+id/main_open_folder"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginStart="10dp"
+        android:gravity="center_vertical"
+        android:text="@string/open_folder"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/main_loading"/>
     <ScrollView
-        android:id="@+id/main_sv"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
         android:contentDescription="@string/main_sv_desc"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_loading"
+        app:layout_constraintTop_toBottomOf="@id/main_open_folder"
         app:layout_constraintBottom_toBottomOf="parent" >
         <LinearLayout
-            android:id="@+id/main_ll"
+            android:id="@+id/main_items"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />

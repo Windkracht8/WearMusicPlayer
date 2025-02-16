@@ -22,6 +22,7 @@ import java.util.Collections;
 class Library{
     private final Main main;
     static String exStorageDir;
+    static String musicDir;
     static File filePendingDelete;
     final ArrayList<Track> tracks = new ArrayList<>();
     final ArrayList<Artist> artists = new ArrayList<>();
@@ -30,6 +31,7 @@ class Library{
     Library(Main main){
         this.main = main;
         exStorageDir = Environment.getExternalStorageDirectory().toString();
+        musicDir = exStorageDir + "/Music/";
     }
     Album getAlbum(int id){
         for(Album album : albums){if(album.id == id){return album;}}
@@ -123,7 +125,7 @@ class Library{
         );
     }
     String ensurePath(String path){
-        File file = new File(exStorageDir + "/" + path);
+        File file = new File(musicDir + path);
         try{
             if(file.exists()){
                 Log.e(Main.LOG_TAG, "Library.ensurePath: file exists");
@@ -157,7 +159,7 @@ class Library{
         return null;
     }
     void addFile(String path){
-        File file = new File(exStorageDir + "/" + path);
+        File file = new File(musicDir + path);
         scanFile(file.toString());
     }
     void scanFile(String path){
@@ -169,7 +171,7 @@ class Library{
         filePendingDelete = null;
     }
     String deleteFile(String path){
-        filePendingDelete = new File(exStorageDir + "/" + path);
+        filePendingDelete = new File(musicDir + path);
         if(!filePendingDelete.exists()){
             Log.i(Main.LOG_TAG, "Library.deleteFile: path does not exists");
             return "OK";
@@ -217,7 +219,7 @@ class Library{
         private Track(Context context, Uri uri, String path, String title, String artistName
                 ,String albumName, String albumArtist, String track_no, String disc_no){
             this.uri = uri;
-            this.path = path.substring(exStorageDir.length()+1);
+            this.path = path.substring(musicDir.length());
             this.title = title;
             this.track_no = track_no;
             this.disc_no = disc_no;

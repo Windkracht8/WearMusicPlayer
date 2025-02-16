@@ -1,5 +1,7 @@
 package com.windkracht8.wearmusicplayer;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,18 +9,22 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.splashscreen.SplashScreen;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowInsets;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,22 +46,24 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     private TextView main_device;
     private ImageView main_icon;
     private TextView main_status;
-    private LinearLayout main_ll;
+    private LinearLayout main_items;
     private final ArrayList<Item> items = new ArrayList<>();
     Item itemInProgress;
     private boolean showSplash = true;
     private static boolean hasBTPermission = false;
     static boolean hasReadPermission = false;
+    static int _5dp = 5;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState){
+    @Override protected void onCreate(Bundle savedInstanceState){
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         splashScreen.setKeepOnScreenCondition(() -> showSplash);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        findViewById(R.id.root).setOnApplyWindowInsetsListener(onApplyWindowInsetsListener);
 
-        sharedPreferences = getSharedPreferences("com.windkracht8.wearmusicplayer", Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("main", Context.MODE_PRIVATE);
         sharedPreferences_editor = sharedPreferences.edit();
+        _5dp = getResources().getDimensionPixelSize(R.dimen.dp5);
 
         main_available = findViewById(R.id.main_available);
         main_icon = findViewById(R.id.main_icon);
@@ -63,7 +71,8 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         main_icon.setColorFilter(getColor(R.color.icon_disabled));
         main_device = findViewById(R.id.main_device);
         main_status = findViewById(R.id.main_status);
-        main_ll = findViewById(R.id.main_ll);
+        findViewById(R.id.main_open_folder).setOnClickListener((v)->onOpenFolderClick());
+        main_items = findViewById(R.id.main_items);
 
         runInBackground(() -> commsWifi = new CommsWifi(this));
 
@@ -72,13 +81,12 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         runInBackground(() -> Library.scanFiles(this));
         showSplash = false;
     }
-    @Override
-    protected void onDestroy(){
+    @Override protected void onDestroy(){
         super.onDestroy();
-        if(commsBT != null){
-            commsBT.stopBT();
+        runInBackground(()->{
+            if(commsBT != null) commsBT.stopBT();
             commsBT = null;
-        }
+        });
     }
 
     private void checkPermissions(){
@@ -124,8 +132,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             }
         }
     }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
+    @Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Log.d(LOG_TAG, "Main.onRequestPermissionsResult");
         for(int i=0; i<permissions.length; i++){
@@ -160,20 +167,32 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         if(executorService == null) executorService = Executors.newCachedThreadPool();
         executorService.execute(runnable);
     }
+    static final View.OnApplyWindowInsetsListener onApplyWindowInsetsListener = new View.OnApplyWindowInsetsListener(){
+        @NonNull @Override public WindowInsets onApplyWindowInsets(@NonNull View view, @NonNull WindowInsets windowInsets){
+            view.setPadding(
+                    windowInsets.getSystemWindowInsetLeft()
+                    ,windowInsets.getSystemWindowInsetTop()
+                    ,windowInsets.getSystemWindowInsetRight()
+                    ,windowInsets.getSystemWindowInsetBottom()
+            );
+            return windowInsets;
+        }
+    };
 
     void libraryFilesScanned(){
         runOnUiThread(()->{
             findViewById(R.id.main_loading).setVisibility(View.GONE);
-            for(Library.LibDir libDir : Library.dir_music.libDirs){
+            for(Library.LibDir libDir : Library.root_libDir.libDirs){
                 Item item = new Item(this, libDir);
                 items.add(item);
-                main_ll.addView(item);
+                main_items.addView(item);
             }
-            for(Library.LibTrack libTrack : Library.dir_music.libTracks){
+            for(Library.LibTrack libTrack : Library.root_libDir.libTracks){
                 Item item = new Item(this, libTrack);
                 items.add(item);
-                main_ll.addView(item);
+                main_items.addView(item);
             }
+            runInBackground(this::sendSyncRequest);
         });
     }
     void libraryNewStatuses(){runOnUiThread(()->items.forEach(Item::newStatus));}
@@ -184,12 +203,10 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         }
         commsBT = new CommsBT(this);
         commsBT.addListener(this);
-        startActivity(new Intent(this, DeviceSelect.class));
         runInBackground(() -> commsBT.startBT());
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event){
+    @Override public boolean onKeyDown(int keyCode, KeyEvent event){
         if(keyCode == KeyEvent.KEYCODE_BACK){
             onBack();
             return true;
@@ -208,6 +225,33 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             finish();
         }
     }
+
+    private void onOpenFolderClick(){
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        openFolderResult.launch(intent);
+    }
+    private final ActivityResultLauncher<Intent> openFolderResult = registerForActivityResult(
+        new ActivityResultContracts.StartActivityForResult(),
+        result -> {
+            if(result.getResultCode() != Activity.RESULT_OK) return;
+            try{
+                Intent data = result.getData();
+                if(data == null) throw new Exception("data is empty");
+                Uri uri = data.getData();
+                if(uri == null) throw new Exception("uri is empty");
+                String fullPath = uri.getPath();
+                if(fullPath == null) throw new Exception("fullPath is empty");
+                String path = fullPath.replace("/tree/primary:", "");
+                main_items.removeAllViews();
+                findViewById(R.id.main_loading).setVisibility(View.VISIBLE);
+                runInBackground(()->Library.scanFiles(this, path));
+            }catch(Exception e){
+                Log.e(Main.LOG_TAG, "Main.openFolderResult Exception: " + e.getMessage());
+                Toast.makeText(this, R.string.fail_open_folder, Toast.LENGTH_SHORT).show();
+            }
+        }
+    );
 
     private void onIconClick(){
         if(commsBT == null) return;
@@ -237,9 +281,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     }
 
     private boolean cantSendRequest(){
-        if(commsBT != null && commsBT.status == CommsBT.Status.CONNECTED) return false;
-        main_status.setText(R.string.fail_BT);
-        return true;
+        return commsBT == null || commsBT.status != CommsBT.Status.CONNECTED;
     }
 
     void sendFileDetailsRequest(Library.LibItem libItem, String ipAddress){
@@ -247,8 +289,8 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         runInBackground(()-> commsBT.sendRequestFileDetails(libItem, ipAddress));
     }
     private void sendSyncRequest(){
-        Log.d(Main.LOG_TAG, "Main.sendSyncRequest");
         if(cantSendRequest()) return;
+        Log.d(Main.LOG_TAG, "Main.sendSyncRequest");
         try{
             JSONObject requestData = new JSONObject();
             runInBackground(()->commsBT.sendRequest("sync", requestData));
@@ -295,7 +337,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             main_icon.setColorFilter(getColor(R.color.icon_disabled));
             main_device.setTextColor(getColor(R.color.text));
             main_device.setText(R.string.connect);
-            if(commsBT.status == CommsBT.Status.DISCONNECTED){
+            if(commsBT != null && commsBT.status == CommsBT.Status.DISCONNECTED){
                 startActivity(new Intent(this, DeviceSelect.class));
             }
         });
@@ -303,6 +345,9 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     @Override
     public void onBTConnecting(String deviceName){
         runOnUiThread(()-> {
+            Intent startDeviceConnect = new Intent(this, DeviceConnect.class);
+            startDeviceConnect.putExtra("name", deviceName);
+            startActivity(startDeviceConnect);
             main_icon.setColorFilter(getColor(R.color.text));
             main_device.setTextColor(getColor(R.color.text));
             main_device.setText(rps(R.string.connecting_to, deviceName));
@@ -381,7 +426,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
                     break;
                 case "deleteFile":
                     if(response.getString("responseData").equals("OK")){
-                        itemInProgress.libItem.setStatus(this, Library.LibItem.Status.NOT);
+                        itemInProgress.libItem.setStatusNot(this);
                         main_status.setText(R.string.deleted_file);
                         break;
                     }else{
