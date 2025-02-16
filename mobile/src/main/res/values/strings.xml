@@ -8,6 +8,8 @@
     <string name="main_loading_text">loading file list</string>
     <string name="main_sv_desc">File overview</string>
     <string name="connect">Tap icon to connect with watch</string>
+    <string name="open_folder">open other folder</string>
+    <string name="fail_open_folder">Failed to open folder</string>
 
     <string name="device_select_title">To connect, open the app on the watch and select your watch
         from the list below</string>
@@ -42,5 +44,4 @@
     <string name="fail_response">Problem with response from watch</string>
     <string name="fail_send_file">Sending of file has failed</string>
     <string name="fail_delete_file">Failed to delete the file on the watch</string>
-    <string name="fail_show_item">Failed to show item</string>
 </resources>

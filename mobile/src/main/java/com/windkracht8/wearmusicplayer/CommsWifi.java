@@ -13,7 +13,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -91,7 +90,7 @@ class CommsWifi{
 
         try(ServerSocket serverSocket = new ServerSocket(PORT_NUMBER)){
             Socket socket = serverSocket.accept();
-            try(FileInputStream fileInputStream = new FileInputStream(libItem.uri.getPath())){
+            try(FileInputStream fileInputStream = new FileInputStream(libItem.getFullPath())){
                 long bytesDone = 0;
                 OutputStream outputStream = socket.getOutputStream();
                 while(!disconnect && fileInputStream.available() > 0){

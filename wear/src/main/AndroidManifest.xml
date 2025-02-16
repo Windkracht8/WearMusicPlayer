@@ -23,7 +23,7 @@
         <activity
             android:name=".Main"
             android:taskAffinity=".Main"
-            android:launchMode="singleInstance"
+            android:launchMode="singleTop"
             android:exported="true"
             android:theme="@style/wmp_splash" >
             <intent-filter>

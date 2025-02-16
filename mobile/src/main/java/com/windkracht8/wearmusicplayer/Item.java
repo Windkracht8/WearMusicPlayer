@@ -2,10 +2,8 @@ package com.windkracht8.wearmusicplayer;
 
 import android.content.Context;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 
@@ -17,9 +15,9 @@ class Item extends ConstraintLayout{
 
     private TextView item_status;
     private TextView item_label;
+    private LinearLayout item_items;
 
     private final ArrayList<Item> items = new ArrayList<>();
-    private boolean isExpanded = false;
 
     Item(Main main, Library.LibDir libDir){
         super(main);
@@ -27,19 +25,7 @@ class Item extends ConstraintLayout{
         isDir = true;
         show(main);
         item_label.setTextAppearance(R.style.w8TextViewStyleBold);
-
-        LinearLayout item_items = findViewById(R.id.item_items);
-        for(Library.LibDir libDirSub : libDir.libDirs){
-            Item item = new Item(main, libDirSub);
-            items.add(item);
-            item_items.addView(item);
-        }
-        for(Library.LibTrack libTrack : libDir.libTracks){
-            Item item = new Item(main, libTrack);
-            items.add(item);
-            item_items.addView(item);
-        }
-        item_status.setContentDescription(getContext().getString(R.string.item_status_desc) + libItem.name);
+        item_status.setContentDescription(main.getString(R.string.item_status_desc) + libItem.name);
     }
     Item(Main main, Library.LibTrack libTrack){
         super(main);
@@ -48,24 +34,20 @@ class Item extends ConstraintLayout{
         show(main);
     }
     private void show(Main main){
-        LayoutInflater inflater = (LayoutInflater) main.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if(inflater == null){Toast.makeText(main, R.string.fail_show_item, Toast.LENGTH_SHORT).show();return;}
-        inflater.inflate(R.layout.item, this, true);
-
+        ((LayoutInflater) main.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+            .inflate(R.layout.item, this, true);
         item_status = findViewById(R.id.item_status);
         item_label = findViewById(R.id.item_label);
+        item_items = findViewById(R.id.item_items);
         if(!isDir) item_status.setOnClickListener(v -> main.onItemStatusPressed(this));
-        item_label.setOnClickListener(v -> onLabelPressed());
+        item_label.setOnClickListener(v -> onLabelPressed(main));
 
         newStatus();
 
         if(libItem.depth > 0){
-            setVisibility(View.GONE);
-            int margin = getResources().getDimensionPixelSize(R.dimen.dp5) * libItem.depth;
-            ((LinearLayout.LayoutParams) item_label.getLayoutParams()).setMarginStart(margin);
+            ((LinearLayout.LayoutParams) findViewById(R.id.item_label_wrapper).getLayoutParams()).setMarginStart(Main._5dp * libItem.depth);
         }
         item_label.setText(libItem.name);
-        getViewTreeObserver().addOnGlobalLayoutListener(()-> item_label.setY(0.0F));//This is to fix, which I assume, is a bug in Android
     }
 
     void clearStatus(){
@@ -116,10 +98,25 @@ class Item extends ConstraintLayout{
     void updateProgress(Main main, long progress){
         main.runOnUiThread(()->item_status.setText(String.valueOf((progress * 100) / libItem.length)));
     }
-    private void onLabelPressed(){
+    private void onLabelPressed(Main main){
         if(!isDir) return;
-        isExpanded = !isExpanded;
-        int view = isExpanded ? View.VISIBLE : View.GONE;
-        items.forEach((i)-> i.setVisibility(view));
+        if(item_items.getVisibility() == VISIBLE){
+            item_items.setVisibility(GONE);
+        }else{
+            if(items.isEmpty()){
+                Library.LibDir libDir = (Library.LibDir)libItem;
+                for(Library.LibDir libDirSub : libDir.libDirs){
+                    Item item = new Item(main, libDirSub);
+                    items.add(item);
+                    item_items.addView(item);
+                }
+                for(Library.LibTrack libTrack : libDir.libTracks){
+                    Item item = new Item(main, libTrack);
+                    items.add(item);
+                    item_items.addView(item);
+                }
+            }
+            item_items.setVisibility(VISIBLE);
+        }
     }
 }

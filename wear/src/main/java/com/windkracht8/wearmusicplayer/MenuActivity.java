@@ -23,8 +23,7 @@ public class MenuActivity extends FragmentActivity{
     private GestureDetector gestureDetector;
     private ImageView menu_loading;
     private AnimatedVectorDrawable menu_loading_animate;
-    @Override
-    public void onCreate(Bundle savedInstanceState){
+    @Override public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         gestureDetector = new GestureDetector(this, simpleOnGestureListener, new Handler(Looper.getMainLooper()));
         setContentView(R.layout.menu);
@@ -58,11 +57,9 @@ public class MenuActivity extends FragmentActivity{
         menu_loading.setVisibility(View.GONE);
         menu_loading_animate.stop();
     }
-    @Override
-    public boolean onTouchEvent(MotionEvent event){return gestureDetector.onTouchEvent(event);}
+    @Override public boolean onTouchEvent(MotionEvent event){return gestureDetector.onTouchEvent(event);}
     private final GestureDetector.SimpleOnGestureListener simpleOnGestureListener = new GestureDetector.SimpleOnGestureListener(){
-        @Override
-        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY){
+        @Override public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY){
             if(Math.abs(velocityX) < Math.abs(velocityY)) return false;
             if(velocityX > 0) onBack();
             return true;

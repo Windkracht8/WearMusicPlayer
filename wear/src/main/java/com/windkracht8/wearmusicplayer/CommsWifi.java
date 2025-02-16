@@ -54,7 +54,7 @@ class CommsWifi{
         long bytesDone = 0;
         try(Socket socket = new Socket(ip, port)){
             InputStream inputStream = socket.getInputStream();
-            try(FileOutputStream fileOutputStream = new FileOutputStream(Library.exStorageDir + "/" + path)){
+            try(FileOutputStream fileOutputStream = new FileOutputStream(Library.musicDir + path)){
                 int counter = 0;
                 while(counter < 100){
                     if(inputStream.available() == 0){
