@@ -27,8 +27,7 @@ public class DeviceSelect extends Activity implements CommsBT.BTInterface{
         super.onCreate(savedInstanceState);
         restartBT = getIntent().getBooleanExtra("restartBT", false);
         setContentView(R.layout.device_select);
-
-        findViewById(R.id.root).setOnApplyWindowInsetsListener(Main.onApplyWindowInsetsListener);
+        findViewById(android.R.id.content).setOnApplyWindowInsetsListener(Main.onApplyWindowInsetsListener);
 
         device_select_loading = findViewById(R.id.device_select_loading);
         ((AnimatedVectorDrawable) device_select_loading.getBackground()).start();

@@ -33,7 +33,7 @@ public class MenuScreenArtists extends MenuScreen{
                 }
                 MenuItem menuItem = new MenuItem(inflater, artist.name, second);
                 int finalIndex = index;
-                menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenArtist(finalIndex)));
+                menuItem.setOnClickListener(v->openMenuScreen(new MenuScreenArtist(finalIndex)));
                 addMenuItem(menuItem);
             }
         }catch(Exception e){

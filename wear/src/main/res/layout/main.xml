@@ -91,11 +91,12 @@
         app:layout_constraintBottom_toTopOf="@id/main_library"/>
     <TextView
         android:id="@+id/main_library"
-        android:layout_width="match_parent"
+        android:layout_width="@dimen/minTouchSize"
         android:layout_height="@dimen/minTouchSize"
         android:gravity="center"
         android:text="@string/loading"
-        android:textSize="20sp"
+        android:autoSizeTextType="uniform"
+        android:maxLines="1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>

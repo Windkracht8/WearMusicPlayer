@@ -14,8 +14,7 @@ import java.util.Collections;
 
 public class MenuScreenAll extends MenuScreen{
     private ArrayList<Library.Track> tracks;
-    @Override
-    public @Nullable View onCreateView(
+    @Override public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
@@ -23,7 +22,7 @@ public class MenuScreenAll extends MenuScreen{
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
         menu_label.setText(getString(R.string.all));
         MenuItem menuItem = new MenuItem(inflater, getString(R.string.randomise), null);
-        menuItem.setOnClickListener((v)-> randomise());
+        menuItem.setOnClickListener(v->randomise());
         addMenuItem(menuItem);
 
         try{
@@ -32,7 +31,7 @@ public class MenuScreenAll extends MenuScreen{
                 Library.Track track = tracks.get(trackIndex);
                 MenuItem menuItemTrack = new MenuItem(inflater, track.title, track.artist.name);
                 int finalTrackIndex = trackIndex;
-                menuItemTrack.setOnClickListener((v)-> openTrackList(tracks, finalTrackIndex));
+                menuItemTrack.setOnClickListener(v->openTrackList(tracks, finalTrackIndex));
                 addMenuItem(menuItemTrack);
             }
         }catch(Exception e){

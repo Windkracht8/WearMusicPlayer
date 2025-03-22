@@ -12,8 +12,7 @@ import androidx.annotation.Nullable;
 public class MenuScreenArtist extends MenuScreen{
     private final int artistIndex;
     MenuScreenArtist(int artistIndex){this.artistIndex = artistIndex;}
-    @Override
-    public @Nullable View onCreateView(
+    @Override public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
@@ -23,11 +22,11 @@ public class MenuScreenArtist extends MenuScreen{
             Library.Artist artist = Main.library.artists.get(artistIndex);
             menu_label.setText(artist.name);
 
-            artist.albums.forEach((album)->{
+            artist.albums.forEach(album->{
                 String second = getString(R.string.menu_album) + ": " + album.tracks.size() + " ";
                 second += getString(album.tracks.size() == 1 ? R.string.menu_track : R.string.menu_tracks);
                 MenuItem menuItem = new MenuItem(inflater, album.name, second);
-                menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenAlbum(album.id)));
+                menuItem.setOnClickListener(v->openMenuScreen(new MenuScreenAlbum(album.id)));
                 addMenuItem(menuItem);
             });
             for(int trackIndex = 0; trackIndex < artist.tracks.size(); trackIndex++){
@@ -38,7 +37,7 @@ public class MenuScreenArtist extends MenuScreen{
                         ,track.album == null ? null : track.album.name
                 );
                 int finalTrackIndex = trackIndex;
-                menuItem.setOnClickListener((v)-> openTrackList(artist.tracks, finalTrackIndex));
+                menuItem.setOnClickListener(v->openTrackList(artist.tracks, finalTrackIndex));
                 addMenuItem(menuItem);
             }
         }catch(Exception e){

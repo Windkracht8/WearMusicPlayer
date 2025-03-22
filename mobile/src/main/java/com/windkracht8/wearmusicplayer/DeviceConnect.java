@@ -15,8 +15,7 @@ public class DeviceConnect extends Activity implements CommsBT.BTInterface{
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.device_connect);
-
-        findViewById(R.id.root).setOnApplyWindowInsetsListener(Main.onApplyWindowInsetsListener);
+        findViewById(android.R.id.content).setOnApplyWindowInsetsListener(Main.onApplyWindowInsetsListener);
 
         Intent startDeviceConnect = getIntent();
         String text = getString(R.string.connecting_to) + " " + startDeviceConnect.getStringExtra("name");

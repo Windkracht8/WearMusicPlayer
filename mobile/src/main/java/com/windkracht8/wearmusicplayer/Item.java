@@ -2,6 +2,7 @@ package com.windkracht8.wearmusicplayer;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -16,6 +17,7 @@ class Item extends ConstraintLayout{
     private TextView item_status;
     private TextView item_label;
     private LinearLayout item_items;
+    private View item_line;
 
     private final ArrayList<Item> items = new ArrayList<>();
 
@@ -39,16 +41,18 @@ class Item extends ConstraintLayout{
         item_status = findViewById(R.id.item_status);
         item_label = findViewById(R.id.item_label);
         item_items = findViewById(R.id.item_items);
-        if(!isDir) item_status.setOnClickListener(v -> main.onItemStatusPressed(this));
-        item_label.setOnClickListener(v -> onLabelPressed(main));
+        item_line = findViewById(R.id.item_line);
+        if(!isDir) item_status.setOnClickListener(v->main.onItemStatusPressed(this));
+        item_label.setOnClickListener(v->onLabelPressed(main));
 
         newStatus();
 
         if(libItem.depth > 0){
-            ((LinearLayout.LayoutParams) findViewById(R.id.item_label_wrapper).getLayoutParams()).setMarginStart(Main._5dp * libItem.depth);
+            ((ConstraintLayout.LayoutParams) findViewById(R.id.item_root).getLayoutParams()).setMarginStart(Main._5dp * libItem.depth);
         }
         item_label.setText(libItem.name);
     }
+    void hideLine(){item_line.setVisibility(View.GONE);}
 
     void clearStatus(){
         libItem.clearStatus();
@@ -60,28 +64,22 @@ class Item extends ConstraintLayout{
         main.runOnUiThread(this::newStatus);
     }
     void newStatus(){
+        if(!isDir) item_status.setText("");
         switch(libItem.status){
             case FULL:
                 if(isDir){
                     item_status.setText("V");
                 }else{
-                    item_status.setText("");
                     item_status.setBackgroundResource(R.drawable.icon_delete);
                 }
                 break;
             case PARTIAL:
-                if(isDir){
-                    item_status.setText("/");
-                }else{
-                    item_status.setText("");
-                    item_status.setBackgroundResource(0);
-                }
+                if(isDir) item_status.setText("/");
                 break;
             case NOT:
                 if(isDir){
                     item_status.setText("");
                 }else{
-                    item_status.setText("");
                     item_status.setBackgroundResource(R.drawable.icon_upload);
                 }
                 break;
@@ -116,6 +114,7 @@ class Item extends ConstraintLayout{
                     item_items.addView(item);
                 }
             }
+            if(!items.isEmpty()) items.get(items.size()-1).hideLine();
             item_items.setVisibility(VISIBLE);
         }
     }

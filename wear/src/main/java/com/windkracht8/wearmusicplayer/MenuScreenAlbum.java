@@ -12,8 +12,7 @@ import androidx.annotation.Nullable;
 public class MenuScreenAlbum extends MenuScreen{
     private final int albumId;
     MenuScreenAlbum(int albumId){this.albumId = albumId;}
-    @Override
-    public @Nullable View onCreateView(
+    @Override public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
@@ -29,7 +28,7 @@ public class MenuScreenAlbum extends MenuScreen{
                         ,album.artist
                 );
                 int finalTrackIndex = trackIndex;
-                menuItem.setOnClickListener((v)-> openTrackList(album.tracks, finalTrackIndex));
+                menuItem.setOnClickListener(v->openTrackList(album.tracks, finalTrackIndex));
                 addMenuItem(menuItem);
             }
         }catch(Exception e){
