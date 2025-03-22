@@ -10,8 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class MenuScreenMain extends MenuScreen{
-    @Override
-    public @Nullable View onCreateView(
+    @Override public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
@@ -25,7 +24,7 @@ public class MenuScreenMain extends MenuScreen{
             Log.e(Main.LOG_TAG, "Failed to get library tracks size: " + e.getMessage());
         }
         MenuItem menuItem = new MenuItem(inflater, getString(R.string.all), String.valueOf(size));
-        menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenAll()));
+        menuItem.setOnClickListener(v->openMenuScreen(new MenuScreenAll()));
         addMenuItem(menuItem);
 
         try{
@@ -35,7 +34,7 @@ public class MenuScreenMain extends MenuScreen{
             size = 0;
         }
         menuItem = new MenuItem(inflater, getString(R.string.albums), String.valueOf(size));
-        menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenAlbums()));
+        menuItem.setOnClickListener(v->openMenuScreen(new MenuScreenAlbums()));
         addMenuItem(menuItem);
 
         try{
@@ -45,11 +44,11 @@ public class MenuScreenMain extends MenuScreen{
             size = 0;
         }
         menuItem = new MenuItem(inflater, getString(R.string.artists), String.valueOf(size));
-        menuItem.setOnClickListener((v)-> openMenuScreen(new MenuScreenArtists()));
+        menuItem.setOnClickListener(v->openMenuScreen(new MenuScreenArtists()));
         addMenuItem(menuItem);
 
         menuItem = new MenuItem(inflater, getString(R.string.rescan), null);
-        menuItem.setOnClickListener((v)-> rescan());
+        menuItem.setOnClickListener(v->rescan());
         addMenuItem(menuItem);
 
         return rootView;

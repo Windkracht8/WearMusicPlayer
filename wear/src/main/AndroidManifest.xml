@@ -34,6 +34,7 @@
         <activity
             android:name=".MenuActivity"
             android:taskAffinity=".Main"
+            android:launchMode="singleTop"
             android:theme="@style/wmp"/>
         <service
             android:name=".W8Player"

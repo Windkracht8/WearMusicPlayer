@@ -1,6 +1,7 @@
 package com.windkracht8.wearmusicplayer;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,6 +26,7 @@ public class MenuActivity extends FragmentActivity{
     private AnimatedVectorDrawable menu_loading_animate;
     @Override public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        if(getIntent().getBooleanExtra("close", false)) finish();
         gestureDetector = new GestureDetector(this, simpleOnGestureListener, new Handler(Looper.getMainLooper()));
         setContentView(R.layout.menu);
         menu_loading = findViewById(R.id.menu_loading);
@@ -33,21 +35,29 @@ public class MenuActivity extends FragmentActivity{
         fragmentManager.addOnBackStackChangedListener(()->{
             List<Fragment> fragments = fragmentManager.getFragments();
             if(fragments.get(fragments.size()-1) instanceof MenuScreen menuScreen){
+                //This is needed because MenuScreen.onResume is not called when pop-ing the stack
                 menuScreen.menu_sv.requestFocus();
             }
         });
     }
+    @Override protected void onNewIntent(Intent intent){
+        super.onNewIntent(intent);
+        if(intent.getBooleanExtra("close", false)) finish();
+    }
+    @Override public void onResume(){
+        super.onResume();
+        Main.isMenuVisible = true;
+    }
+    @Override public void onPause(){
+        super.onPause();
+        Main.isMenuVisible = false;
+    }
     void openMenuScreen(MenuScreen menuScreen){
-        try{
-            animationStart();
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.menu_container, menuScreen, menuScreen.getClass().getSimpleName())
-                    .addToBackStack(menuScreen.getClass().getSimpleName())
-                    .commit();
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "MenuActivity.openMenuScreen: " + e.getMessage());
-            Toast.makeText(this, R.string.fail_technical, Toast.LENGTH_SHORT).show();
-        }
+        animationStart();
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.menu_container, menuScreen, menuScreen.getClass().getSimpleName())
+                .addToBackStack(menuScreen.getClass().getSimpleName())
+                .commit();
     }
     void animationStart(){
         menu_loading_animate.start();
@@ -66,7 +76,7 @@ public class MenuActivity extends FragmentActivity{
         }
     };
     @SuppressLint("ClickableViewAccessibility")
-    void addOnTouch(View view){view.setOnTouchListener((v, e)-> gestureDetector.onTouchEvent(e));}
+    void addOnTouch(View view){view.setOnTouchListener((v, e)->gestureDetector.onTouchEvent(e));}
     private void onBack(){
         if(getSupportFragmentManager().getBackStackEntryCount() == 0){
             finish();

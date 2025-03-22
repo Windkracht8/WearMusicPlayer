@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:indicatorColor="@color/w8blue"
-        app:trackColor="@color/icon_disabled"
+        app:trackColor="@color/transparent"
         app:trackThickness="2dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

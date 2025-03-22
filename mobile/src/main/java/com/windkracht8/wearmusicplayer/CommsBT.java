@@ -68,12 +68,10 @@ class CommsBT{
     void startBT(){
         if(bluetoothAdapter == null){
             onBTError(R.string.fail_BT_denied);
-            onBTStartDone();
             return;
         }
         if(bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON){
             onBTError(R.string.fail_BT_off);
-            onBTStartDone();
             return;
         }
         known_device_addresses = Main.sharedPreferences.getStringSet("known_device_addresses", known_device_addresses);
@@ -82,7 +80,6 @@ class CommsBT{
 
         if(devices.isEmpty()){
             onBTError(R.string.fail_BT_no_devices);
-            onBTStartDone();
             return;
         }
         if(known_device_addresses.isEmpty()){
@@ -349,13 +346,13 @@ class CommsBT{
         Log.d(Main.LOG_TAG, "CommsBT.onBTStartDone");
         startDone = true;
         listeners.remove(null);
-        listeners.forEach(BTInterface::onBTStartDone);
+        for(int i=0; i<listeners.size(); i++) listeners.get(i).onBTStartDone();
     }
     private void onBTConnecting(String deviceName){
         Log.d(Main.LOG_TAG, "CommsBT.onBTConnecting");
         status = Status.CONNECTING;
         listeners.remove(null);
-        listeners.forEach((l)->l.onBTConnecting(deviceName));
+        for(int i=0; i<listeners.size(); i++) listeners.get(i).onBTConnecting(deviceName);
     }
     private void onBTConnectFailed(){
         Log.d(Main.LOG_TAG, "CommsBT.onBTConnectFailed");
@@ -363,7 +360,7 @@ class CommsBT{
         status = Status.DISCONNECTED;
         if(startDone){
             listeners.remove(null);
-            for(BTInterface listener:listeners) listener.onBTConnectFailed();
+            for(int i=0; i<listeners.size(); i++) listeners.get(i).onBTConnectFailed();
         }else{
             onBTStartDone();
         }
@@ -372,7 +369,7 @@ class CommsBT{
         Log.d(Main.LOG_TAG, "CommsBT.onBTConnected");
         status = Status.CONNECTED;
         listeners.remove(null);
-        listeners.forEach((l)->l.onBTConnected(device.getName()));
+        for(int i=0; i<listeners.size(); i++) listeners.get(i).onBTConnected(device.getName());
         if(!startDone) onBTStartDone();
         if(!known_device_addresses.contains(device.getAddress())){
             known_device_addresses.add(device.getAddress());
@@ -384,22 +381,22 @@ class CommsBT{
         Log.d(Main.LOG_TAG, "CommsBT.onBTDisconnected");
         status = Status.DISCONNECTED;
         listeners.remove(null);
-        for(BTInterface listener:listeners) listener.onBTDisconnected();
+        for(int i=0; i<listeners.size(); i++) listeners.get(i).onBTDisconnected();
     }
     private void onBTSending(String requestType){
         Log.d(Main.LOG_TAG, "CommsBT.onBTSending " + requestType);
         listeners.remove(null);
-        for(BTInterface listener:listeners) listener.onBTSending(requestType);
+        for(int i=0; i<listeners.size(); i++) listeners.get(i).onBTSending(requestType);
     }
     private void onBTResponse(JSONObject response){
         Log.d(Main.LOG_TAG, "CommsBT.onBTResponse " + response);
         listeners.remove(null);
-        for(BTInterface listener:listeners) listener.onBTResponse(response);
+        for(int i=0; i<listeners.size(); i++) listeners.get(i).onBTResponse(response);
     }
     private void onBTError(int message){
         Log.d(Main.LOG_TAG, "CommsBT.onBTError");
         listeners.remove(null);
-        for(BTInterface listener:listeners) listener.onBTError(message);
+        for(int i=0; i<listeners.size(); i++) listeners.get(i).onBTError(message);
     }
     interface BTInterface{
         void onBTStartDone();

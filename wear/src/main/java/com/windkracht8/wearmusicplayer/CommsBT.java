@@ -36,9 +36,7 @@ class CommsBT{
     private boolean disconnect = false;
     private final JSONArray responseQueue = new JSONArray();
 
-    CommsBT(Main main){
-        this.main = main;
-    }
+    CommsBT(Main main){this.main = main;}
 
     private void gotRequest(String request){
         Log.d(Main.LOG_TAG, "CommsBT.gotRequest: " + request);

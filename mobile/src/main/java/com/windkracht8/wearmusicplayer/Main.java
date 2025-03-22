@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -56,10 +58,10 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
 
     @Override protected void onCreate(Bundle savedInstanceState){
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
-        splashScreen.setKeepOnScreenCondition(() -> showSplash);
+        splashScreen.setKeepOnScreenCondition(()->showSplash);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        findViewById(R.id.root).setOnApplyWindowInsetsListener(onApplyWindowInsetsListener);
+        findViewById(android.R.id.content).setOnApplyWindowInsetsListener(onApplyWindowInsetsListener);
 
         sharedPreferences = getSharedPreferences("main", Context.MODE_PRIVATE);
         sharedPreferences_editor = sharedPreferences.edit();
@@ -67,18 +69,18 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
 
         main_available = findViewById(R.id.main_available);
         main_icon = findViewById(R.id.main_icon);
-        main_icon.setOnClickListener(view -> onIconClick());
+        main_icon.setOnClickListener(v->onIconClick());
         main_icon.setColorFilter(getColor(R.color.icon_disabled));
         main_device = findViewById(R.id.main_device);
         main_status = findViewById(R.id.main_status);
-        findViewById(R.id.main_open_folder).setOnClickListener((v)->onOpenFolderClick());
+        findViewById(R.id.main_open_folder).setOnClickListener(v->onOpenFolderClick());
         main_items = findViewById(R.id.main_items);
 
-        runInBackground(() -> commsWifi = new CommsWifi(this));
+        runInBackground(()->commsWifi = new CommsWifi(this));
 
         checkPermissions();
         startBT();
-        runInBackground(() -> Library.scanFiles(this));
+        runInBackground(()->Library.scanFiles(this));
         showSplash = false;
     }
     @Override protected void onDestroy(){
@@ -87,6 +89,26 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             if(commsBT != null) commsBT.stopBT();
             commsBT = null;
         });
+    }
+    @Override protected void onResume(){
+        super.onResume();
+        if(Build.VERSION.SDK_INT < 35) return;
+        WindowInsetsController wic = main_icon.getWindowInsetsController();
+        if(wic == null) return;
+        switch(getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK){
+            case Configuration.UI_MODE_NIGHT_NO:
+                wic.setSystemBarsAppearance(
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                );
+                break;
+            case Configuration.UI_MODE_NIGHT_YES:
+                wic.setSystemBarsAppearance(
+                        0,
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                );
+                break;
+        }
     }
 
     private void checkPermissions(){
@@ -141,7 +163,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             ){
                 if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
                     hasReadPermission = true;
-                    runInBackground(() -> Library.scanFiles(this));
+                    runInBackground(()->Library.scanFiles(this));
                 }
                 break;
             }
@@ -192,6 +214,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
                 items.add(item);
                 main_items.addView(item);
             }
+            if(!items.isEmpty()) items.getLast().hideLine();
             runInBackground(this::sendSyncRequest);
         });
     }
@@ -203,7 +226,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         }
         commsBT = new CommsBT(this);
         commsBT.addListener(this);
-        runInBackground(() -> commsBT.startBT());
+        runInBackground(commsBT::startBT);
     }
 
     @Override public boolean onKeyDown(int keyCode, KeyEvent event){
@@ -218,8 +241,8 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.alert_exit_title);
             builder.setMessage(R.string.alert_exit_message);
-            builder.setPositiveButton(R.string.alert_exit_positive, (dialog, which) -> finish());
-            builder.setNegativeButton(R.string.alert_exit_negative, (dialog, which) -> dialog.dismiss());
+            builder.setPositiveButton(R.string.alert_exit_positive, (d, w)->finish());
+            builder.setNegativeButton(R.string.alert_exit_negative, (d, w)->d.dismiss());
             builder.create().show();
         }else{
             finish();
@@ -233,7 +256,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     }
     private final ActivityResultLauncher<Intent> openFolderResult = registerForActivityResult(
         new ActivityResultContracts.StartActivityForResult(),
-        result -> {
+        result->{
             if(result.getResultCode() != Activity.RESULT_OK) return;
             try{
                 Intent data = result.getData();
@@ -270,12 +293,12 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         switch(item.libItem.status){
             case FULL:
                 itemInProgress = item;
-                runInBackground(()-> commsBT.sendRequestDeleteFile(item.libItem.path));
+                runInBackground(()->commsBT.sendRequestDeleteFile(item.libItem.path));
                 break;
             case PARTIAL:
                 break;
             case NOT:
-                runInBackground(()-> commsWifi.queueFile(item));
+                runInBackground(()->commsWifi.queueFile(item));
                 break;
         }
     }
@@ -286,7 +309,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
 
     void sendFileDetailsRequest(Library.LibItem libItem, String ipAddress){
         if(cantSendRequest()) return;
-        runInBackground(()-> commsBT.sendRequestFileDetails(libItem, ipAddress));
+        runInBackground(()->commsBT.sendRequestFileDetails(libItem, ipAddress));
     }
     private void sendSyncRequest(){
         if(cantSendRequest()) return;
@@ -300,9 +323,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         }
     }
 
-    private void gotFreeSpace(long freeSpace){
-        main_available.setText(bytesToHuman(freeSpace));
-    }
+    private void gotFreeSpace(long freeSpace){main_available.setText(bytesToHuman(freeSpace));}
     private String bytesToHuman(long bytes){
         long GB = 1073741824;
         long MB = 1048576;
@@ -344,7 +365,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     }
     @Override
     public void onBTConnecting(String deviceName){
-        runOnUiThread(()-> {
+        runOnUiThread(()->{
             Intent startDeviceConnect = new Intent(this, DeviceConnect.class);
             startDeviceConnect.putExtra("name", deviceName);
             startActivity(startDeviceConnect);

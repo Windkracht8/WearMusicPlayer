@@ -29,8 +29,16 @@ public abstract class MenuScreen extends Fragment{
     private static float bottom_quarter;
     private static float below_screen;
 
-    @Override
-    public @Nullable View onCreateView(
+    @Override public void onAttach(@NonNull Context context){
+        super.onAttach(context);
+        try{
+            menuActivity = (MenuActivity) getActivity();
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "MenuScreen.onAttach " + e.getMessage());
+            Toast.makeText(getContext(), R.string.fail_technical, Toast.LENGTH_SHORT).show();
+        }
+    }
+    @Override public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
@@ -46,8 +54,7 @@ public abstract class MenuScreen extends Fragment{
             ((LinearLayout.LayoutParams) menu_label.getLayoutParams()).leftMargin = Main.vw20;
             ((LinearLayout.LayoutParams) menu_label.getLayoutParams()).rightMargin = Main.vw20;
             rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener(){
-                @Override
-                public void onGlobalLayout(){
+                @Override public void onGlobalLayout(){
                     rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                     if(itemHeight == 0){
                         itemHeight = menuItems.get(0).getHeight();
@@ -58,30 +65,17 @@ public abstract class MenuScreen extends Fragment{
                     scaleMenuItems(0);
                 }
             });
-            menu_sv.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> scaleMenuItems(scrollY));
+            menu_sv.setOnScrollChangeListener((v, sx, sy, osx, osy)->scaleMenuItems(sy));
         }
         menuActivity.addOnTouch(rootView);
         return rootView;
     }
-    @Override
-    public void onAttach(@NonNull Context context){
-        super.onAttach(context);
-        try{
-            menuActivity = (MenuActivity) getActivity();
-        }catch(Exception e){
-            Log.e(Main.LOG_TAG, "MenuScreen.onAttach " + e.getMessage());
-            Toast.makeText(getContext(), R.string.fail_technical, Toast.LENGTH_SHORT).show();
-        }
-    }
-    @Override
-    public void onResume(){
+    @Override public void onResume(){
         super.onResume();
-        menu_sv.requestFocus();
         menuActivity.animationStop();
+        menu_sv.requestFocus();
     }
-    void openMenuScreen(MenuScreen menuScreen){
-        menuActivity.openMenuScreen(menuScreen);
-    }
+    void openMenuScreen(MenuScreen menuScreen){menuActivity.openMenuScreen(menuScreen);}
     void addMenuItem(MenuItem menuItem){
         menuItems.add(menuItem);
         menu_items.addView(menuItem);

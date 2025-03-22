@@ -121,7 +121,7 @@ class Library{
         MediaScannerConnection.scanFile(main,
                 paths.toArray(new String[0]),
                 null,
-                (path1, uri) -> scanMediaStore()
+                (p, u)->scanMediaStore()
         );
     }
     String ensurePath(String path){
@@ -166,7 +166,7 @@ class Library{
         MediaScannerConnection.scanFile(main,
                 new String[]{path},
                 null,
-                (path1, uri) -> scanMediaStore()
+                (p, u)->scanMediaStore()
         );
         filePendingDelete = null;
     }
