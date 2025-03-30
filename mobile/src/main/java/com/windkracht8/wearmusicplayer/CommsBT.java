@@ -113,6 +113,10 @@ class CommsBT{
         onBTStartDone();
     }
     void restartBT(){
+        if(bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON){
+            onBTError(R.string.fail_BT_off);
+            return;
+        }
         Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
         for(BluetoothDevice device : devices){
             if(known_device_addresses.contains(device.getAddress())){
@@ -120,6 +124,7 @@ class CommsBT{
                 return;
             }
         }
+        if(devices.isEmpty()) onBTError(R.string.fail_BT_no_devices);
     }
     void stopBT(){
         disconnect = true;
@@ -134,8 +139,12 @@ class CommsBT{
     }
 
     Set<BluetoothDevice> getDevices(){
-        if(bluetoothAdapter == null || bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON){
+        if(bluetoothAdapter == null){
             onBTError(R.string.fail_BT_denied);
+            return null;
+        }
+        if(bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON){
+            onBTError(R.string.fail_BT_off);
             return null;
         }
         return bluetoothAdapter.getBondedDevices();

@@ -94,6 +94,7 @@ class Item extends ConstraintLayout{
         items.forEach(Item::newStatus);
     }
     void updateProgress(Main main, long progress){
+        if(libItem.length <= 0) return;
         main.runOnUiThread(()->item_status.setText(String.valueOf((progress * 100) / libItem.length)));
     }
     private void onLabelPressed(Main main){

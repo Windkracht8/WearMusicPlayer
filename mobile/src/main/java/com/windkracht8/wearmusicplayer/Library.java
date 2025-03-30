@@ -113,7 +113,10 @@ class Library{
         Status status = Status.UNKNOWN;
         long length = 1;
         LibItem(String path){
-            if(root_libDir != null && path.startsWith(exStorageDir)) path = path.substring(root_libDir.getFullPath().length()+1);
+            if(root_libDir != null){
+                String root_libDir_full = root_libDir.getFullPath() + "/";
+                if(path.startsWith(root_libDir_full)) path = path.substring(root_libDir_full.length());
+            }
             if(path.endsWith("/")) path = path.substring(0, path.length()-1);
             int index = 1;
             while(index >= 0){

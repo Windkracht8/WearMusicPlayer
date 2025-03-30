@@ -22,43 +22,47 @@ import androidx.wear.ongoing.OngoingActivity;
 import androidx.wear.ongoing.Status;
 
 public class W8Player extends MediaSessionService{
-    private static final String channel_id = "WearMusicPlayer_CHANNEL";
+    private static final String NOTIFICATION_CHANNEL_ID = "WMP_Notification";
     private MediaSession mediaSession;
     private NotificationManager notificationManager;
     private OngoingActivity ongoingActivity;
 
-    @OptIn(markerClass = UnstableApi.class)
-    @Override
-    public void onCreate(){
+    @OptIn(markerClass = UnstableApi.class) @Override public void onCreate(){
         Log.d(Main.LOG_TAG, "W8player.onCreate");
         super.onCreate();
         ExoPlayer exoPlayer = new ExoPlayer.Builder(this).build();
         mediaSession = new MediaSession.Builder(this, exoPlayer).build();
 
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.createNotificationChannel(new NotificationChannel(
-                channel_id
-                ,getString(R.string.open_wmp)
-                ,NotificationManager.IMPORTANCE_HIGH)
-        );
+        boolean exists = false;
+        for(NotificationChannel channel : notificationManager.getNotificationChannels()){
+            String channelId = channel.getId();
+            if(channelId.equals(NOTIFICATION_CHANNEL_ID)){
+                exists = true;
+            }else{
+                notificationManager.deleteNotificationChannel(channelId);
+            }
+        }
+        if(!exists){
+            notificationManager.createNotificationChannel(new NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID
+                    ,getString(R.string.playing_track)
+                    ,NotificationManager.IMPORTANCE_HIGH)
+            );
+        }
     }
-    @Override
-    public void onDestroy(){
+    @Override public void onDestroy(){
         Log.d(Main.LOG_TAG, "W8player.onDestroy");
         super.onDestroy();
         mediaSession.getPlayer().release();
         mediaSession.release();
         notificationManager.cancelAll();
     }
-    @Nullable
-    @Override
-    public MediaSession onGetSession(@NonNull MediaSession.ControllerInfo controllerInfo){
+    @Nullable @Override public MediaSession onGetSession(@NonNull MediaSession.ControllerInfo controllerInfo){
         return mediaSession;
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    @Override
-    public void onUpdateNotification(
+    @OptIn(markerClass = UnstableApi.class) @Override public void onUpdateNotification(
             @NonNull MediaSession session,
             boolean startInForegroundRequired
     ){
@@ -74,7 +78,7 @@ public class W8Player extends MediaSessionService{
                     .build();
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
                     getBaseContext()
-                    ,channel_id
+                    , NOTIFICATION_CHANNEL_ID
             )
                     .setSmallIcon(R.drawable.icon_vector)
                     .setStyle(new MediaStyleNotificationHelper.MediaStyle(mediaSession))

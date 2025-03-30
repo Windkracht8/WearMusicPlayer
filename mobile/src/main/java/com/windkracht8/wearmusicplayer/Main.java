@@ -214,7 +214,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
                 items.add(item);
                 main_items.addView(item);
             }
-            if(!items.isEmpty()) items.getLast().hideLine();
+            if(!items.isEmpty()) items.get(items.size()-1).hideLine();
             runInBackground(this::sendSyncRequest);
         });
     }
