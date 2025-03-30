@@ -22,7 +22,7 @@ import androidx.wear.ongoing.OngoingActivity;
 import androidx.wear.ongoing.Status;
 
 public class W8Player extends MediaSessionService{
-    private static final String NOTIFICATION_CHANNEL_ID = "WMP_Notification";
+    private static final String NOTIFICATION_CHANNEL_ID = "WearMusicPlayer_Ongoing";
     private MediaSession mediaSession;
     private NotificationManager notificationManager;
     private OngoingActivity ongoingActivity;
