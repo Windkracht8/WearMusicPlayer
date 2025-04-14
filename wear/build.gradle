@@ -25,8 +25,8 @@ android {
 }
 dependencies {
     implementation 'androidx.core:core-splashscreen:1.0.1'
-    implementation 'androidx.media3:media3-exoplayer:1.5.1'
-    implementation 'androidx.media3:media3-session:1.5.1'
+    implementation 'androidx.media3:media3-exoplayer:1.6.1'
+    implementation 'androidx.media3:media3-session:1.6.1'
     implementation 'androidx.wear:wear-ongoing:1.0.0'
     //Material3 does not support CircularProgressIndicator in java (only available as Composable component)
     implementation 'com.google.android.material:material:1.12.0'

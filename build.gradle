@@ -9,11 +9,12 @@ buildscript {
 }
 /*
 Settings > Kotlin Compiler
-    Kotlin compiler version: 2.1.10
+    Kotlin compiler version: 2.1.20
     Language version: 2.1
     API version: 2.1
     Target JVM version: 21
 File > Project Structure > Project
+	Gradle Plugin Version: 8.9.1
 	Gradle Version: 8.13
 */
 allprojects {

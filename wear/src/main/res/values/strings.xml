@@ -20,7 +20,6 @@
     <string name="confirm_close_play">Stop playing and close?</string>
     <string name="yes">yes</string>
     <string name="back">back</string>
-    <string name="open_wmp">Open Music Player</string>
     <string name="playing_track">Playing track</string>
     <string name="paused_track">Track paused</string>
 
