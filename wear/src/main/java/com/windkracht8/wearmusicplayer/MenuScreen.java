@@ -28,6 +28,7 @@ public abstract class MenuScreen extends Fragment{
     private static float scalePerPixel;
     private static float bottom_quarter;
     private static float below_screen;
+    int scrollToTrack = 0;
 
     @Override public void onAttach(@NonNull Context context){
         super.onAttach(context);
@@ -81,11 +82,21 @@ public abstract class MenuScreen extends Fragment{
         menu_items.addView(menuItem);
         menuActivity.addOnTouch(menuItem);
     }
-    void openTrackList(ArrayList<Library.Track> tracks, int trackIndex){
+    void openTrackList(Library.TrackListType trackListType, int trackListId, ArrayList<Library.Track> tracks, int trackIndex){
         menuActivity.animationStart();
+        Main.trackListType = trackListType;
+        Main.trackListId = trackListId;
         Main.openTrackList = tracks;
         Main.openTrackListTrack = trackIndex;
         menuActivity.finish();
+    }
+    void scrollToItem(int index){
+        menu_sv.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener(){
+            @Override public void onGlobalLayout(){
+                menu_sv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                menu_sv.scrollTo(0, (int)(menuItems.get(index).getY()));
+            }
+        });
     }
 
     private void scaleMenuItems(int scrollY){

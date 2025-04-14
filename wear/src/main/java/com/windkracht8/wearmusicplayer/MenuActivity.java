@@ -39,10 +39,12 @@ public class MenuActivity extends FragmentActivity{
                 menuScreen.menu_sv.requestFocus();
             }
         });
+        deeplink(getIntent());
     }
     @Override protected void onNewIntent(Intent intent){
         super.onNewIntent(intent);
         if(intent.getBooleanExtra("close", false)) finish();
+        deeplink(intent);
     }
     @Override public void onResume(){
         super.onResume();
@@ -51,6 +53,26 @@ public class MenuActivity extends FragmentActivity{
     @Override public void onPause(){
         super.onPause();
         Main.isMenuVisible = false;
+    }
+    private void deeplink(Intent intent){
+        if(!intent.getBooleanExtra("deeplink", false)) return;
+        switch(Main.trackListType){
+            case ALL:
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.menu_container, new MenuScreenAll(Main.trackListIndex))
+                        .commit();
+                break;
+            case ALBUM:
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.menu_container, new MenuScreenAlbum(Main.trackListId, Main.trackListIndex))
+                        .commit();
+                break;
+            case ARTIST:
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.menu_container, new MenuScreenArtist(Main.trackListId, Main.trackListIndex))
+                        .commit();
+                break;
+        }
     }
     void openMenuScreen(MenuScreen menuScreen){
         animationStart();

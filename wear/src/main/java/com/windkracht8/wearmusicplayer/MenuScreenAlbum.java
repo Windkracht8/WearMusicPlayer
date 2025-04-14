@@ -12,6 +12,10 @@ import androidx.annotation.Nullable;
 public class MenuScreenAlbum extends MenuScreen{
     private final int albumId;
     MenuScreenAlbum(int albumId){this.albumId = albumId;}
+    MenuScreenAlbum(int albumId, int scrollToTrack){
+        this.albumId = albumId;
+        this.scrollToTrack = scrollToTrack;
+    }
     @Override public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
             @Nullable ViewGroup container,
@@ -28,9 +32,10 @@ public class MenuScreenAlbum extends MenuScreen{
                         ,album.artist
                 );
                 int finalTrackIndex = trackIndex;
-                menuItem.setOnClickListener(v->openTrackList(album.tracks, finalTrackIndex));
+                menuItem.setOnClickListener(v->openTrackList(Library.TrackListType.ALBUM, albumId, album.tracks, finalTrackIndex));
                 addMenuItem(menuItem);
             }
+            if(scrollToTrack > 0 && scrollToTrack < album.tracks.size()) scrollToItem(scrollToTrack);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Failed to get library album: " + e.getMessage());
         }

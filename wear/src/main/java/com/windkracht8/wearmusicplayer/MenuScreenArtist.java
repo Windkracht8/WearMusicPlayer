@@ -12,6 +12,10 @@ import androidx.annotation.Nullable;
 public class MenuScreenArtist extends MenuScreen{
     private final int artistIndex;
     MenuScreenArtist(int artistIndex){this.artistIndex = artistIndex;}
+    MenuScreenArtist(int artistIndex, int scrollToTrack){
+        this.artistIndex = artistIndex;
+        this.scrollToTrack = scrollToTrack;
+    }
     @Override public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
             @Nullable ViewGroup container,
@@ -37,9 +41,10 @@ public class MenuScreenArtist extends MenuScreen{
                         ,track.album == null ? null : track.album.name
                 );
                 int finalTrackIndex = trackIndex;
-                menuItem.setOnClickListener(v->openTrackList(artist.tracks, finalTrackIndex));
+                menuItem.setOnClickListener(v->openTrackList(Library.TrackListType.ARTIST, artistIndex, artist.tracks, finalTrackIndex));
                 addMenuItem(menuItem);
             }
+            if(scrollToTrack > 0 && scrollToTrack < artist.tracks.size()) scrollToItem(scrollToTrack);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Failed to get library artist: " + e.getMessage());
         }

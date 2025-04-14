@@ -74,6 +74,9 @@ public class Main extends Activity{
 
     static ArrayList<Library.Track> openTrackList = new ArrayList<>();
     static int openTrackListTrack = -1;
+    static Library.TrackListType trackListType = Library.TrackListType.ALL;
+    static int trackListId = 0;
+    static int trackListIndex = 0;
     static boolean doRescan = false;
 
     @Override protected void onCreate(Bundle savedInstanceState){
@@ -122,6 +125,10 @@ public class Main extends Activity{
             }
         });
         main_next.setOnClickListener(v->{if(mediaController != null) mediaController.seekToNext();});
+
+        main_song_title.setOnClickListener(v->onSongClick());
+        main_song_artist.setOnClickListener(v->onSongClick());
+
         main_library.setOnClickListener(v->{
             main_loading.setVisibility(View.VISIBLE);
             ((AnimatedVectorDrawable) main_loading.getBackground()).start();
@@ -180,6 +187,7 @@ public class Main extends Activity{
         @Override public void onMediaMetadataChanged(@NonNull MediaMetadata mediaMetadata){
             Log.d(LOG_TAG, "Main.onMediaMetadataChanged " + mediaMetadata.title);
             if(mediaMetadata.title == null) return;
+            trackListIndex = mediaController.getCurrentMediaItemIndex();
             main_song_title.setText(mediaMetadata.title);
             main_song_artist.setText(mediaMetadata.artist);
             if(mediaController.hasPreviousMediaItem()){
@@ -423,6 +431,11 @@ public class Main extends Activity{
         }else{
             finish();
         }
+    }
+    private void onSongClick(){
+        main_loading.setVisibility(View.VISIBLE);
+        ((AnimatedVectorDrawable) main_loading.getBackground()).start();
+        startActivity((new Intent(this, MenuActivity.class)).putExtra("deeplink", true));
     }
 
     @Override public boolean dispatchGenericMotionEvent(MotionEvent ev){

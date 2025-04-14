@@ -14,6 +14,8 @@ import java.util.Collections;
 
 public class MenuScreenAll extends MenuScreen{
     private ArrayList<Library.Track> tracks;
+    MenuScreenAll(){}
+    MenuScreenAll(int scrollToTrack){this.scrollToTrack = scrollToTrack;}
     @Override public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
             @Nullable ViewGroup container,
@@ -31,9 +33,10 @@ public class MenuScreenAll extends MenuScreen{
                 Library.Track track = tracks.get(trackIndex);
                 MenuItem menuItemTrack = new MenuItem(inflater, track.title, track.artist.name);
                 int finalTrackIndex = trackIndex;
-                menuItemTrack.setOnClickListener(v->openTrackList(tracks, finalTrackIndex));
+                menuItemTrack.setOnClickListener(v->openTrackList(Library.TrackListType.ALL, 0, tracks, finalTrackIndex));
                 addMenuItem(menuItemTrack);
             }
+            if(scrollToTrack > 0 && scrollToTrack < tracks.size()) scrollToItem(scrollToTrack+1);
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "Failed to get library tracks: " + e.getMessage());
         }

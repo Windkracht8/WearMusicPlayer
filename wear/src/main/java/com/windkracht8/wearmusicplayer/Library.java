@@ -28,6 +28,8 @@ class Library{
     final ArrayList<Artist> artists = new ArrayList<>();
     final ArrayList<Album> albums = new ArrayList<>();
 
+    public enum TrackListType{ALL, ARTIST, ALBUM}
+
     Library(Main main){
         this.main = main;
         exStorageDir = Environment.getExternalStorageDirectory().toString();
