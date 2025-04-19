@@ -1,6 +1,7 @@
 package com.windkracht8.wearmusicplayer;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -48,6 +49,7 @@ public class Main extends Activity{
     static boolean isMenuVisible = false;
     private static boolean hasBTPermission = false;
     private static boolean hasReadPermission = false;
+    private Main main;
     private TextView main_timer;
     private ImageView main_previous;
     private ImageView main_play_pause;
@@ -79,10 +81,12 @@ public class Main extends Activity{
     static int trackListIndex = 0;
     static boolean doRescan = false;
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override protected void onCreate(Bundle savedInstanceState){
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         splashScreen.setKeepOnScreenCondition(()->showSplash);
         super.onCreate(savedInstanceState);
+        main = this;
         isScreenRound = getResources().getConfiguration().isScreenRound();
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         heightPixels = displayMetrics.heightPixels;
@@ -107,10 +111,12 @@ public class Main extends Activity{
         main_song_artist = findViewById(R.id.main_song_artist);
         main_library = findViewById(R.id.main_library);
 
-        findViewById(R.id.main_volume_down).setOnClickListener(v->
+        ImageView main_volume_down = findViewById(R.id.main_volume_down);
+        main_volume_down.setOnClickListener(v->
                 audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
         );
-        findViewById(R.id.main_volume_up).setOnClickListener(v->
+        ImageView main_volume_up = findViewById(R.id.main_volume_up);
+        main_volume_up.setOnClickListener(v->
                 audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
         );
         main_previous.setOnClickListener(v->{if(mediaController != null) mediaController.seekToPrevious();});
@@ -136,6 +142,15 @@ public class Main extends Activity{
         });
 
         if(heightPixels < getResources().getDimensionPixelSize(R.dimen._200dp)) main_song_title.setLines(1);
+
+        main_volume_down.setOnTouchListener(onTouchListener);
+        main_volume_up.setOnTouchListener(onTouchListener);
+        main_previous.setOnTouchListener(onTouchListener);
+        main_play_pause.setOnTouchListener(onTouchListener);
+        main_next.setOnTouchListener(onTouchListener);
+        main_song_title.setOnTouchListener(onTouchListener);
+        main_song_artist.setOnTouchListener(onTouchListener);
+        main_library.setOnTouchListener(onTouchListener);
 
         requestPermissions();
         if(hasReadPermission) runInBackground(library::scanMediaStore);
@@ -220,6 +235,12 @@ public class Main extends Activity{
             executorService.shutdownNow();
         }
         System.exit(0);
+    }
+
+    private void onSongClick(){
+        main_loading.setVisibility(View.VISIBLE);
+        ((AnimatedVectorDrawable) main_loading.getBackground()).start();
+        startActivity((new Intent(this, MenuActivity.class)).putExtra("deeplink", true));
     }
 
     private void loadTracks(ArrayList<Library.Track> tracks){
@@ -432,20 +453,25 @@ public class Main extends Activity{
             finish();
         }
     }
-    private void onSongClick(){
-        main_loading.setVisibility(View.VISIBLE);
-        ((AnimatedVectorDrawable) main_loading.getBackground()).start();
-        startActivity((new Intent(this, MenuActivity.class)).putExtra("deeplink", true));
-    }
 
     @Override public boolean dispatchGenericMotionEvent(MotionEvent ev){
         super.dispatchGenericMotionEvent(ev);
         return true; //Just to let Google know we are listening to rotary events
     }
+    private final View.OnTouchListener onTouchListener = new View.OnTouchListener(){
+        @Override public boolean onTouch(View v, MotionEvent event){
+            if(!main.onTouchEvent(event)){
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    return v.performClick();
+                }
+                return false;
+            }
+            return true;
+        }
+    };
     @Override public boolean onTouchEvent(MotionEvent event){return gestureDetector.onTouchEvent(event);}
     private final GestureDetector.SimpleOnGestureListener simpleOnGestureListener = new GestureDetector.SimpleOnGestureListener(){
-        @Override
-        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY){
+        @Override public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY){
             if(Math.abs(velocityX) < Math.abs(velocityY)) return false;
             if(velocityX > 0) onBack();
             return true;
