@@ -36,5 +36,5 @@
         android:layout_height="1dp"
         android:layout_marginStart="48sp"
         android:layout_marginEnd="10dp"
-        android:background="@color/text"/>
+        android:background="@color/icon_disabled"/>
 </LinearLayout>

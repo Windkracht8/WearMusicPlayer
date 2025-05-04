@@ -117,13 +117,13 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
                     && hasPermission(android.Manifest.permission.BLUETOOTH_SCAN);
             if(!hasReadPermission || !hasBTPermission){
-                ActivityCompat.requestPermissions(this
-                        ,new String[]{
-                            Manifest.permission.READ_MEDIA_AUDIO
-                            ,Manifest.permission.BLUETOOTH_CONNECT
-                            ,Manifest.permission.BLUETOOTH_SCAN
-                        }
-                        ,1
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                            Manifest.permission.READ_MEDIA_AUDIO,
+                            Manifest.permission.BLUETOOTH_CONNECT,
+                            Manifest.permission.BLUETOOTH_SCAN
+                        },
+                        1
                 );
             }
         }else if(Build.VERSION.SDK_INT >= 31){
@@ -131,25 +131,25 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
                     && hasPermission(android.Manifest.permission.BLUETOOTH_SCAN);
             if(!hasReadPermission || !hasBTPermission){
-                ActivityCompat.requestPermissions(this
-                        ,new String[]{
-                            Manifest.permission.READ_EXTERNAL_STORAGE
-                            ,Manifest.permission.BLUETOOTH_CONNECT
-                            ,Manifest.permission.BLUETOOTH_SCAN
-                        }
-                        ,1
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.BLUETOOTH_CONNECT,
+                            Manifest.permission.BLUETOOTH_SCAN
+                        },
+                        1
                 );
             }
         }else{
             hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
             hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH);
             if(!hasReadPermission || !hasBTPermission){
-                ActivityCompat.requestPermissions(this
-                        ,new String[]{
-                            Manifest.permission.READ_EXTERNAL_STORAGE
-                            ,Manifest.permission.BLUETOOTH
-                        }
-                        ,1
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.BLUETOOTH
+                        },
+                        1
                 );
             }
         }
@@ -192,10 +192,10 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     static final View.OnApplyWindowInsetsListener onApplyWindowInsetsListener = new View.OnApplyWindowInsetsListener(){
         @NonNull @Override public WindowInsets onApplyWindowInsets(@NonNull View view, @NonNull WindowInsets windowInsets){
             view.setPadding(
-                    windowInsets.getSystemWindowInsetLeft()
-                    ,windowInsets.getSystemWindowInsetTop()
-                    ,windowInsets.getSystemWindowInsetRight()
-                    ,windowInsets.getSystemWindowInsetBottom()
+                    windowInsets.getSystemWindowInsetLeft(),
+                    windowInsets.getSystemWindowInsetTop(),
+                    windowInsets.getSystemWindowInsetRight(),
+                    windowInsets.getSystemWindowInsetBottom()
             );
             return windowInsets;
         }
@@ -280,7 +280,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         if(commsBT == null) return;
         switch(commsBT.status){
             case CONNECTING, CONNECTED -> commsBT.stopBT();
-            case DISCONNECTED -> {
+            case DISCONNECTED ->{
                 Intent startDeviceSelect = new Intent(this, DeviceSelect.class);
                 startDeviceSelect.putExtra("restartBT", true);
                 startActivity(startDeviceSelect);

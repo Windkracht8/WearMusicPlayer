@@ -106,7 +106,7 @@ class Library{
     }
 
     static class LibItem implements Comparable<LibItem>{
-        enum Status {FULL, PARTIAL, NOT, UNKNOWN}
+        enum Status{FULL, PARTIAL, NOT, UNKNOWN}
         final String path;
         final String name;
         int depth = 0;

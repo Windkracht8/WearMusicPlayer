@@ -43,9 +43,9 @@ public class W8Player extends MediaSessionService{
         }
         if(!exists){
             notificationManager.createNotificationChannel(new NotificationChannel(
-                    NOTIFICATION_CHANNEL_ID
-                    ,getString(R.string.playing_track)
-                    ,NotificationManager.IMPORTANCE_HIGH)
+                    NOTIFICATION_CHANNEL_ID,
+                    getString(R.string.playing_track),
+                    NotificationManager.IMPORTANCE_HIGH)
             );
         }
     }
@@ -70,17 +70,17 @@ public class W8Player extends MediaSessionService{
         }
         if(session.getPlayer().isPlaying()){
             PendingIntent pendingIntent = PendingIntent.getActivity(
-                    getBaseContext()
-                    ,0
-                    ,new Intent(this, Main.class)
-                    ,PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                    getBaseContext(),
+                    0,
+                    new Intent(this, Main.class),
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
             Status ongoingActivityStatus = new Status.Builder()
                     .addTemplate(getString(R.string.playing_track))
                     .build();
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
-                    getBaseContext()
-                    , NOTIFICATION_CHANNEL_ID
+                    getBaseContext(),
+                    NOTIFICATION_CHANNEL_ID
             )
                     .setSmallIcon(R.drawable.icon_vector)
                     .setStyle(new MediaStyleNotificationHelper.MediaStyle(mediaSession))
@@ -90,30 +90,21 @@ public class W8Player extends MediaSessionService{
                     .setOngoing(true);
             if(ongoingActivity == null){
                 ongoingActivity = new OngoingActivity.Builder(
-                        getBaseContext()
-                        ,9
-                        ,notificationBuilder
+                        getBaseContext(),
+                        9,
+                        notificationBuilder
                 )
                         .setStaticIcon(R.drawable.icon_vector)
                         .setTouchIntent(pendingIntent)
                         .setStatus(ongoingActivityStatus)
                         .build();
                 ongoingActivity.apply(getBaseContext());
-                /*
-                ServiceCompat.startForeground(
-                        this
-                        ,9
-                        ,notificationBuilder.build()
-                        ,ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                );
-                 */
                 notificationManager.notify(9, notificationBuilder.build());
             }else{
                 notificationManager.notify(9, notificationBuilder.build());
                 ongoingActivity.update(getBaseContext(), ongoingActivityStatus);
             }
         }else if(ongoingActivity != null){
-            //TODO after 5 minutes not playing remove notification
             Status ongoingActivityStatus = new Status.Builder()
                     .addTemplate(getString(R.string.paused_track))
                     .build();

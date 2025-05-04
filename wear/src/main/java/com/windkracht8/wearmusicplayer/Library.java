@@ -70,7 +70,7 @@ class Library{
                 null,
                 null,
                 null
-        )) {
+        )){
             Log.d(Main.LOG_TAG, "Library.scanMediaStore query done");
             if(cursor == null){
                 Log.e(Main.LOG_TAG, "Library.scanMediaStore: Cursor is null");
@@ -181,21 +181,18 @@ class Library{
         Uri uri = getUriForPath(path);
         if(uri == null) return main.getString(R.string.fail_technical);
         if(main.checkUriPermission(
-                uri
-                ,android.os.Process.myPid()
-                ,android.os.Process.myUid()
-                ,Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                uri,
+                android.os.Process.myPid(),
+                android.os.Process.myUid(),
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             ) == PackageManager.PERMISSION_DENIED
         ){
             PendingIntent pendingIntent = MediaStore.createDeleteRequest(
-                    main.getContentResolver()
-                    ,new ArrayList<>(Collections.singletonList(uri))
+                    main.getContentResolver(),
+                    new ArrayList<>(Collections.singletonList(uri))
             );
             try{
-                main.startIntentSenderForResult(
-                        pendingIntent.getIntentSender()
-                        ,5, null, 0, 0, 0
-                );
+                main.startIntentSenderForResult(pendingIntent.getIntentSender(), 5, null, 0, 0, 0);
             }catch(Exception e){
                 Log.e(Main.LOG_TAG, "Library.deleteFile: startIntentSenderForResult: " + e.getMessage());
                 return main.getString(R.string.fail_technical);
@@ -218,8 +215,9 @@ class Library{
         Album album;
         private final String track_no;
         private final String disc_no;
-        private Track(Context context, Uri uri, String path, String title, String artistName
-                ,String albumName, String albumArtist, String track_no, String disc_no){
+        private Track(Context context, Uri uri, String path, String title, String artistName,
+                String albumName, String albumArtist, String track_no, String disc_no
+        ){
             this.uri = uri;
             this.path = path.substring(musicDir.length());
             this.title = title;

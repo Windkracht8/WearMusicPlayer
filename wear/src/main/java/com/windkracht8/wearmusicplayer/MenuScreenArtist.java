@@ -36,9 +36,9 @@ public class MenuScreenArtist extends MenuScreen{
             for(int trackIndex = 0; trackIndex < artist.tracks.size(); trackIndex++){
                 Library.Track track = artist.tracks.get(trackIndex);
                 MenuItem menuItem = new MenuItem(
-                        inflater
-                        ,track.title
-                        ,track.album == null ? null : track.album.name
+                        inflater,
+                        track.title,
+                        track.album == null ? null : track.album.name
                 );
                 int finalTrackIndex = trackIndex;
                 menuItem.setOnClickListener(v->openTrackList(Library.TrackListType.ARTIST, artistIndex, artist.tracks, finalTrackIndex));

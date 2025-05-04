@@ -27,9 +27,9 @@ public class MenuScreenAlbum extends MenuScreen{
             menu_label.setText(album.name);
             for(int trackIndex = 0; trackIndex < album.tracks.size(); trackIndex++){
                 MenuItem menuItem = new MenuItem(
-                        inflater
-                        ,album.tracks.get(trackIndex).title
-                        ,album.artist
+                        inflater,
+                        album.tracks.get(trackIndex).title,
+                        album.artist
                 );
                 int finalTrackIndex = trackIndex;
                 menuItem.setOnClickListener(v->openTrackList(Library.TrackListType.ALBUM, albumId, album.tracks, finalTrackIndex));

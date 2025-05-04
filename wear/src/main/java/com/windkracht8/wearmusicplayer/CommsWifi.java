@@ -25,8 +25,8 @@ class CommsWifi{
             connectivityManager.requestNetwork(
                     new NetworkRequest.Builder()
                             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                            .build()
-                    , new ConnectivityManager.NetworkCallback() {
+                            .build(),
+                    new ConnectivityManager.NetworkCallback(){
                         public void onAvailable(@NonNull Network network){
                             super.onAvailable(network);
                             Log.d(Main.LOG_TAG, "CommsWifi.NetworkCallback.onAvailable");
@@ -40,8 +40,8 @@ class CommsWifi{
                             main.toast(R.string.fail_wifi_fast);
                             readFileFromStream(main, connectivityManager, path, length, ip, port);
                         }
-                    }
-                    , 2000
+                    },
+                    2000
             );
         }catch(Exception e){
             Log.e(Main.LOG_TAG, "CommsWifi " + e.getMessage());

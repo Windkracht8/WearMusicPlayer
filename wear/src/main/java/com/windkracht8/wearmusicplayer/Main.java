@@ -322,9 +322,9 @@ public class Main extends Activity{
                     || !hasPermission(Manifest.permission.POST_NOTIFICATIONS)
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
-                        Manifest.permission.POST_NOTIFICATIONS
-                        ,Manifest.permission.READ_MEDIA_AUDIO
-                        ,Manifest.permission.BLUETOOTH_CONNECT}, 1);
+                        Manifest.permission.POST_NOTIFICATIONS,
+                        Manifest.permission.READ_MEDIA_AUDIO,
+                        Manifest.permission.BLUETOOTH_CONNECT}, 1);
             }
         }else if(Build.VERSION.SDK_INT >= 31){
             hasReadPermission = hasPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE);
@@ -332,8 +332,8 @@ public class Main extends Activity{
             if(!hasReadPermission || !hasBTPermission
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
-                                Manifest.permission.MANAGE_EXTERNAL_STORAGE
-                                ,Manifest.permission.BLUETOOTH_CONNECT}, 1);
+                                Manifest.permission.MANAGE_EXTERNAL_STORAGE,
+                                Manifest.permission.BLUETOOTH_CONNECT}, 1);
             }
         }else{//30
             hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
@@ -341,8 +341,8 @@ public class Main extends Activity{
             if(!hasReadPermission || !hasBTPermission
             ){
                 ActivityCompat.requestPermissions(this, new String[]{
-                                Manifest.permission.READ_EXTERNAL_STORAGE
-                                ,Manifest.permission.BLUETOOTH}, 1);
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.BLUETOOTH}, 1);
             }
         }
     }
@@ -413,13 +413,13 @@ public class Main extends Activity{
             if(resultCode == 0){
                 Log.i(Main.LOG_TAG, "Main.onActivityResult: file delete permission denied");
                 runInBackground(()->commsBT.sendResponse(
-                        "deleteFile"
-                        ,getString(R.string.fail_no_permission))
+                        "deleteFile",
+                        getString(R.string.fail_no_permission))
                 );
             }else{
                 runInBackground(()->commsBT.sendResponse(
-                        "deleteFile"
-                        ,"OK")
+                        "deleteFile",
+                        "OK")
                 );
                 runInBackground(()->{
                     if(Library.filePendingDelete != null)
