@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.9.1'
+        classpath 'com.android.tools.build:gradle:8.9.2'
     }
 }
 /*
@@ -15,7 +15,7 @@ Settings > Kotlin Compiler
     Target JVM version: 21
 File > Project Structure > Project
 	Gradle Plugin Version: 8.9.1
-	Gradle Version: 8.13
+	Gradle Version: 8.14
 */
 allprojects {
     repositories {

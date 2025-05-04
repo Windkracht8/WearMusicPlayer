@@ -5,14 +5,12 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ServiceInfo;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.ServiceCompat;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.session.MediaSession;
@@ -66,6 +64,10 @@ public class W8Player extends MediaSessionService{
             @NonNull MediaSession session,
             boolean startInForegroundRequired
     ){
+        if(session.getPlayer().getPlaybackState() == androidx.media3.common.Player.STATE_ENDED){
+            notificationManager.cancel(9);
+            return;
+        }
         if(session.getPlayer().isPlaying()){
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     getBaseContext()
@@ -97,17 +99,21 @@ public class W8Player extends MediaSessionService{
                         .setStatus(ongoingActivityStatus)
                         .build();
                 ongoingActivity.apply(getBaseContext());
+                /*
                 ServiceCompat.startForeground(
                         this
                         ,9
                         ,notificationBuilder.build()
                         ,ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
                 );
+                 */
+                notificationManager.notify(9, notificationBuilder.build());
             }else{
                 notificationManager.notify(9, notificationBuilder.build());
                 ongoingActivity.update(getBaseContext(), ongoingActivityStatus);
             }
         }else if(ongoingActivity != null){
+            //TODO after 5 minutes not playing remove notification
             Status ongoingActivityStatus = new Status.Builder()
                     .addTemplate(getString(R.string.paused_track))
                     .build();
