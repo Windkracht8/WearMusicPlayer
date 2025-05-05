@@ -1,3 +1,11 @@
+/*
+ *  Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
+ *  This file is part of WearMusicPlayer
+ *  WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ *  WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *  You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.windkracht8.wearmusicplayer;
 
 import android.Manifest;
@@ -200,11 +208,22 @@ public class Main extends Activity{
             }
         }
         @Override public void onMediaMetadataChanged(@NonNull MediaMetadata mediaMetadata){
-            Log.d(LOG_TAG, "Main.onMediaMetadataChanged " + mediaMetadata.title);
-            if(mediaMetadata.title == null) return;
             trackListIndex = mediaController.getCurrentMediaItemIndex();
-            main_song_title.setText(mediaMetadata.title);
-            main_song_artist.setText(mediaMetadata.artist);
+            if(mediaMetadata.title == null && mediaMetadata.artist == null){
+                handler.postDelayed(()->setEmptyMetadata(), 100);
+            }else{
+                handler.removeCallbacksAndMessages(null);
+                if(mediaMetadata.title == null){
+                    main_song_title.setText(R.string.unknown);
+                }else{
+                    main_song_title.setText(mediaMetadata.title);
+                }
+                if(mediaMetadata.artist == null){
+                    main_song_artist.setText(R.string.unknown);
+                }else{
+                    main_song_artist.setText(mediaMetadata.artist);
+                }
+            }
             if(mediaController.hasPreviousMediaItem()){
                 main_previous.setColorFilter(getColor(R.color.white));
             }else{
@@ -221,6 +240,10 @@ public class Main extends Activity{
             Log.e(LOG_TAG, "Main.onPlayerError: " + error.getMessage());
         }
     };
+    private void setEmptyMetadata(){
+        main_song_title.setText(R.string.unknown);
+        main_song_artist.setText(R.string.unknown);
+    }
     @Override public void onDestroy(){
         super.onDestroy();
         runInBackground(()->{
