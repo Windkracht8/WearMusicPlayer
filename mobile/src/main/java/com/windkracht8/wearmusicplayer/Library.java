@@ -1,9 +1,9 @@
 /*
- *  Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
- *  This file is part of WearMusicPlayer
- *  WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- *  WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *  You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
+ * This file is part of WearMusicPlayer
+ * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.windkracht8.wearmusicplayer;
@@ -24,12 +24,12 @@ class Library{
     static LibDir root_libDir;
 
     static void scanFiles(Main main){
-        if(!Main.hasReadPermission) return;
+        if(!Permissions.hasReadPermission) return;
         exStorageDir = Environment.getExternalStorageDirectory().toString() + "/";
         scanFiles(main, "Music");
     }
     static void scanFiles(Main main, String dir){
-        if(!Main.hasReadPermission) return;
+        if(!Permissions.hasReadPermission) return;
         root_libDir = new LibDir(dir);
         scanFilesDir(root_libDir);
         main.libraryFilesScanned();

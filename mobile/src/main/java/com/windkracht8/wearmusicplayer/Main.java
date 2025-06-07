@@ -1,9 +1,9 @@
 /*
- *  Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
- *  This file is part of WearMusicPlayer
- *  WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- *  WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *  You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
+ * This file is part of WearMusicPlayer
+ * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.windkracht8.wearmusicplayer;
@@ -13,16 +13,14 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.splashscreen.SplashScreen;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.drawable.AnimatedVectorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -60,8 +58,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     private final ArrayList<Item> items = new ArrayList<>();
     Item itemInProgress;
     private boolean showSplash = true;
-    private static boolean hasBTPermission = false;
-    static boolean hasReadPermission = false;
+    private boolean initLoadRequested = false;
     static int _5dp = 5;
 
     @Override protected void onCreate(Bundle savedInstanceState){
@@ -86,20 +83,24 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
 
         runInBackground(()->commsWifi = new CommsWifi(this));
 
-        checkPermissions();
-        startBT();
-        runInBackground(()->Library.scanFiles(this));
+        Permissions.checkPermissions(this);
+        if(!Permissions.hasReadPermission) startActivity(new Intent(this, Permissions.class));
+        if(commsBT == null || commsBT.status == CommsBT.Status.DISCONNECTED) startBT();
         showSplash = false;
     }
     @Override protected void onDestroy(){
         super.onDestroy();
         runInBackground(()->{
-            if(commsBT != null) commsBT.stopBT();
+            if(commsBT != null) commsBT.stop();
             commsBT = null;
         });
     }
     @Override protected void onResume(){
         super.onResume();
+        if(Permissions.hasReadPermission && !initLoadRequested){
+            initLoadRequested = true;
+            runInBackground(()->Library.scanFiles(this));
+        }
         if(Build.VERSION.SDK_INT < 35) return;
         WindowInsetsController wic = main_icon.getWindowInsetsController();
         if(wic == null) return;
@@ -119,80 +120,6 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         }
     }
 
-    private void checkPermissions(){
-        if(Build.VERSION.SDK_INT >= 33){
-            hasReadPermission = hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                    && hasPermission(android.Manifest.permission.BLUETOOTH_SCAN);
-            if(!hasReadPermission || !hasBTPermission){
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                            Manifest.permission.READ_MEDIA_AUDIO,
-                            Manifest.permission.BLUETOOTH_CONNECT,
-                            Manifest.permission.BLUETOOTH_SCAN
-                        },
-                        1
-                );
-            }
-        }else if(Build.VERSION.SDK_INT >= 31){
-            hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                    && hasPermission(android.Manifest.permission.BLUETOOTH_SCAN);
-            if(!hasReadPermission || !hasBTPermission){
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.BLUETOOTH_CONNECT,
-                            Manifest.permission.BLUETOOTH_SCAN
-                        },
-                        1
-                );
-            }
-        }else{
-            hasReadPermission = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-            hasBTPermission = hasPermission(Manifest.permission.BLUETOOTH);
-            if(!hasReadPermission || !hasBTPermission){
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.BLUETOOTH
-                        },
-                        1
-                );
-            }
-        }
-    }
-    @Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Log.d(LOG_TAG, "Main.onRequestPermissionsResult");
-        for(int i=0; i<permissions.length; i++){
-            if(permissions[i].equals(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    || permissions[i].equals(Manifest.permission.READ_MEDIA_AUDIO)
-            ){
-                if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
-                    hasReadPermission = true;
-                    runInBackground(()->Library.scanFiles(this));
-                }
-                break;
-            }
-        }
-        for(int i=0; i<permissions.length; i++){
-            if(permissions[i].equals(Manifest.permission.BLUETOOTH_CONNECT)
-                    || permissions[i].equals(Manifest.permission.BLUETOOTH)
-            ){
-                if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
-                    hasBTPermission = true;
-                    startBT();
-                }else{
-                    onBTError(R.string.fail_BT_denied);
-                }
-                break;
-            }
-        }
-    }
-    private boolean hasPermission(String permission){
-        return ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
-    }
     private void runInBackground(Runnable runnable){
         if(executorService == null) executorService = Executors.newCachedThreadPool();
         executorService.execute(runnable);
@@ -228,13 +155,15 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     }
     void libraryNewStatuses(){runOnUiThread(()->items.forEach(Item::newStatus));}
     private void startBT(){
-        if(!hasBTPermission){
+        if(!Permissions.hasBTPermission){
             onBTStartDone();
             return;
         }
+        main_icon.setBackgroundResource(R.drawable.icon_watch_connecting);
+        main_icon.setColorFilter(getColor(R.color.icon_disabled));
+        ((AnimatedVectorDrawable) main_icon.getBackground()).start();
         commsBT = new CommsBT(this);
-        commsBT.addListener(this);
-        runInBackground(commsBT::startBT);
+        runInBackground(commsBT::start);
     }
 
     @Override public boolean onKeyDown(int keyCode, KeyEvent event){
@@ -260,7 +189,12 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     private void onOpenFolderClick(){
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         intent.addCategory(Intent.CATEGORY_DEFAULT);
-        openFolderResult.launch(intent);
+        try{
+            openFolderResult.launch(intent);
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "Main.onOpenFolderClick Exception: " + e.getMessage());
+            Toast.makeText(this, R.string.fail_open_folder_request, Toast.LENGTH_SHORT).show();
+        }
     }
     private final ActivityResultLauncher<Intent> openFolderResult = registerForActivityResult(
         new ActivityResultContracts.StartActivityForResult(),
@@ -285,14 +219,13 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
     );
 
     private void onIconClick(){
-        if(commsBT == null) return;
-        switch(commsBT.status){
-            case CONNECTING, CONNECTED -> commsBT.stopBT();
-            case DISCONNECTED ->{
-                Intent startDeviceSelect = new Intent(this, DeviceSelect.class);
-                startDeviceSelect.putExtra("restartBT", true);
-                startActivity(startDeviceSelect);
-            }
+        if(!Permissions.hasBTPermission){
+            startActivity(new Intent(this, Permissions.class));
+        }else if(commsBT == null || commsBT.status == CommsBT.Status.DISCONNECTED){
+            if(commsBT == null) commsBT = new CommsBT(this);
+            startActivity(new Intent(this, DeviceSelect.class));
+        }else{
+            commsBT.stop();
         }
     }
 
@@ -352,16 +285,10 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
         return bytes + " B";
     }
 
-    private String rps(int resource, String string){return getString(resource) + " " + string;}
-
-    @Override
-    public void onBTStartDone(){
-        if(commsBT == null){
-            onBTError(R.string.fail_BT_denied);
-            return;
-        }
-        if(commsBT.status == CommsBT.Status.CONNECTED) return;
+    @Override public void onBTStartDone(){
+        if(commsBT == null || commsBT.status == CommsBT.Status.CONNECTED) return;
         runOnUiThread(()->{
+            Log.d(LOG_TAG, "Main.onBTStartDone");
             main_icon.setBackgroundResource(R.drawable.icon_watch);
             main_icon.setColorFilter(getColor(R.color.icon_disabled));
             main_device.setTextColor(getColor(R.color.text));
@@ -371,38 +298,41 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             }
         });
     }
-    @Override
-    public void onBTConnecting(String deviceName){
+    @Override public void onBTConnecting(String deviceName){
         runOnUiThread(()->{
+            Log.d(LOG_TAG, "Main.onBTConnecting");
             Intent startDeviceConnect = new Intent(this, DeviceConnect.class);
             startDeviceConnect.putExtra("name", deviceName);
             startActivity(startDeviceConnect);
-            main_icon.setColorFilter(getColor(R.color.text));
+            main_icon.setBackgroundResource(R.drawable.icon_watch_connecting);
+            main_icon.setColorFilter(getColor(R.color.icon_disabled));
+            ((AnimatedVectorDrawable) main_icon.getBackground()).start();
             main_device.setTextColor(getColor(R.color.text));
-            main_device.setText(rps(R.string.connecting_to, deviceName));
+            main_device.setText(getString(R.string.connecting_to, deviceName));
         });
     }
-    @Override
-    public void onBTConnectFailed(){
+    @Override public void onBTConnectFailed(){
         runOnUiThread(()->{
+            Log.d(LOG_TAG, "Main.onBTConnectFailed");
+            main_icon.setBackgroundResource(R.drawable.icon_watch);
             main_icon.setColorFilter(getColor(R.color.error));
             main_device.setTextColor(getColor(R.color.error));
             main_device.setText(R.string.fail_BT);
         });
     }
-    @Override
-    public void onBTConnected(String deviceName){
+    @Override public void onBTConnected(String deviceName){
         runOnUiThread(()->{
+            main_icon.setBackgroundResource(R.drawable.icon_watch);
             main_icon.setColorFilter(getColor(R.color.text));
             main_device.setTextColor(getColor(R.color.text));
-            main_device.setText(rps(R.string.connected_to, deviceName));
+            main_device.setText(getString(R.string.connected_to, deviceName));
             sendSyncRequest();
         });
     }
-    @Override
-    public void onBTDisconnected(){
+    @Override public void onBTDisconnected(){
         runOnUiThread(()->{
             main_available.setText("");
+            main_icon.setBackgroundResource(R.drawable.icon_watch);
             main_icon.setColorFilter(getColor(R.color.icon_disabled));
             main_device.setTextColor(getColor(R.color.text));
             main_device.setText(R.string.disconnected);
@@ -410,8 +340,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             items.forEach(Item::clearStatus);
         });
     }
-    @Override
-    public void onBTSending(String requestType){
+    @Override public void onBTSending(String requestType){
         runOnUiThread(()->{
             switch(requestType){
                 case "fileDetails"-> main_status.setText(R.string.sending_file);
@@ -419,8 +348,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             }
         });
     }
-    @Override
-    public void onBTResponse(JSONObject response){
+    @Override public void onBTResponse(JSONObject response){
         try{
             String requestType = response.getString("requestType");
             switch(requestType){
@@ -469,8 +397,7 @@ public class Main extends AppCompatActivity implements CommsBT.BTInterface{
             onBTError(R.string.fail_response);
         }
     }
-    @Override
-    public void onBTError(int message){
+    @Override public void onBTError(int message){
         runOnUiThread(()->{
             main_icon.setColorFilter(getColor(R.color.error));
             main_device.setTextColor(getColor(R.color.error));

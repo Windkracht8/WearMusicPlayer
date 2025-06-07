@@ -1,9 +1,9 @@
 /*
- *  Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
- *  This file is part of WearMusicPlayer
- *  WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- *  WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *  You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
+ * This file is part of WearMusicPlayer
+ * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.windkracht8.wearmusicplayer;
@@ -34,24 +34,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@SuppressLint("MissingPermission")//Permissions are handled in Main
+@SuppressLint("MissingPermission")//Handled by Permissions.hasXPermission
 class CommsBT{
     private static final UUID WMP_UUID = UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6e1");
     private final BluetoothAdapter bluetoothAdapter;
     private BluetoothSocket bluetoothSocket;
     private CommsBTConnect commsBTConnect;
     private CommsBTConnected commsBTConnected;
+    final ArrayList<BluetoothDevice> knownBTDevices = new ArrayList<>();
 
     enum Status{DISCONNECTED, CONNECTING, CONNECTED}
     Status status = Status.DISCONNECTED;
     private boolean disconnect = false;
     private boolean startDone = false;
-    private Set<String> known_device_addresses = new HashSet<>();
+    private Set<String> knownBTAddresses = new HashSet<>();
     private final JSONArray requestQueue = new JSONArray();
-    private final List<BTInterface> listeners = new ArrayList<>();
 
-    CommsBT(Context context){
-        BluetoothManager bm = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+    CommsBT(Main main){
+        addListener(main);
+        BluetoothManager bm = (BluetoothManager) main.getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bm.getAdapter();
         if(bluetoothAdapter == null) return;
 
@@ -63,78 +64,75 @@ class CommsBT{
                     int btState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                     if(btState == BluetoothAdapter.STATE_TURNING_OFF){
                         onBTError(R.string.fail_BT_off);
-                        stopBT();
+                        stop();
                     }else if(btState == BluetoothAdapter.STATE_ON){
-                        startBT();
+                        start();
                     }
                 }
             }
         };
-        context.registerReceiver(btBroadcastReceiver, btIntentFilter);
+        main.registerReceiver(btBroadcastReceiver, btIntentFilter);
     }
 
-    void startBT(){
+    void start(){
+        startDone = false;
         if(bluetoothAdapter == null){
-            onBTError(R.string.fail_BT_denied);
-            return;
-        }
-        if(bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON){
-            onBTError(R.string.fail_BT_off);
-            return;
-        }
-        known_device_addresses = Main.sharedPreferences.getStringSet("known_device_addresses", known_device_addresses);
-        Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
-        Log.d(Main.LOG_TAG, "CommsBT.startBT " + known_device_addresses.size() + " known of " + devices.size() + " total devices");
-
-        if(devices.isEmpty()){
-            onBTError(R.string.fail_BT_no_devices);
-            return;
-        }
-        if(known_device_addresses.isEmpty()){
             onBTStartDone();
             return;
         }
-
-        //Clean known devices
-        for(String known_device_address : known_device_addresses){
-            boolean stillBonded = false;
-            for(BluetoothDevice device : devices){
-                if(device.getAddress().equals(known_device_address)){
-                    stillBonded = true;
-                    break;
-                }
-            }
-            if(!stillBonded){
-                known_device_addresses.remove(known_device_address);
-                Main.sharedPreferences_editor.putStringSet("known_device_addresses", known_device_addresses);
-                Main.sharedPreferences_editor.apply();
-            }
-        }
-
-        //Try to connect to known device
-        for(BluetoothDevice device : devices){
-            if(known_device_addresses.contains(device.getAddress())){
-                connectDevice(device);
-                return;
-            }
-        }
-        onBTStartDone();
-    }
-    void restartBT(){
         if(bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON){
+            onBTStartDone();
             onBTError(R.string.fail_BT_off);
             return;
         }
-        Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
-        for(BluetoothDevice device : devices){
-            if(known_device_addresses.contains(device.getAddress())){
-                connectDevice(device);
+
+        knownBTAddresses = Main.sharedPreferences.getStringSet("knownBTAddresses", knownBTAddresses);
+        Log.d(Main.LOG_TAG, "CommsBT.startBT " + knownBTAddresses.size() + " known BT addresses");
+        Set<BluetoothDevice> bondedBTDevices = bluetoothAdapter.getBondedDevices();
+        //Find and clean known devices
+        for(String address : knownBTAddresses) checkKnownBTDevice(address, bondedBTDevices);
+        //Try to connect to known device
+        for(BluetoothDevice device : knownBTDevices){
+            connectDevice(device);
+            return;//having multiple watches is rare, user will have to select from DeviceSelect
+        }
+        onBTStartDone();
+    }
+    //Check if a known device is still bound, if so, add it to known devices
+    private void checkKnownBTDevice(String known_device_address, Set<BluetoothDevice> bondedDevices){
+        for(BluetoothDevice device : bondedDevices){
+            if(device.getAddress().equals(known_device_address)){
+                knownBTDevices.add(device);
                 return;
             }
         }
-        if(devices.isEmpty()) onBTError(R.string.fail_BT_no_devices);
+        removeKnownBTAddress(known_device_address);
     }
-    void stopBT(){
+    void removeKnownBTAddress(String address){
+        if(!knownBTAddresses.contains(address)) return;
+        knownBTAddresses.remove(address);
+        storeKnownBTAddresses();
+    }
+    private void addKnownBTDevice(BluetoothDevice device){
+        if(knownBTAddresses.contains(device.getAddress())) return;
+        knownBTDevices.add(device);
+        addKnownBTAddress(device.getAddress());
+    }
+    private void addKnownBTAddress(String address){
+        if(knownBTAddresses.contains(address)) return;
+        knownBTAddresses.add(address);
+        storeKnownBTAddresses();
+    }
+    private void storeKnownBTAddresses(){
+        if(knownBTAddresses.isEmpty()){
+            Main.sharedPreferences_editor.remove("knownBTAddresses");
+        }else{
+            Main.sharedPreferences_editor.putStringSet("knownBTAddresses", knownBTAddresses);
+        }
+        Main.sharedPreferences_editor.apply();
+    }
+
+    void stop(){
         disconnect = true;
         try{
             if(bluetoothSocket != null) bluetoothSocket.close();
@@ -146,7 +144,7 @@ class CommsBT{
         commsBTConnected = null;
     }
 
-    Set<BluetoothDevice> getDevices(){
+    Set<BluetoothDevice> getBondedDevices(){
         if(bluetoothAdapter == null){
             onBTError(R.string.fail_BT_denied);
             return null;
@@ -157,7 +155,6 @@ class CommsBT{
         }
         return bluetoothAdapter.getBondedDevices();
     }
-
     void connectDevice(BluetoothDevice device){
         Log.d(Main.LOG_TAG, "CommsBT.connectDevice: " + device.getName());
         if(bluetoothAdapter == null ||
@@ -219,7 +216,6 @@ class CommsBT{
             }
         }
         public void run(){
-            bluetoothAdapter.cancelDiscovery();
             try{
                 bluetoothSocket.connect();
                 commsBTConnected = new CommsBTConnected();
@@ -256,16 +252,16 @@ class CommsBT{
                 onBTDisconnected();
                 return;
             }
+            status = Status.CONNECTED;
             onBTConnected(bluetoothSocket.getRemoteDevice());
+            addKnownBTDevice(bluetoothSocket.getRemoteDevice());
         }
         public void run(){process(Executors.newSingleThreadScheduledExecutor());}
         private void close(){
             Log.d(Main.LOG_TAG, "CommsBTConnected.close");
             onBTDisconnected();
             try{
-                for(int i=requestQueue.length(); i>0; i--){
-                    requestQueue.remove(i-1);
-                }
+                for(int i=requestQueue.length(); i>0; i--) requestQueue.remove(i-1);
                 if(bluetoothSocket != null) bluetoothSocket.close();
             }catch(Exception e){
                 Log.d(Main.LOG_TAG, "CommsBTConnected.close exception: " + e.getMessage());
@@ -349,6 +345,7 @@ class CommsBT{
             }
         }
         private boolean isValidJSON(String json){
+            if(!json.endsWith("}")) return false;
             try{
                 new JSONObject(json);
             }catch(JSONException e){
@@ -358,6 +355,8 @@ class CommsBT{
         }
     }
 
+    private final List<BTInterface> listeners = new ArrayList<>();
+    void removeListener(BTInterface listener){listeners.remove(listener);}
     void addListener(BTInterface listener){listeners.add(listener);}
     private void onBTStartDone(){
         Log.d(Main.LOG_TAG, "CommsBT.onBTStartDone");
@@ -384,15 +383,9 @@ class CommsBT{
     }
     private void onBTConnected(BluetoothDevice device){
         Log.d(Main.LOG_TAG, "CommsBT.onBTConnected");
-        status = Status.CONNECTED;
         listeners.remove(null);
         for(int i=0; i<listeners.size(); i++) listeners.get(i).onBTConnected(device.getName());
         if(!startDone) onBTStartDone();
-        if(!known_device_addresses.contains(device.getAddress())){
-            known_device_addresses.add(device.getAddress());
-            Main.sharedPreferences_editor.putStringSet("known_device_addresses", known_device_addresses);
-            Main.sharedPreferences_editor.apply();
-        }
     }
     private void onBTDisconnected(){
         Log.d(Main.LOG_TAG, "CommsBT.onBTDisconnected");
