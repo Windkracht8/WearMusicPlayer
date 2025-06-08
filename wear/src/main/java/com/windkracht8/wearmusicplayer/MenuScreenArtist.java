@@ -19,7 +19,6 @@ import androidx.annotation.Nullable;
 
 public class MenuScreenArtist extends MenuScreen{
     private final int artistIndex;
-    public MenuScreenArtist(){artistIndex = 0;}//Crash can happen if this is not there
     MenuScreenArtist(int artistIndex){this.artistIndex = artistIndex;}
     MenuScreenArtist(int artistIndex, int scrollToTrack){
         this.artistIndex = artistIndex;

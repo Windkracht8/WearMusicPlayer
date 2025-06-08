@@ -30,8 +30,8 @@ public class MenuActivity extends FragmentActivity{
     private GestureDetector gestureDetector;
     private ImageView menu_loading;
     private AnimatedVectorDrawable menu_loading_animate;
-    @Override public void onCreate(Bundle savedInstanceState){
-        super.onCreate(savedInstanceState);
+    @Override public void onCreate(Bundle ignored){
+        super.onCreate(null);
         if(getIntent().getBooleanExtra("close", false)) finish();
         gestureDetector = new GestureDetector(this, simpleOnGestureListener, new Handler(Looper.getMainLooper()));
         setContentView(R.layout.menu);

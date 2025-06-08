@@ -22,7 +22,7 @@ import java.util.Collections;
 
 public class MenuScreenAll extends MenuScreen{
     private ArrayList<Library.Track> tracks;
-    public MenuScreenAll(){scrollToTrack = 0;}//Crash can happen if this is not there
+    MenuScreenAll(){}
     MenuScreenAll(int scrollToTrack){this.scrollToTrack = scrollToTrack;}
     @Override public @Nullable View onCreateView(
             @NonNull LayoutInflater inflater,
