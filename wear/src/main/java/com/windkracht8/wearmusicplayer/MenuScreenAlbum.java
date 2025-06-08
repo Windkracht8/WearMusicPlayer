@@ -19,7 +19,6 @@ import androidx.annotation.Nullable;
 
 public class MenuScreenAlbum extends MenuScreen{
     private final int albumId;
-    public MenuScreenAlbum(){albumId = 0;}//Crash can happen if this is not there
     MenuScreenAlbum(int albumId){this.albumId = albumId;}
     MenuScreenAlbum(int albumId, int scrollToTrack){
         this.albumId = albumId;
