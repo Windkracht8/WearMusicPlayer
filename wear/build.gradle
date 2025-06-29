@@ -12,10 +12,10 @@ android{
     defaultConfig{
         applicationId = 'com.windkracht8.wearmusicplayer'
         minSdk = 30
-        //Wear OS, latest is 34
+        //Wear OS, latest is 35
         //noinspection OldTargetApi
-        targetSdk = 34
-        compileSdk = 35
+        targetSdk = 35
+        compileSdk = 36
         versionCode = 247
         versionName = 'w1.28'
     }

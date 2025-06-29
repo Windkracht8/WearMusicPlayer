@@ -12,8 +12,8 @@ android{
     defaultConfig{
         applicationId = 'com.windkracht8.wearmusicplayer'
         minSdk = 26
-        targetSdk = 35
-        compileSdk = 35
+        targetSdk = 36
+        compileSdk = 36
         versionCode = 142
         versionName = 'm1.22'
     }
@@ -34,5 +34,5 @@ dependencies{
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'androidx.core:core-splashscreen:1.0.1'
-    implementation platform('org.jetbrains.kotlin:kotlin-bom:2.1.21')
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:2.2.0')
 }
