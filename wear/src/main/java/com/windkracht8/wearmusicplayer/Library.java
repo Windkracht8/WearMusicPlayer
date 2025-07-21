@@ -70,7 +70,7 @@ class Library{
         };
 
         try(Cursor cursor = main.getContentResolver().query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL),
                 projection,
                 null,
                 null,
@@ -105,6 +105,9 @@ class Library{
                         cursor.getString(DISC_NUMBER)
                 );
             }
+        }catch(Exception e){
+            Log.e(Main.LOG_TAG, "Library.scanMediaStore cursor exception: " + e.getMessage());
+            main.toast(R.string.fail_scan_media);
         }
         try{
             Log.d(Main.LOG_TAG, "Library.scanMediaStore sort");
