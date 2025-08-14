@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
   ~ This file is part of WearMusicPlayer
   ~ WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -8,10 +7,5 @@
   -->
 
 <resources>
-    <color name="w8blue">#2BD2E3</color>
-    <color name="white">#FFF</color>
-    <color name="black">#000</color>
-    <color name="transparent">#0000</color>
-    <color name="icon_disabled">#666</color>
-    <color name="bg_item">#222</color>
+	<color name="black">#000</color>
 </resources>

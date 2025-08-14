@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
   ~ This file is part of WearMusicPlayer
   ~ WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -8,9 +7,9 @@
   -->
 
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="48dp"
-        android:height="48dp"
-        android:drawable="@mipmap/icon"
-        android:gravity="center"/>
+	<item
+		android:width="48dp"
+		android:height="48dp"
+		android:drawable="@mipmap/icon"
+		android:gravity="center"/>
 </layer-list>

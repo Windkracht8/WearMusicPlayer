@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!--
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><!--
   - Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
   - This file is part of WearMusicPlayer
   - WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -9,83 +8,44 @@
 
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
-<svg
-   width="96"
-   height="96"
-   viewBox="0 0 96 96"
-   version="1.1"
-   id="svg1"
-   sodipodi:docname="icon_animate.svg"
-   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
-   inkscape:export-xdpi="96"
-   inkscape:export-ydpi="96"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview1"
-     pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
-     inkscape:document-units="px"
-     inkscape:zoom="3.1757812"
-     inkscape:cx="33.535056"
-     inkscape:cy="22.829029"
-     inkscape:window-width="1275"
-     inkscape:window-height="993"
-     inkscape:window-x="2916"
-     inkscape:window-y="218"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="layer1" />
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1">
-    <path
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
-       d="M 0,72.25 H 96"
-       id="bar_1" />
-    <path
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
-       d="M 0,64.25 H 96.000003"
-       id="bar_2" />
-    <path
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
-       d="M 5.9967911e-5,56.25 H 96.00006"
-       id="bar_3" />
-    <path
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
-       d="M 0,48.25 H 96"
-       id="bar_4" />
-    <path
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
-       d="M 0,40.25 H 96"
-       id="bar_5" />
-    <path
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
-       d="M 97.25,0 V 96"
-       id="bar_vert" />
-    <circle
-       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
-       id="note_left"
-       cx="33.248352"
-       cy="64.451653"
-       r="6.5483503" />
-    <path
-       id="note_connect"
-       style="fill:none;stroke:#000000;stroke-width:3.28501;stroke-dasharray:none"
-       d="M 38.165034,64.451649 V 33.3524 l 29.456731,-8.190857 v 31.104666"
-       sodipodi:nodetypes="cccc" />
-    <circle
-       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
-       id="note_right"
-       cx="62.71595"
-       cy="56.266212"
-       r="6.5483503" />
-  </g>
+<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" width="96" height="96" viewBox="0 0 96 96"
+	version="1.1" id="svg1"
+	sodipodi:docname="icon_animate.svg" inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+	inkscape:export-xdpi="96"
+	inkscape:export-ydpi="96"
+	xmlns="http://www.w3.org/2000/svg">
+	<sodipodi:namedview id="namedview1" pagecolor="#ffffff" bordercolor="#000000"
+		borderopacity="0.25" inkscape:showpageshadow="2" inkscape:pageopacity="0.0"
+		inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" inkscape:document-units="px"
+		inkscape:zoom="3.1757812" inkscape:cx="33.535056" inkscape:cy="22.829029"
+		inkscape:window-width="1275" inkscape:window-height="993" inkscape:window-x="2916"
+		inkscape:window-y="218" inkscape:window-maximized="0" inkscape:current-layer="layer1"/>
+	<g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1">
+		<path
+			style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
+			d="M 0,72.25 H 96" id="bar_1"/>
+		<path
+			style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
+			d="M 0,64.25 H 96.000003" id="bar_2"/>
+		<path
+			style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
+			d="M 5.9967911e-5,56.25 H 96.00006" id="bar_3"/>
+		<path
+			style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
+			d="M 0,48.25 H 96" id="bar_4"/>
+		<path
+			style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
+			d="M 0,40.25 H 96" id="bar_5"/>
+		<path
+			style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1"
+			d="M 97.25,0 V 96" id="bar_vert"/>
+		<circle style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
+			id="note_left" cx="33.248352" cy="64.451653" r="6.5483503"/>
+		<path id="note_connect"
+			style="fill:none;stroke:#000000;stroke-width:3.28501;stroke-dasharray:none"
+			d="M 38.165034,64.451649 V 33.3524 l 29.456731,-8.190857 v 31.104666"
+			sodipodi:nodetypes="cccc"/>
+		<circle style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
+			id="note_right" cx="62.71595" cy="56.266212" r="6.5483503"/>
+	</g>
 </svg>

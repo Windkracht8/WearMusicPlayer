@@ -7,67 +7,28 @@
   -->
 
 <resources>
-    <string name="app_name" translatable="false">Wear Music Player</string>
+	<string name="app_name" translatable="false">Wear Music Player</string>
 
-    <!-- main ui -->
-    <string name="loading_desc">loading icon</string>
-    <string name="main_icon_desc">icon</string>
-    <string name="item_status_desc">status</string>
-    <string name="main_loading_text">loading file list</string>
-    <string name="main_sv_desc">File overview</string>
-    <string name="connect">Tap icon to connect with watch</string>
-    <string name="open_folder">open other folder</string>
-    <string name="fail_open_folder_request">Failed to launch folder select app</string>
-    <string name="fail_open_folder">Failed to open folder</string>
+	<!-- main ui -->
+	<string name="fail_open_folder_request">Failed to launch folder select app</string>
+	<string name="fail_open_folder">Failed to open folder</string>
 
-    <!-- permission -->
-    <string name="permission_title">Permissions required</string>
-    <string name="permission_nearby_title">Nearby devices is needed to connect to your watch</string>
-    <string name="permission_nearby">Allow nearby devices</string>
-    <string name="permission_nearby_check">Nearby devices ✓</string>
-    <string name="permission_read_title">Access to files is needed to show the music on your phone
-        and to send it to your watch</string>
-    <string name="permission_read">Allow access to files</string>
-    <string name="permission_read_check">Access files ✓</string>
-    <string name="permission_explain">If clicking allow on this screen does nothing, you will need
-        to allow the permission in your phone\'s settings manually.</string>
+	<!-- CommsBT -->
+	<string name="sync">Synchronizing</string>
+	<string name="sync_done">Synchronized</string>
+	<string name="send_file">Sending file</string>
+	<string name="file_sent">File received by watch</string>
+	<string name="fail_send_file">Sending of file has failed</string>
+	<string name="delete_file">Deleting file</string>
+	<string name="delete_file_confirm">Deleting file, confirm on watch</string>
+	<string name="delete_file_declined">Delete declined on watch</string>
+	<string name="file_deleted">File deleted on watch</string>
+	<string name="fail_delete_file">Failed to delete the file on the watch</string>
 
-    <!-- device select/connect -->
-    <string name="device_select_title">To connect, open the app on the watch and select your watch
-        from the list below</string>
-    <string name="device_select_new">New watch</string>
-    <string name="device_select_none">No Bluetooth device found, first pair your watch</string>
-    <string name="device_connect_instruct">keep the app on the watch open while trying to
-        connect</string>
-    <string name="delete_device">Delete device?</string>
-    <string name="delete">Delete</string>
-    <string name="cancel">Cancel</string>
+	<string name="fail_no_wifi">To send a file, first connect to a Wifi network</string>
+	<string name="fail_send_message">Failed to send message to watch</string>
+	<string name="fail_response">Problem with response from watch</string>
 
-    <string name="alert_exit_title">Upload in progress</string>
-    <string name="alert_exit_message">Stop sending file and close?</string>
-    <string name="alert_exit_positive">Stop and close</string>
-    <string name="alert_exit_negative">Continue</string>
-
-    <!-- CommsBT -->
-    <string name="connecting_to">Connecting to %s</string>
-    <string name="connected_to">Connected to %s</string>
-    <string name="disconnected">Disconnected, tap icon to connect</string>
-    <string name="sending_file">Sending file</string>
-    <string name="received_file">File received by watch</string>
-    <string name="deleting_file">Deleting file</string>
-    <string name="deleted_file">File deleted on watch</string>
-
-    <string name="fail_BT_denied">No Bluetooth permission. Allow nearby devices, try again.</string>
-    <string name="fail_BT_off">Bluetooth turned off</string>
-    <string name="fail_BT">That did not work, tap icon to connect with watch</string>
-
-    <!-- CommsWifi -->
-    <string name="no_wifi">To send a file, first connect to a wifi network</string>
-
-    <!-- fail -->
-    <string name="fail_sync">Failed to synchronise with watch</string>
-    <string name="fail_send_message">Failed to send message to watch</string>
-    <string name="fail_response">Problem with response from watch</string>
-    <string name="fail_send_file">Sending of file has failed</string>
-    <string name="fail_delete_file">Failed to delete the file on the watch</string>
+	<string name="fail_BT_denied">No Bluetooth permission, tap icon</string>
+	<string name="fail_BT_off">Bluetooth turned off</string>
 </resources>

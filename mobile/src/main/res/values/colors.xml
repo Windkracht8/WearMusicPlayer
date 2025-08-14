@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
   ~ This file is part of WearMusicPlayer
   ~ WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -8,13 +7,6 @@
   -->
 
 <resources>
-    <color name="w8blue">#FF2BD2E3</color>
-    <color name="black">#000</color>
-    <color name="transparent">#0000</color>
-    <color name="background">@android:color/background_light</color>
-    <color name="bg_item">#DDD</color>
-    <color name="icon_disabled">#666</color>
-    <color name="text">#000</color>
-    <color name="button">#105B65</color>
-    <color name="error">@android:color/holo_red_dark</color>
+	<color name="black">#000</color>
+	<color name="onBackground">#000</color>
 </resources>

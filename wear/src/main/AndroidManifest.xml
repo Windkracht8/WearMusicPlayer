@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
   ~ This file is part of WearMusicPlayer
   ~ WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -7,50 +6,55 @@
   ~ You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" >
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
-    <uses-feature android:name="android.hardware.type.watch"/>
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/icon"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/wmp_splash" >
-        <meta-data
-            android:name="com.google.android.wearable.standalone"
-            android:value="true"/>
-        <activity
-            android:name=".Main"
-            android:taskAffinity=".Main"
-            android:launchMode="singleTop"
-            android:exported="true"
-            android:theme="@style/wmp_splash" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".MenuActivity"
-            android:taskAffinity=".Main"
-            android:launchMode="singleTop"
-            android:theme="@style/wmp"/>
-        <service
-            android:name=".W8Player"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="false" >
-            <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService"/>
-            </intent-filter>
-        </service>
-    </application>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<uses-permission android:name="android.permission.BLUETOOTH"/>
+	<uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+	<uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
+	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+	<uses-permission android:name="android.permission.INTERNET"/>
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+	<uses-permission
+		android:name="android.permission.READ_EXTERNAL_STORAGE"
+		android:maxSdkVersion="32"/>
+	<uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+
+	<uses-feature android:name="android.hardware.type.watch"/>
+	<application
+		android:allowBackup="true"
+		android:icon="@mipmap/icon"
+		android:label="@string/app_name"
+		android:supportsRtl="true"
+		android:theme="@android:style/Theme.DeviceDefault">
+		<meta-data
+			android:name="com.google.android.wearable.standalone"
+			android:value="true"/>
+
+		<activity
+			android:name=".Main"
+			android:exported="true"
+			android:launchMode="singleTop"
+			android:taskAffinity=".Main"
+			android:theme="@style/W8Theme.Starting">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN"/>
+				<category android:name="android.intent.category.LAUNCHER"/>
+			</intent-filter>
+		</activity>
+		<activity
+			android:name=".Progress"
+			android:taskAffinity=".MainActivity"
+			android:excludeFromRecents="true"
+			android:noHistory="true"/>
+		<service
+			android:name=".W8Player"
+			android:foregroundServiceType="mediaPlayback"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="androidx.media3.session.MediaSessionService"/>
+			</intent-filter>
+		</service>
+	</application>
 </manifest>

@@ -3,13 +3,9 @@
 .gradle
 .idea
 build
+debug
+release
 gradle
 gradlew*
-mobile/build
-mobile/debug
-mobile/release
-wear/build
-wear/debug
-wear/release
 *.jks
 local.properties

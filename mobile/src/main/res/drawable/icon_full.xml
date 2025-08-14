@@ -1,0 +1,20 @@
+<!--
+  ~ Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
+  ~ This file is part of WearMusicPlayer
+  ~ WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  ~ You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+	android:width="48dp"
+	android:height="48dp"
+	android:viewportWidth="48"
+	android:viewportHeight="48">
+	<path
+		android:pathData="M12,24L20,32L36,16"
+		android:strokeLineJoin="round"
+		android:strokeWidth="4"
+		android:strokeColor="#000"
+		android:strokeLineCap="round"/>
+</vector>
