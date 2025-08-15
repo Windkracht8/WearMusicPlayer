@@ -49,8 +49,8 @@ android {
 dependencies {
 	implementation("androidx.activity:activity-compose:1.10.1")
 	implementation("androidx.core:core-splashscreen:1.0.1")
-	implementation("androidx.compose.animation:animation-graphics-android:1.8.3")
-	implementation("androidx.compose.runtime:runtime-android:1.8.3")
+	implementation("androidx.compose.animation:animation-graphics-android:1.9.0")
+	implementation("androidx.compose.runtime:runtime-android:1.9.0")
 	implementation("androidx.compose.material3:material3-android:1.3.2")
 	implementation("androidx.navigation:navigation-runtime-android:2.9.3")
 
