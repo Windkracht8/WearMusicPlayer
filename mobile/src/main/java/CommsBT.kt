@@ -8,22 +8,22 @@
 package com.windkracht8.wearmusicplayer
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
-import android.content.IntentFilter
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.core.content.edit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.json.JSONException
 import org.json.JSONObject
@@ -32,30 +32,30 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
 
-val WMP_UUID: UUID = UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6e1")
-
 @SuppressLint("MissingPermission")//handled by Permissions
 object CommsBT {
+	val WMP_UUID: UUID = UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6e1")
 	const val CODE_PENDING = 1
 	const val CODE_OK = 0
 	//const val CODE_FAIL = -1
-	//const val CODE_UNKNOWN_REQUEST_TYPE = -2
+	//const val CODE_UNKNOWN_REQUEST_TYPE = -2 TODO give more feedback to user
 	//const val CODE_FAIL_CREATE_DIRECTORY = -3
 	//const val CODE_FAIL_CREATE_FILE = -4
 	//const val CODE_FILE_EXISTS = -5
 	//const val CODE_FAIL_DEL_FILE = -6
 	const val CODE_DECLINED = -6
-
+	var sharedPreferences: SharedPreferences? = null
 	var bluetoothAdapter: BluetoothAdapter? = null
 	var bluetoothSocket: BluetoothSocket? = null
 	var commsBTConnect: CommsBTConnect? = null
 	var commsBTConnected: CommsBTConnected? = null
 	val knownDevices: MutableSet<BluetoothDevice> = mutableSetOf()
-	var knownAddresses: MutableSet<String>? = null
+	var knownAddresses: MutableSet<String> = mutableSetOf()
 
 	enum class Status { STARTING, DISCONNECTED, CONNECTING, CONNECTED, ERROR }
+
 	val status = MutableStateFlow(null as Status?)
-	val error = MutableSharedFlow<Int>()
+	var error by mutableIntStateOf(-1)
 	var freeSpace by mutableStateOf("")
 	var messageStatus by mutableIntStateOf(-1)
 	val messageError = MutableSharedFlow<Int>()
@@ -63,37 +63,31 @@ object CommsBT {
 	var disconnect = false
 	val requestQueue: MutableSet<Request> = mutableSetOf()
 	var lastRequest: Request? = null
-
-	fun start(main: Main) {
-		if (!Permissions.hasBT) return onError(R.string.fail_BT_denied)
+	fun start(activity: Activity) {
+		if(!Permissions.hasBT) return onError(R.string.fail_BT_denied)
 		status.value = Status.STARTING
-		main.registerReceiver(
-			main.btBroadcastReceiver,
-			IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-		)
-
-		val bm = main.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+		val bm = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		bluetoothAdapter = bm.adapter
-		if (bluetoothAdapter?.state != BluetoothAdapter.STATE_ON) return onError(R.string.fail_BT_off)
+		if(bluetoothAdapter?.state != BluetoothAdapter.STATE_ON) return onError(R.string.fail_BT_off)
 
-		knownAddresses =
-			Main.sharedPreferences.getStringSet("knownAddresses", knownAddresses ?: mutableSetOf())
-		logD("CommsBT.startBT " + knownAddresses?.size + " known addresses")
+		sharedPreferences =
+			activity.applicationContext.getSharedPreferences("CommsBT", MODE_PRIVATE)
+		knownAddresses = sharedPreferences?.getStringSet("knownAddresses", null) ?: mutableSetOf()
+		logD("CommsBT.startBT " + knownAddresses.size + " known addresses")
 		val bondedBTDevices = bluetoothAdapter?.bondedDevices ?: emptySet()
 		//Find and clean known devices
-		knownAddresses?.forEach { checkKnownAddress(it, bondedBTDevices) }
+		knownAddresses.forEach { checkKnownAddress(it, bondedBTDevices) }
 		//Try to connect to known device
-		if (knownDevices.isNotEmpty()) {
+		if(knownDevices.isNotEmpty()) {
 			connectDevice(knownDevices.first())
 			return //having multiple watches is rare, user will have to select from DeviceSelect
 		}
 		status.value = Status.DISCONNECTED
 	}
 
-	//Check if a known device is still bound, if so, add it to known devices
 	fun checkKnownAddress(knownAddress: String, bondedDevices: Set<BluetoothDevice>) {
-		for (device in bondedDevices) {
-			if (device.address == knownAddress) {
+		for(device in bondedDevices) {
+			if(device.address == knownAddress) {
 				knownDevices.add(device)
 				return
 			}
@@ -102,21 +96,22 @@ object CommsBT {
 	}
 
 	fun delKnownAddress(address: String) {
-		if (knownAddresses?.remove(address) == true) storeKnownAddresses()
+		if(knownAddresses.remove(address)) storeKnownAddresses()
 	}
 
 	fun storeKnownAddresses() {
-		if (knownAddresses?.isEmpty() == true) {
-			Main.sharedPreferences_editor.remove("knownAddresses")
-		} else {
-			Main.sharedPreferences_editor.putStringSet("knownAddresses", knownAddresses)
+		sharedPreferences?.edit {
+			if(knownAddresses.isEmpty()) {
+				remove("knownAddresses")
+			} else {
+				putStringSet("knownAddresses", knownAddresses)
+			}
 		}
-		Main.sharedPreferences_editor.apply()
 	}
 
 	fun stop() {
 		disconnect = true
-		try { bluetoothSocket?.close() } catch (_: Exception) {}
+		tryIgnore { bluetoothSocket?.close() }
 		bluetoothSocket = null
 		commsBTConnect = null
 		commsBTConnected = null
@@ -126,11 +121,11 @@ object CommsBT {
 	}
 
 	fun getBondedDevices(): Set<BluetoothDevice>? {
-		if (bluetoothAdapter == null) {
+		if(bluetoothAdapter == null) {
 			onError(R.string.fail_BT_denied)
 			return null
 		}
-		if (bluetoothAdapter?.state != BluetoothAdapter.STATE_ON) {
+		if(bluetoothAdapter?.state != BluetoothAdapter.STATE_ON) {
 			onError(R.string.fail_BT_off)
 			return null
 		}
@@ -139,7 +134,7 @@ object CommsBT {
 
 	fun connectDevice(device: BluetoothDevice) {
 		logD("CommsBT.connectDevice: " + device.name)
-		if (status.value in listOf(Status.CONNECTED, Status.CONNECTING) ||
+		if(status.value in listOf(Status.CONNECTED, Status.CONNECTING) ||
 			bluetoothAdapter?.isEnabled != true
 		) return
 		disconnect = false
@@ -160,6 +155,7 @@ object CommsBT {
 			)
 		)
 	}
+
 	fun sendRequestDeleteFile(libItem: LibItem) {
 		logD("CommsBT.sendRequestDeleteFile " + libItem.name)
 		libItem.status = LibItem.Status.PENDING
@@ -176,19 +172,20 @@ object CommsBT {
 			logD("CommsBTConnect " + device.name)
 			try {
 				bluetoothSocket = device.createRfcommSocketToServiceRecord(WMP_UUID)
-			} catch (e: Exception) {
+			} catch(e: Exception) {
 				logE("CommsBTConnect Exception: " + e.message)
 				status.value = Status.DISCONNECTED
 			}
 		}
+
 		override fun run() {
 			try {
 				bluetoothSocket?.connect()
 				commsBTConnected = CommsBTConnected()
 				commsBTConnected?.start()
-			} catch (e: Exception) {
+			} catch(e: Exception) {
 				logD("CommsBTConnect.run failed: " + e.message)
-				try { bluetoothSocket?.close() } catch (_: Exception) {}
+				tryIgnore { bluetoothSocket?.close() }
 				status.value = Status.DISCONNECTED
 			}
 		}
@@ -205,36 +202,39 @@ object CommsBT {
 				outputStream = bluetoothSocket!!.outputStream
 				status.value = Status.CONNECTED
 				knownDevices.add(bluetoothSocket!!.remoteDevice)
-				if (knownAddresses?.add(bluetoothSocket!!.remoteDevice.address) == true) {
+				if(knownAddresses.add(bluetoothSocket!!.remoteDevice.address)) {
 					storeKnownAddresses()
 				}
-			} catch (e: Exception) {
+			} catch(e: Exception) {
 				logE("CommsBTConnected init Exception: " + e.message)
 				status.value = Status.DISCONNECTED
 			}
 		}
+
 		override fun run() {
 			sendRequestSync()
 			runBlocking { process() }
 		}
+
 		fun close() {
 			logD("CommsBTConnected.close")
 			status.value = Status.DISCONNECTED
 			freeSpace = ""
 			messageStatus = -1
-			try {
+			tryIgnore {
 				requestQueue.clear()
 				bluetoothSocket?.close()
-			} catch (_: Exception) {}
+			}
 			bluetoothSocket = null
 			commsBTConnected = null
 			commsBTConnect = null
 		}
+
 		suspend fun process() {
-			while (!disconnect) {
+			while(!disconnect) {
 				try {
 					outputStream!!.write("".toByteArray())
-				} catch (_: Exception) {
+				} catch(_: Exception) {
 					logD("Connection closed")
 					break
 				}
@@ -244,47 +244,47 @@ object CommsBT {
 			}
 			close()
 		}
+
 		fun sendNextRequest() {
 			try {
 				outputStream!!.write("".toByteArray())
-				if (requestQueue.isEmpty() || CommsWifi.isSending || lastRequest != null) return
+				if(requestQueue.isEmpty() || CommsWifi.isSending || lastRequest != null) return
 				lastRequest = requestQueue.first()
 				requestQueue.remove(lastRequest)
 				logD("CommsBTConnected.sendNextRequest: $lastRequest")
-				if(lastRequest!!.type == Request.Type.SEND_FILE){
-					CoroutineScope(Dispatchers.Default).launch {
-						CommsWifi.sendFile(lastRequest!!.libItem!!)
-					}
+				if(lastRequest!!.type == Request.Type.SEND_FILE) {
+					runInBackground { CommsWifi.sendFile(lastRequest!!.libItem!!) }
 				}
 				outputStream!!.write(lastRequest.toString().toByteArray())
-			} catch (e: Exception) {
+			} catch(e: Exception) {
 				logE("CommsBTConnected.sendNextRequest Exception: " + e.message)
 				onMessageError(R.string.fail_send_message)
 				disconnect = true
 			}
 		}
+
 		suspend fun read() {
 			try {
-				if (inputStream!!.available() < 5) return
+				if(inputStream!!.available() < 5) return
 				var lastReadTime = System.currentTimeMillis()
 				var response = ""
-				while (System.currentTimeMillis() - lastReadTime < 3000) {
-					if (inputStream!!.available() == 0) {
+				while(System.currentTimeMillis() - lastReadTime < 3000) {
+					if(inputStream!!.available() == 0) {
 						delay(100)
 						continue
 					}
 					val buffer = ByteArray(inputStream!!.available())
 					val numBytes = inputStream!!.read(buffer)
-					if (numBytes < 0) {
+					if(numBytes < 0) {
 						logE("CommsBTConnected.read read error, response: $response")
 						lastRequest = null
 						return onMessageError(R.string.fail_response)
-					} else if (numBytes > 0) {
+					} else if(numBytes > 0) {
 						lastReadTime = System.currentTimeMillis()
 					}
 					val temp = String(buffer)
 					response += temp
-					if (isValidJSON(response)) {
+					if(isValidJSON(response)) {
 						logD("CommsBTConnected.read got message: $response")
 						gotResponse(JSONObject(response))
 						return
@@ -292,24 +292,25 @@ object CommsBT {
 				}
 				logE("CommsBTConnected.read no valid message and no new data after 3 sec: $response")
 				lastRequest = null
-			} catch (e: Exception) {
+			} catch(e: Exception) {
 				logE("CommsBTConnected.read Exception: " + e.message)
 				lastRequest = null
 			}
 			onMessageError(R.string.fail_response)
 		}
+
 		fun gotResponse(response: JSONObject) {
 			try {
 				val requestType = response.getString("requestType")
 				val responseData = response.get("responseData")
-				when (requestType) {
+				when(requestType) {
 					"sync" -> {
 						//{"requestType":"sync","responseData":{"tracks":[{"path":"directory\/track1.mp3"},{"path":"track2.mp3"}],"freeSpace":5672968192}}
 						//CODE_FAIL
 						//CODE_UNKNOWN_REQUEST_TYPE
-						if (responseData is JSONObject) {
+						if(responseData is JSONObject) {
 							freeSpace = bytesToHuman(responseData.getLong("freeSpace"))
-							CoroutineScope(Dispatchers.Default).launch {
+							runInBackground {
 								Library.updateLibWithFilesOnWatch(
 									responseData.getJSONArray("tracks")
 								)
@@ -319,7 +320,6 @@ object CommsBT {
 							logE("CommsBT.gotResponse sync responseData: $responseData")
 							messageStatus = R.string.fail_response
 						}
-						lastRequest = null
 					}
 					"fileDetails" -> {
 						//{"requestType":"fileDetails","responseData":1}
@@ -329,18 +329,17 @@ object CommsBT {
 						//CODE_FAIL_CREATE_DIRECTORY
 						//CODE_FAIL_CREATE_FILE
 						//CODE_FILE_EXISTS
-						if (responseData is Int && responseData < 1) {
+						if(responseData is Int && responseData < 1) {
 							CommsWifi.stop()
 							logE("CommsBT.gotResponse fileDetails responseData: $responseData")
 							messageStatus = R.string.fail_send_file
 						}
-						lastRequest = null
 					}
 					"fileBinary" -> {
 						//{"requestType":"fileBinary","responseData":{"path":"directory\/track.mp3","freeSpace":12345}}
 						//CODE_FAIL
 						//CODE_UNKNOWN_REQUEST_TYPE
-						if (responseData is JSONObject) {
+						if(responseData is JSONObject) {
 							freeSpace = bytesToHuman(responseData.getLong("freeSpace"))
 							lastRequest?.libItem?.setStatusFull()
 							logD("CommsBT.gotResponse fileBinary lastRequest: " + lastRequest?.libItem?.path)
@@ -349,7 +348,6 @@ object CommsBT {
 							logE("CommsBT.gotResponse fileBinary responseData: $responseData")
 							messageStatus = R.string.fail_send_file
 						}
-						lastRequest = null
 					}
 					"deleteFile" -> {
 						//{"requestType":"deleteFile","responseData":0}
@@ -359,44 +357,47 @@ object CommsBT {
 						//CODE_UNKNOWN_REQUEST_TYPE
 						//CODE_FAIL_DEL_FILE
 						//CODE_DECLINED
-						when (responseData) {
+						when(responseData) {
 							CODE_PENDING -> messageStatus = R.string.delete_file_confirm
 							CODE_OK -> {
 								lastRequest?.libItem?.setStatusNot()
 								messageStatus = R.string.file_deleted
-								lastRequest = null
 							}
 							CODE_DECLINED -> {
 								lastRequest?.libItem?.setStatusFull()
 								messageStatus = R.string.delete_file_declined
-								lastRequest = null
 							}
 							else -> {
 								logE("CommsBT.gotResponse deleteFile")
 								messageStatus = R.string.fail_delete_file
-								lastRequest = null
 							}
 						}
 					}
 				}
-			} catch (e: Exception) {
+			} catch(e: Exception) {
 				logE("CommsBT.gotResponse: " + e.message)
 				onMessageError(R.string.fail_response)
-				lastRequest = null
 			}
+			lastRequest = null
 		}
+
 		fun isValidJSON(json: String): Boolean {
-			if (!json.endsWith("}")) return false
-			try { JSONObject(json)} catch (_: JSONException) { return false }
+			if(!json.endsWith("}")) return false
+			try {
+				JSONObject(json)
+			} catch(_: JSONException) {
+				return false
+			}
 			return true
 		}
 	}
 
 	class Request(val type: Type, val libItem: LibItem? = null) {
 		enum class Type { SYNC, SEND_FILE, DELETE_FILE }
+
 		override fun toString(): String {
 			val request = JSONObject()
-			when (type) {
+			when(type) {
 				Type.SYNC -> {
 					//{"requestType":"sync","requestData":{}}
 					request.put("requestType", "sync")
@@ -406,12 +407,12 @@ object CommsBT {
 				Type.SEND_FILE -> {
 					//{"requestType":"fileDetails","requestData":{"path":"Music/track.mp3","length":12345,"ip":"192.168.1.100","port":9002}}
 					request.put("requestType", "fileDetails")
-					if (CommsWifi.ipAddress == null) {
+					if(CommsWifi.ipAddress == null) {
 						onMessageError(R.string.fail_no_wifi)
 						return ""
 					}
 					val libItem = libItem
-					if (libItem == null) {
+					if(libItem == null) {
 						onMessageError(R.string.fail_send_message)
 						return ""
 					}
@@ -431,7 +432,7 @@ object CommsBT {
 					//{"requestType":"deleteFile","requestData":"track.mp3"}
 					request.put("requestType", "deleteFile")
 					val path = libItem?.path
-					if (path == null) {
+					if(path == null) {
 						onMessageError(R.string.fail_send_message)
 						return ""
 					}
@@ -444,12 +445,13 @@ object CommsBT {
 	}
 
 	fun onError(message: Int) {
-		CoroutineScope(Dispatchers.Default).launch { error.emit(message) }
+		error = message
 		status.value = Status.ERROR
 	}
+
 	fun onMessageError(message: Int) {
 		messageStatus = message
-		CoroutineScope(Dispatchers.Default).launch { messageError.emit(message) }
+		runInBackground { messageError.emit(message) }
 		lastRequest?.libItem?.status = LibItem.Status.UNKNOWN
 	}
 }

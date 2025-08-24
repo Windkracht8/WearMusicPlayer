@@ -17,11 +17,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 import java.io.FileOutputStream
 import java.net.Socket
 
@@ -48,12 +45,12 @@ object CommsWifi {
 		logD("CommsWifi path: $path length: $length ip: $ip port: $port")
 		if(connectivityManager == null){
 			error = R.string.fail_wifi
-			CoroutineScope(Dispatchers.Default).launch { status.emit(Status.ERROR) }
+			runInBackground { status.emit(Status.ERROR) }
 			return
 		}
 		val connectivityManager = connectivityManager ?: return
 		this.path = path
-		CoroutineScope(Dispatchers.Default).launch { status.emit(Status.PREPARING) }
+		runInBackground { status.emit(Status.PREPARING) }
 		connectionType = ConnectionType.REQUESTING
 		progress = 0F
 
@@ -67,7 +64,7 @@ object CommsWifi {
 						super.onAvailable(network)
 						logD("CommsWifi.NetworkCallback.onAvailable")
 						connectivityManager.bindProcessToNetwork(network)
-						CoroutineScope(Dispatchers.Default).launch {
+						runInBackground {
 							connectionType = ConnectionType.FAST
 							readFileFromStream(connectivityManager, path, length, ip, port)
 						}
@@ -75,7 +72,7 @@ object CommsWifi {
 					override fun onUnavailable() {
 						super.onUnavailable()
 						logD("CommsWifi.NetworkCallback.onUnavailable")
-						CoroutineScope(Dispatchers.Default).launch {
+						runInBackground {
 							connectionType = ConnectionType.SLOW
 							readFileFromStream(connectivityManager, path, length, ip, port)
 						}
@@ -85,7 +82,7 @@ object CommsWifi {
 			)
 		} catch (e: Exception) {
 			logE("CommsWifi " + e.message)
-			CoroutineScope(Dispatchers.Default).launch {
+			runInBackground {
 				connectionType = ConnectionType.SLOW
 				readFileFromStream(connectivityManager, path, length, ip, port)
 			}
@@ -100,7 +97,7 @@ object CommsWifi {
 		port: Int
 	) {
 		logD("CommsWifi.readFileFromStream")
-		CoroutineScope(Dispatchers.Default).launch { status.emit(Status.RECEIVING) }
+		runInBackground { status.emit(Status.RECEIVING) }
 		var bytesDone: Long = 0
 		try {
 			Socket(ip, port).use { socket ->
@@ -117,7 +114,7 @@ object CommsWifi {
 							if (numBytes < 0) {
 								logE("CommsWifi.receiveFile read error")
 								error = R.string.fail_read_wifi
-								CoroutineScope(Dispatchers.Default).launch { status.emit(Status.ERROR) }
+								runInBackground { status.emit(Status.ERROR) }
 								connectivityManager.bindProcessToNetwork(null)
 								return
 							}
@@ -126,14 +123,14 @@ object CommsWifi {
 							progress = bytesDone.toFloat() / length.toFloat()
 							//logD("CommsWifi.read bytesDone: $bytesDone length: $length progress: $progress")
 							if (bytesDone >= length) {
-								CoroutineScope(Dispatchers.Default).launch { status.emit(Status.DONE) }
+								runInBackground { status.emit(Status.DONE) }
 								connectivityManager.bindProcessToNetwork(null)
 								return
 							}
 							lastReadTime = System.currentTimeMillis()
 						}
 						error = R.string.fail_read_wifi
-						CoroutineScope(Dispatchers.Default).launch { status.emit(Status.ERROR) }
+						runInBackground { status.emit(Status.ERROR) }
 					}
 				}
 			}
@@ -141,11 +138,11 @@ object CommsWifi {
 			logE("CommsWifi.receiveFile exception: $e")
 			logE("CommsWifi.receiveFile exception: " + e.message)
 			error = R.string.fail_wifi
-			CoroutineScope(Dispatchers.Default).launch { status.emit(Status.ERROR) }
+			runInBackground { status.emit(Status.ERROR) }
 		}
 		//if we get here it failed
 		connectivityManager.bindProcessToNetwork(null)
 		error = R.string.fail_read_wifi
-		CoroutineScope(Dispatchers.Default).launch { status.emit(Status.ERROR) }
+		runInBackground { status.emit(Status.ERROR) }
 	}
 }

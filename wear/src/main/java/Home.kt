@@ -52,11 +52,7 @@ fun Home(
 			.fillMaxHeight()
 			.padding(10.dp, 10.dp, 10.dp, 0.dp)
 	) {
-		Row(
-			modifier = Modifier
-				.fillMaxWidth()
-				.weight(1F)
-		) {
+		Row(modifier = Modifier.fillMaxWidth().weight(1F)) {
 			Spacer(modifier = Modifier.weight(2F))
 			IconButton(
 				modifier = Modifier.weight(6F),
@@ -88,19 +84,15 @@ fun Home(
 			}
 			Spacer(modifier = Modifier.weight(2F))
 		}
-		Row(
-			modifier = Modifier
-				.fillMaxWidth()
-				.weight(1F)
-		) {
+		Row(modifier = Modifier.fillMaxWidth().weight(1F)) {
 			IconButton(
 				modifier = Modifier.weight(1F),
 				onClick = onPreviousClick
 			) {
 				Icon(
 					imageVector = ImageVector.vectorResource(R.drawable.icon_previous),
-					contentDescription = "previous song",
-					tint = if (hasPrevious) ColorWhite else ColorDisabled
+					tint = if (hasPrevious) ColorWhite else ColorDisabled,
+					contentDescription = "previous song"
 				)
 			}
 			IconButton(
@@ -112,8 +104,8 @@ fun Home(
 						if (isPlaying) R.drawable.icon_pause
 						else R.drawable.icon_play
 					),
-					contentDescription = "play or pause",
-					tint = Color.Unspecified
+					tint = Color.Unspecified,
+					contentDescription = "play or pause"
 				)
 			}
 			IconButton(
@@ -122,8 +114,8 @@ fun Home(
 			) {
 				Icon(
 					imageVector = ImageVector.vectorResource(R.drawable.icon_next),
-					contentDescription = "next song",
-					tint = if (hasNext) ColorWhite else ColorDisabled
+					tint = if (hasNext) ColorWhite else ColorDisabled,
+					contentDescription = "next song"
 				)
 			}
 		}
@@ -144,10 +136,7 @@ fun Home(
 			)
 		}
 		TextButton(
-			modifier = Modifier
-				.fillMaxWidth()
-				.weight(1F)
-				.padding(5.dp, 0.dp),
+			modifier = Modifier.fillMaxWidth().weight(1F).padding(horizontal = 5.dp),
 			onClick = onTrackClick
 		) {
 			BasicText(
@@ -163,9 +152,7 @@ fun Home(
 			)
 		}
 		IconButton(
-			modifier = Modifier
-				.fillMaxWidth()
-				.weight(1F),
+			modifier = Modifier.fillMaxWidth().weight(1F),
 			onClick = onLibraryClick
 		) {
 			Icon(

@@ -10,12 +10,14 @@ package com.windkracht8.wearmusicplayer
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 const val LOG_TAG = "WearMusicPlayer"
 fun logE(message: String) = Log.e(LOG_TAG, message)
 fun logD(message: String) = Log.d(LOG_TAG, message)
-
 fun Context.toast(message: Int) =
 	Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
@@ -23,18 +25,26 @@ const val GB: Long = 1073741824
 const val MB: Long = 1048576
 const val KB: Long = 1024
 fun bytesToHuman(bytes: Long): String {
-	if (bytes > GB * 10) {
+	if(bytes > GB * 10) {
 		val gbs = bytes.toDouble() / GB
 		return String.format(Locale.getDefault(), "%.0f GB", gbs)
-	} else if (bytes > GB * 5) {
+	} else if(bytes > GB * 5) {
 		val gbs = bytes.toDouble() / GB
 		return String.format(Locale.getDefault(), "%.3f GB", gbs)
-	} else if (bytes > MB) {
+	} else if(bytes > MB) {
 		val mbs = bytes.toDouble() / MB
 		return String.format(Locale.getDefault(), "%.0f MB", mbs)
-	} else if (bytes > KB) {
+	} else if(bytes > KB) {
 		val kbs = bytes.toDouble() / KB
 		return String.format(Locale.getDefault(), "%.0f KB", kbs)
 	}
 	return "$bytes B"
 }
+
+fun tryIgnore(block: () -> Unit) = try {
+	block()
+} catch(_: Exception) {
+}
+
+fun runInBackground(block: suspend () -> Unit) =
+	CoroutineScope(Dispatchers.Default).launch { block() }

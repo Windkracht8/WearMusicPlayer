@@ -8,6 +8,7 @@
 package com.windkracht8.wearmusicplayer
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
@@ -24,18 +25,12 @@ fun MenuArtists(onMenuArtistClick: (id: Int) -> Unit) {
 		last = ColumnItemType.Button,
 	)
 	val transformationSpec = rememberTransformationSpec()
-	ScreenScaffold(
-		scrollState = columnState,
-		contentPadding = contentPadding
-	) { contentPadding ->
-		TransformingLazyColumn(
-			state = columnState,
-			contentPadding = contentPadding
-		) {
+	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
+		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = "Artists",
+					label = stringResource(R.string.artists),
 				)
 			}
 			Library.artists.forEach {
@@ -43,10 +38,11 @@ fun MenuArtists(onMenuArtistClick: (id: Int) -> Unit) {
 					MenuItem(
 						transformation = SurfaceTransformation(transformationSpec),
 						label = it.name,
-						subLabel = if (it.albums.isEmpty()) "track".singularPlural(it.tracks.size)
-						else ("album".singularPlural(it.albums.size) + " " +
-								"track".singularPlural(it.tracks.size)
-								),
+						subLabel =
+							if (it.albums.isEmpty()) trackOrTracks(it.tracks.size)
+							else (albumOrAlbums(it.albums.size) + " " +
+									trackOrTracks(it.tracks.size)
+							),
 						onClick = { onMenuArtistClick(it.id) }
 					)
 				}

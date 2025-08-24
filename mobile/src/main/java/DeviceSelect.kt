@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -37,13 +36,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -54,16 +52,15 @@ class DeviceSelect : ComponentActivity() {
 	var bondedDevices: Set<BluetoothDevice>? = null
 	public override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		if (!Permissions.hasBT) finishAndRemoveTask()
+		if(!Permissions.hasBT) finishAndRemoveTask()
 
 		lifecycleScope.launch {
 			CommsBT.status.collect { status ->
 				logD("DeviceSelect: CommsBT status change: $status")
-				when (status) {
+				when(status) {
 					CommsBT.Status.CONNECTING -> {
 						startActivity(Intent(this@DeviceSelect, DeviceConnect::class.java))
 					}
-
 					CommsBT.Status.CONNECTED, CommsBT.Status.ERROR -> finishAndRemoveTask()
 					CommsBT.Status.STARTING, CommsBT.Status.DISCONNECTED, null -> {}
 				}
@@ -87,18 +84,17 @@ class DeviceSelect : ComponentActivity() {
 
 	fun onDeviceClick(device: BluetoothDevice) {
 		logD("onDeviceClick: " + device.name)
-		CoroutineScope(Dispatchers.Default).launch { CommsBT.connectDevice(device) }
+		runInBackground { CommsBT.connectDevice(device) }
 	}
 
 	fun onNewDeviceClick() {
 		logD("onNewDeviceClick")
-		CoroutineScope(Dispatchers.Default).launch {
+		runInBackground {
 			bondedDevices = CommsBT.getBondedDevices()
 			showNewDevices = true
 		}
 	}
 }
-
 @SuppressLint("MissingPermission") //Handled by Permissions
 @Composable
 fun DeviceSelectScreen(
@@ -110,19 +106,16 @@ fun DeviceSelectScreen(
 	val longPressTimeoutMillis = LocalViewConfiguration.current.longPressTimeoutMillis
 	var confirmDelDevice by remember { mutableStateOf("") }
 	var showNewWatch by remember { mutableStateOf(true) }
-	LazyColumn(
-		modifier = Modifier
-			.fillMaxWidth()
-			.fillMaxHeight()
-			.padding(5.dp, 10.dp)
-			.safeDrawingPadding()
-	) {
+	LazyColumn(modifier = Modifier
+		.fillMaxWidth()
+		.fillMaxHeight()
+		.padding(10.dp)) {
 		item {
 			Text(
 				modifier = Modifier
 					.fillMaxWidth()
-					.padding(0.dp, 0.dp, 0.dp, 10.dp),
-				text = "To connect, open the app on the watch and select your watch from the list below",
+					.padding(bottom = 10.dp),
+				text = stringResource(R.string.device_select_title),
 				fontSize = 20.sp,
 				textAlign = TextAlign.Center
 			)
@@ -133,15 +126,14 @@ fun DeviceSelectScreen(
 				val interactionSource = remember { MutableInteractionSource() }
 				LaunchedEffect(interactionSource) {
 					interactionSource.interactions.collectLatest { interaction ->
-						when (interaction) {
+						when(interaction) {
 							is PressInteraction.Press -> {
 								isShort = true
 								delay(longPressTimeoutMillis)
 								isShort = false
 								confirmDelDevice = device.address
 							}
-
-							is PressInteraction.Release -> if (isShort) onDeviceClick(device)
+							is PressInteraction.Release -> if(isShort) onDeviceClick(device)
 						}
 					}
 				}
@@ -151,11 +143,11 @@ fun DeviceSelectScreen(
 						.height(60.dp)
 						.padding(10.dp),
 					interactionSource = interactionSource,
-					onClick = { onDeviceClick(device) }
-				) { Text(text = device.name ?: "<no name>") }
+					onClick = {}
+				) { Text(device.name ?: "<no name>") }
 			}
 		}
-		if (showNewWatch) {
+		if(showNewWatch) {
 			item {
 				Button(
 					modifier = Modifier
@@ -166,12 +158,12 @@ fun DeviceSelectScreen(
 						showNewWatch = false
 						onNewDeviceClick()
 					}
-				) { Text(text = "New Watch") }
+				) { Text(R.string.device_select_new) }
 			}
 		}
-		if (showNewDevices) {
-			if (bondedDevices?.isEmpty() ?: true) {
-				item { Text(text = "No Bluetooth device found, first pair your watch") }
+		if(showNewDevices) {
+			if(bondedDevices?.isEmpty() ?: true) {
+				item { Text(R.string.device_select_none) }
 			}
 			bondedDevices?.forEach { device ->
 				item {
@@ -181,35 +173,33 @@ fun DeviceSelectScreen(
 							.height(60.dp)
 							.padding(10.dp),
 						onClick = { onDeviceClick(device) }
-					) { Text(text = device.name ?: "<no name>") }
+					) { Text(device.name ?: "<no name>") }
 				}
 			}
 		}
-		if (confirmDelDevice.isNotEmpty()) {
+		if(confirmDelDevice.isNotEmpty()) {
 			item {
 				AlertDialog(
-					title = { Text("Delete device?") },
+					title = { Text(R.string.delete_device) },
 					onDismissRequest = { confirmDelDevice = "" },
 					confirmButton = {
 						TextButton(
 							onClick = {
-								logD("confirmButton $confirmDelDevice")
 								CommsBT.delKnownAddress(confirmDelDevice)
 								confirmDelDevice = ""
 							}
-						) { Text("Delete") }
+						) { Text(R.string.delete) }
 					},
 					dismissButton = {
 						TextButton(
 							onClick = { confirmDelDevice = "" }
-						) { Text("Cancel") }
+						) { Text(R.string.cancel) }
 					}
 				)
 			}
 		}
 	}
 }
-
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, apiLevel = 35)
 @Composable
 fun PreviewDeviceSelect() {
@@ -225,7 +215,6 @@ fun PreviewDeviceSelect() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, apiLevel = 35)
 @Composable
 fun PreviewDeviceSelectDay() {
-	CommsBT
 	W8Theme {
 		Surface {
 			DeviceSelectScreen(

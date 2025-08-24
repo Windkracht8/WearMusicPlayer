@@ -46,8 +46,6 @@ import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavHostState
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 var hasReadPermission = false
@@ -63,8 +61,8 @@ class Main : ComponentActivity() {
 	var currentTracksType = TrackListType.ALL
 	var currentTracksId = -1
 	var currentTrackId by mutableIntStateOf(-1)
-	var currentTrackTitle by mutableStateOf("loading")
-	var currentTrackArtist by mutableStateOf("loading")
+	var currentTrackTitle by mutableStateOf(getString(R.string.loading))
+	var currentTrackArtist by mutableStateOf(getString(R.string.loading))
 	var hasPrevious by mutableStateOf(false)
 	var hasNext by mutableStateOf(false)
 	var isPlaying by mutableStateOf(false)
@@ -100,16 +98,16 @@ class Main : ComponentActivity() {
 				logD("Main: Library status change: $libraryStatus")
 				when (libraryStatus) {
 					Library.Status.SCAN -> {
-						currentTrackTitle = "loading"
-						currentTrackArtist = "loading"
+						currentTrackTitle = getString(R.string.loading)
+						currentTrackArtist = getString(R.string.loading)
 					}
 					Library.Status.READY -> {
-						if (currentTrackId == -1 || currentTrackTitle == "loading") {
+						if (currentTrackId == -1 || currentTrackTitle == getString(R.string.loading)) {
 							currentTracksType = TrackListType.ALL
 							currentTracks = Library.tracks
 							if (currentTracks.isEmpty()) {
-								currentTrackTitle = "no tracks found"
-								currentTrackArtist = "upload with phone app"
+								currentTrackTitle = getString(R.string.no_tracks)
+								currentTrackArtist = getString(R.string.upload)
 							} else {
 								loadTracks(this@Main)
 							}
@@ -123,8 +121,8 @@ class Main : ComponentActivity() {
 							currentTracks = Library.tracks
 						}
 						if (currentTracks.isEmpty()) {
-							currentTrackTitle = "no tracks found"
-							currentTrackArtist = "upload with phone app"
+							currentTrackTitle = getString(R.string.no_tracks)
+							currentTrackArtist = getString(R.string.upload)
 						}
 						loadTracks(this@Main)
 					}
@@ -166,7 +164,7 @@ class Main : ComponentActivity() {
 		}
 		checkPermissions()
 		if (hasReadPermission) {
-			CoroutineScope(Dispatchers.Default).launch {
+			runInBackground {
 				Library.scanMediaStore(this@Main)
 			}
 		}
@@ -175,7 +173,7 @@ class Main : ComponentActivity() {
 				btBroadcastReceiver,
 				IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
 			)
-			CoroutineScope(Dispatchers.Default).launch { CommsBT.start(this@Main) }
+			runInBackground { CommsBT.start(this@Main) }
 		}
 	}
 	override fun onStop() {
@@ -186,12 +184,9 @@ class Main : ComponentActivity() {
 	override fun onDestroy() {
 		//logD("MainActivity.onDestroy")
 		super.onDestroy()
-		try { MediaController.releaseFuture(mediaControllerFuture) }
-		catch (_: Exception) {}
-		try { unregisterReceiver(btBroadcastReceiver) }
-		catch (_: Exception) {}
-		try { CommsBT.stop() }
-		catch (_: Exception) {}
+		tryIgnore { MediaController.releaseFuture(mediaControllerFuture) }
+		tryIgnore { unregisterReceiver(btBroadcastReceiver) }
+		tryIgnore { CommsBT.stop() }
 	}
 
 	fun previous() {
@@ -221,7 +216,7 @@ class Main : ComponentActivity() {
 	}
 
 	fun rescan() =
-		CoroutineScope(Dispatchers.Default).launch { Library.scanFiles(this@Main) }
+		runInBackground { Library.scanFiles(this@Main) }
 
 	fun loadTracks(activity: ComponentActivity) {
 		if (mediaController == null) return
@@ -323,13 +318,13 @@ class Main : ComponentActivity() {
 			permissions.entries.forEach {
 				if (it.value && it.key == READ_MEDIA_AUDIO) {
 					hasReadPermission = true
-					CoroutineScope(Dispatchers.Default).launch {
+					runInBackground {
 						Library.scanMediaStore(this@Main)
 					}
 				}
 				if (it.value && (it.key == BLUETOOTH_CONNECT || it.key == BLUETOOTH)) {
 					hasBTPermission = true
-					CoroutineScope(Dispatchers.Default).launch {
+					runInBackground {
 						CommsBT.start(this@Main)
 					}
 				}
@@ -343,7 +338,7 @@ class Main : ComponentActivity() {
 				logD("Main: CommsBT.deleteFilePath.value: " + CommsBT.deleteFilePath.value)
 				if (CommsBT.deleteFilePath.value.isNotEmpty()) {
 					val path = CommsBT.deleteFilePath.value
-					CoroutineScope(Dispatchers.Default).launch {
+					runInBackground {
 						Library.scanFile(this@Main, path)
 					}
 					CommsBT.deleteFilePath.value = ""
@@ -374,7 +369,7 @@ fun MainApp(
 			SwipeDismissableNavHost(
 				navController = navController,
 				startDestination = "home",
-				state = navHostState,
+				state = navHostState
 			) {
 				composable("home") {
 					Home(

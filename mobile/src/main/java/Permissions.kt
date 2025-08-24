@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -35,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,10 +47,10 @@ class Permissions : ComponentActivity() {
 		var hasBT by mutableStateOf(false)
 		var hasRead by mutableStateOf(false)
 		fun checkPermissions(context: Context) {
-			if (Build.VERSION.SDK_INT >= 33) {
+			if(Build.VERSION.SDK_INT >= 33) {
 				hasBT = context.hasPermission(BLUETOOTH_CONNECT)
 				hasRead = context.hasPermission(READ_MEDIA_AUDIO)
-			} else if (Build.VERSION.SDK_INT >= 31) {
+			} else if(Build.VERSION.SDK_INT >= 31) {
 				hasBT = context.hasPermission(BLUETOOTH_CONNECT)
 				hasRead = context.hasPermission(READ_EXTERNAL_STORAGE)
 			} else {
@@ -62,18 +62,24 @@ class Permissions : ComponentActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		if (hasBT && hasRead) finishAndRemoveTask()
+		if(hasBT && hasRead) finishAndRemoveTask()
 
 		enableEdgeToEdge()
-		setContent { W8Theme { Surface { PermissionsScreen(
-			this::onNearbyClick,
-			this::onReadClick
-		) } } }
+		setContent {
+			W8Theme {
+				Surface {
+					PermissionsScreen(
+						this::onNearbyClick,
+						this::onReadClick
+					)
+				}
+			}
+		}
 	}
 
 	fun onNearbyClick() {
-		if (hasBT) return
-		if (Build.VERSION.SDK_INT >= 31) {
+		if(hasBT) return
+		if(Build.VERSION.SDK_INT >= 31) {
 			requestMultiplePermissions.launch(arrayOf(BLUETOOTH_CONNECT))
 		} else {
 			requestMultiplePermissions.launch(arrayOf(BLUETOOTH))
@@ -81,8 +87,8 @@ class Permissions : ComponentActivity() {
 	}
 
 	fun onReadClick() {
-		if (hasRead) return
-		if (Build.VERSION.SDK_INT >= 33) {
+		if(hasRead) return
+		if(Build.VERSION.SDK_INT >= 33) {
 			requestMultiplePermissions.launch(arrayOf(READ_MEDIA_AUDIO))
 		} else {
 			requestMultiplePermissions.launch(arrayOf(READ_EXTERNAL_STORAGE))
@@ -93,13 +99,13 @@ class Permissions : ComponentActivity() {
 		ActivityResultContracts.RequestMultiplePermissions()
 	) { permissions ->
 		permissions.entries.forEach {
-			if (it.value && it.key in listOf(BLUETOOTH_CONNECT, BLUETOOTH)) {
+			if(it.value && it.key in listOf(BLUETOOTH_CONNECT, BLUETOOTH)) {
 				hasBT = true
-				if (hasRead) finishAndRemoveTask()
+				if(hasRead) finishAndRemoveTask()
 			}
-			if (it.value && it.key in listOf(READ_MEDIA_AUDIO, READ_EXTERNAL_STORAGE)) {
+			if(it.value && it.key in listOf(READ_MEDIA_AUDIO, READ_EXTERNAL_STORAGE)) {
 				hasRead = true
-				if (hasBT) finishAndRemoveTask()
+				if(hasBT) finishAndRemoveTask()
 			}
 		}
 	}
@@ -107,79 +113,77 @@ class Permissions : ComponentActivity() {
 
 fun Context.hasPermission(permission: String): Boolean =
 	checkSelfPermission(this, permission) == PERMISSION_GRANTED
-
 @Composable
 fun PermissionsScreen(
 	onNearbyClick: () -> Unit,
 	onReadClick: () -> Unit
 ) {
-	Column(
-		modifier = Modifier
-			.fillMaxWidth()
-			.fillMaxHeight()
-			.padding(5.dp, 10.dp)
-			.safeDrawingPadding()
-	) {
+	Column(modifier = Modifier
+		.fillMaxWidth()
+		.fillMaxHeight()
+		.padding(10.dp)) {
 		Text(
 			modifier = Modifier
 				.fillMaxWidth()
-				.padding(0.dp, 10.dp),
-			text = "Permissions required",
+				.padding(vertical = 10.dp),
+			text = stringResource(R.string.permission_title),
 			color = colorScheme.primary,
 			fontSize = 20.sp,
 			fontWeight = FontWeight.Bold,
 			textAlign = TextAlign.Center
 		)
 		Text(
-			modifier = Modifier.fillMaxWidth(),
-			text = if (Permissions.hasBT) "Nearby devices ✓"
-				else "Nearby devices is needed to connect to your watch",
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(bottom = 10.dp),
+			text = stringResource(
+				if(Permissions.hasBT) R.string.permission_nearby_allowed
+				else R.string.permission_nearby_title
+			),
 			fontSize = 20.sp,
 			textAlign = TextAlign.Center
 		)
-		if (!Permissions.hasBT) {
+		if(!Permissions.hasBT) {
 			Button(
 				modifier = Modifier.fillMaxWidth(),
 				onClick = onNearbyClick
-			) {
-				Text(text = "Allow nearby devices")
-			}
+			) { Text(R.string.permission_nearby) }
 		}
 		HorizontalDivider(
 			modifier = Modifier
 				.fillMaxWidth()
-				.padding(0.dp, 10.dp),
+				.padding(vertical = 10.dp),
 			thickness = 2.dp,
 		)
 		Text(
-			modifier = Modifier.fillMaxWidth(),
-			text = if (Permissions.hasRead) "Access files ✓"
-				else "Access to files is needed to show the music on your phone and to send it to your watch",
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(bottom = 10.dp),
+			text = stringResource(
+				if(Permissions.hasRead) R.string.permission_read_allowed
+				else R.string.permission_read_title
+			),
 			fontSize = 20.sp,
 			textAlign = TextAlign.Center
 		)
 		Button(
 			modifier = Modifier.fillMaxWidth(),
 			onClick = onReadClick
-		) {
-			Text(text = "Allow access to files")
-		}
+		) { Text(R.string.permission_read) }
 		HorizontalDivider(
 			modifier = Modifier
 				.fillMaxWidth()
-				.padding(0.dp, 10.dp),
+				.padding(vertical = 10.dp),
 			thickness = 2.dp,
 		)
 		Text(
 			modifier = Modifier.fillMaxWidth(),
-			text = "If clicking allow on this screen does nothing, you will need to allow the " +
-					"permission in your phone's settings manually.",
+			text = stringResource(R.string.permission_explain),
 			fontSize = 14.sp,
 			textAlign = TextAlign.Center
 		)
 	}
 }
-
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, apiLevel = 35)
 @Composable
 fun PreviewPermissions() {

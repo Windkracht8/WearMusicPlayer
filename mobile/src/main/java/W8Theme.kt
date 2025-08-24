@@ -32,11 +32,10 @@ val DarkColorScheme = darkColorScheme(
 	onPrimary = Color(0xFF000000),
 	error = Color(0xFFFF0000),
 )
-
 @Composable
 fun W8Theme(content: @Composable () -> Unit) {
 	MaterialTheme(
-		colorScheme = if (isSystemInDarkTheme()) DarkColorScheme else LightColorScheme,
+		colorScheme = if(isSystemInDarkTheme()) DarkColorScheme else LightColorScheme,
 		content = content
 	)
 }

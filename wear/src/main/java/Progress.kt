@@ -22,6 +22,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,9 +57,7 @@ class Progress : ComponentActivity() {
 fun ProgressScreen() {
 	LocalActivity.current?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 	CircularProgressIndicator(
-		modifier = Modifier
-			.fillMaxWidth()
-			.fillMaxHeight(),
+		modifier = Modifier.fillMaxWidth().fillMaxHeight(),
 		colors = ProgressIndicatorDefaults.colors(
 			indicatorColor = ColorW8Blue,
 			trackColor = ColorBlack
@@ -74,11 +73,11 @@ fun ProgressScreen() {
 		verticalArrangement = Arrangement.Center
 	) {
 		BasicText(
-			text = when (CommsWifi.connectionType) {
-				CommsWifi.ConnectionType.REQUESTING, null -> "requesting Wifi"
-				CommsWifi.ConnectionType.FAST -> "Wifi (fast)"
-				CommsWifi.ConnectionType.SLOW -> "Bluetooth (slow)"
-			},
+			text = stringResource( when (CommsWifi.connectionType) {
+				CommsWifi.ConnectionType.REQUESTING, null -> R.string.requesting
+				CommsWifi.ConnectionType.FAST -> R.string.fast
+				CommsWifi.ConnectionType.SLOW -> R.string.slow
+			}),
 			color = { ColorWhite },
 			maxLines = 1,
 			autoSize = TextAutoSize.StepBased(
@@ -88,8 +87,11 @@ fun ProgressScreen() {
 			)
 		)
 		BasicText(
-			modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
-			text = "Receiving " + CommsWifi.path.substringAfterLast('/'),
+			modifier = Modifier.padding(horizontal = 10.dp),
+			text = stringResource(
+				R.string.receiving,
+				CommsWifi.path.substringAfterLast('/')
+			),
 			color = { ColorWhite },
 			maxLines = 2,
 			autoSize = TextAutoSize.StepBased(

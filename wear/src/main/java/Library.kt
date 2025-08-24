@@ -17,10 +17,7 @@ import android.os.Environment
 import android.os.Process
 import android.provider.MediaStore
 import androidx.activity.result.IntentSenderRequest
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -46,18 +43,18 @@ object Library {
 
 	fun scanMediaStore(context: Context) {
 		logD("Library.scanMediaStore")
-		CoroutineScope(Dispatchers.Default).launch { status.emit(Status.SCAN) }
+		runInBackground { status.emit(Status.SCAN) }
 		tracks.clear()
 		artists.clear()
 		albums.clear()
 
 		scanUri(context, MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL))
 		//logD("Library.scanMediaStore ready")
-		CoroutineScope(Dispatchers.Default).launch { status.emit(Status.READY) }
+		runInBackground { status.emit(Status.READY) }
 	}
 	fun scanFiles(context: Context) {
 		logD("Library.scanFiles")
-		CoroutineScope(Dispatchers.Default).launch { status.emit(Status.SCAN) }
+		runInBackground { status.emit(Status.SCAN) }
 		MediaScannerConnection.scanFile(
 			context,
 			arrayOf(exStorageDir),
@@ -77,7 +74,7 @@ object Library {
 			} else {
 				logD("Library.scanFile path exists")
 				scanUri(context, uri)
-				CoroutineScope(Dispatchers.Default).launch { status.emit(Status.UPDATE) }
+				runInBackground { status.emit(Status.UPDATE) }
 			}
 		}
 	}
@@ -196,7 +193,7 @@ object Library {
 			album.tracks.removeIf { t -> t.path == path }
 		}
 		albums.removeIf { it.tracks.isEmpty() }
-		CoroutineScope(Dispatchers.Default).launch { status.emit(Status.UPDATE) }
+		runInBackground { status.emit(Status.UPDATE) }
 	}
 
 	fun getTracksJson(): JSONArray {
@@ -252,7 +249,7 @@ object Library {
 
 	class Artist(track: Track, artistName: String?) : Comparable<Artist> {
 		val id: Int = artists.size
-		val name: String = artistName ?: "<empty>"
+		val name: String = artistName ?: "<empty>"//TODO from strings.xml or empty string
 		val tracks: ArrayList<Track> = ArrayList()
 		val albums: ArrayList<Album> = ArrayList()
 
@@ -283,7 +280,7 @@ object Library {
 		albumArtist: String?
 	) : Comparable<Album> {
 		val id: Int = albums.size
-		val name: String = albumName ?: "<empty>"
+		val name: String = albumName ?: "<empty>"//TODO from strings.xml or empty string
 		var artist: String = albumArtist ?: track.artist.name
 		val tracks: ArrayList<Track> = ArrayList()
 

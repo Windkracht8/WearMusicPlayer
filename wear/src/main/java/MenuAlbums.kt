@@ -8,6 +8,7 @@
 package com.windkracht8.wearmusicplayer
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
@@ -24,18 +25,12 @@ fun MenuAlbums(onMenuAlbumClick: (id: Int) -> Unit) {
 		last = ColumnItemType.Button,
 	)
 	val transformationSpec = rememberTransformationSpec()
-	ScreenScaffold(
-		scrollState = columnState,
-		contentPadding = contentPadding
-	) { contentPadding ->
-		TransformingLazyColumn(
-			state = columnState,
-			contentPadding = contentPadding
-		) {
+	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
+		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = "Albums",
+					label = stringResource(R.string.albums),
 				)
 			}
 			Library.albums.forEach {

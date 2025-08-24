@@ -9,11 +9,44 @@
 <resources>
 	<string name="app_name" translatable="false">Wear Music Player</string>
 
-	<!-- main ui -->
+	<!-- home -->
+	<string name="starting">Looking for known watch</string>
+	<string name="no_permission">Tap icon to allow permission</string>
+	<string name="open_folder">Open other folder</string>
+	<string name="loading">loading file list</string>
+	<string name="watch_tracks">Tracks only on the watch</string>
+
 	<string name="fail_open_folder_request">Failed to launch folder select app</string>
 	<string name="fail_open_folder">Failed to open folder</string>
 
+	<!-- permission -->
+	<string name="permission_title">Permissions required</string>
+	<string name="permission_nearby_title">Nearby devices is needed to connect to your watch</string>
+	<string name="permission_nearby_allowed">Nearby devices ✓</string>
+	<string name="permission_nearby">Allow nearby devices</string>
+	<string name="permission_read_title">Access to files is needed to show the music on your phone
+		and to send it to your watch</string>
+	<string name="permission_read_allowed">Access files ✓</string>
+	<string name="permission_read">Allow access to files</string>
+	<string name="permission_explain">If clicking allow on this screen does nothing, you will need
+        to allow the permission in your phone\'s settings manually.</string>
+
+	<!-- device select/connect -->
+	<string name="device_select_title">To connect, open the app on the watch, don\'t start a match,
+        and select your watch from the list below</string>
+	<string name="device_select_new">New watch</string>
+	<string name="device_select_none">No Bluetooth device found, first pair your watch</string>
+	<string name="delete_device">Delete device?</string>
+	<string name="delete">Delete</string>
+	<string name="device_connect_instruct">keep the app on the watch open while trying to
+        connect</string>
+	<string name="cancel">Cancel</string>
+
 	<!-- CommsBT -->
+	<string name="connecting_to">Connecting to %s</string>
+	<string name="connected_to">Connected to %s</string>
+	<string name="disconnected">Disconnected, tap icon to connect</string>
+
 	<string name="sync">Synchronizing</string>
 	<string name="sync_done">Synchronized</string>
 	<string name="send_file">Sending file</string>

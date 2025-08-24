@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,35 +41,28 @@ import kotlinx.coroutines.launch
 class DeviceConnect : ComponentActivity() {
 	public override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		if (CommsBT.status.value != CommsBT.Status.CONNECTING) finishAndRemoveTask()
-
+		if(CommsBT.status.value != CommsBT.Status.CONNECTING) finishAndRemoveTask()
 		lifecycleScope.launch {
-			CommsBT.status.collect { status ->
-				logD("DeviceConnect: CommsBT status change: $status")
-				if (status != CommsBT.Status.CONNECTING) finishAndRemoveTask()
+			CommsBT.status.collect {
+				if(it != CommsBT.Status.CONNECTING) finishAndRemoveTask()
 			}
 		}
-
 		enableEdgeToEdge()
 		setContent { W8Theme { Surface { DeviceConnectScreen() } } }
 	}
 }
-
 @Composable
 fun DeviceConnectScreen() {
 	val iconWatchConnecting =
 		AnimatedImageVector.animatedVectorResource(R.drawable.icon_watch_connecting)
 	var iconWatchConnectingAtEnd by remember { mutableStateOf(false) }
-	Column(
-		modifier = Modifier
-			.fillMaxWidth()
-			.fillMaxHeight()
-			.padding(5.dp, 10.dp)
-			.safeDrawingPadding()
-	) {
+	Column(modifier = Modifier
+		.fillMaxWidth()
+		.fillMaxHeight()
+		.padding(10.dp)) {
 		Text(
 			modifier = Modifier.fillMaxWidth(),
-			text = "Connecting to " + CommsBT.deviceName,
+			text = stringResource(R.string.connecting_to, CommsBT.deviceName),
 			textAlign = TextAlign.Center,
 			color = colorScheme.primary,
 			fontSize = 20.sp,
@@ -77,7 +70,7 @@ fun DeviceConnectScreen() {
 		)
 		Text(
 			modifier = Modifier.fillMaxWidth(),
-			text = "keep the app on the watch open while trying to connect",
+			text = stringResource(R.string.device_connect_instruct),
 			textAlign = TextAlign.Center,
 			fontSize = 14.sp,
 			fontWeight = FontWeight.Bold
@@ -95,7 +88,6 @@ fun DeviceConnectScreen() {
 		iconWatchConnectingAtEnd = true
 	}
 }
-
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, apiLevel = 35)
 @Composable
 fun PreviewDeviceConnect() {

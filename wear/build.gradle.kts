@@ -50,7 +50,7 @@ dependencies {
 	implementation("com.google.android.horologist:horologist-compose-layout:0.7.15")
 	implementation("androidx.activity:activity-compose:1.10.1")
 	implementation("androidx.core:core-splashscreen:1.0.1")
-	implementation("androidx.fragment:fragment-ktx:1.8.8")
+	implementation("androidx.fragment:fragment-ktx:1.8.9")
 	implementation("androidx.media3:media3-exoplayer:1.8.0")
 	implementation("androidx.media3:media3-session:1.8.0")
 	implementation("androidx.navigation:navigation-runtime-android:2.9.3")
@@ -60,6 +60,6 @@ dependencies {
 	implementation("androidx.wear:wear-ongoing:1.0.0")
 
 	//actually only for debug, but release won't compile without it
-	implementation("androidx.compose.ui:ui-tooling-preview")
+	implementation("androidx.compose.ui:ui-tooling-preview:1.9.0")
 	implementation("androidx.wear:wear-tooling-preview:1.0.0")
 }

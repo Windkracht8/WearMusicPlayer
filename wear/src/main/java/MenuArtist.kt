@@ -9,6 +9,7 @@ package com.windkracht8.wearmusicplayer
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
@@ -21,7 +22,7 @@ import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadd
 fun MenuArtist(
 	id: Int,
 	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
-	onMenuAlbumClick: (id: Int) -> Unit = {},
+	onMenuAlbumClick: (id: Int) -> Unit,
 	trackId: Int
 ) {
 	val artist = Library.artists.firstOrNull { it.id == id }
@@ -32,22 +33,14 @@ fun MenuArtist(
 	)
 	val transformationSpec = rememberTransformationSpec()
 	LaunchedEffect(Unit) {
-		if (trackId > 0) {
-			columnState.scrollToItem(trackId + 1 + (artist?.albums?.size ?: 0))
-		}
+		if (trackId > 0) columnState.scrollToItem(trackId + 1 + (artist?.albums?.size ?: 0))
 	}
-	ScreenScaffold(
-		scrollState = columnState,
-		contentPadding = contentPadding
-	) { contentPadding ->
-		TransformingLazyColumn(
-			state = columnState,
-			contentPadding = contentPadding
-		) {
+	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
+		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = artist?.name ?: "oops",
+					label = artist?.name ?: stringResource(R.string.oops),
 				)
 			}
 			artist?.albums?.forEach { album ->
@@ -55,7 +48,8 @@ fun MenuArtist(
 					MenuItem(
 						transformation = SurfaceTransformation(transformationSpec),
 						label = album.name,
-						subLabel = "album: " + "track".singularPlural(album.tracks.size),
+						subLabel = stringResource(R.string.album) + ": " +
+								trackOrTracks(album.tracks.size),
 						onClick = { onMenuAlbumClick(album.id) }
 					)
 				}

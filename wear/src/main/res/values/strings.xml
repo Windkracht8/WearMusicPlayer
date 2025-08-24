@@ -8,6 +8,30 @@
 <resources>
 	<string name="app_name">Music Player</string>
 
+	<!-- home -->
+	<string name="loading">loading</string>
+	<string name="no_tracks">no tracks found</string>
+	<string name="upload">"upload with phone app</string>
+
+	<!-- menu -->
+	<string name="library">Library</string>
+	<string name="all">All</string>
+	<string name="albums">Albums</string>
+	<string name="artists">Artists</string>
+	<string name="rescan">Rescan</string>
+	<string name="oops">oops</string>
+	<string name="randomise">Randomise</string>
+	<string name="album">album</string>
+	<string name="track">track</string>
+	<string name="tracks">tracks</string>
+
+	<!-- progress -->
+	<string name="requesting">requesting Wifi</string>
+	<string name="fast">Wifi (fast)</string>
+	<string name="slow">Bluetooth (slow)</string>
+	<string name="receiving">Receiving %s</string>
+
+	<!-- library -->
 	<string name="various_artists">Various artists</string>
 
 	<!-- Notification -->

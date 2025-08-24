@@ -14,12 +14,9 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.Context
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.InputStream
@@ -81,7 +78,7 @@ object CommsBT {
 						//{"requestType":"fileDetails","responseData":-1}
 						return
 					}
-					CoroutineScope(Dispatchers.Default).launch {
+					runInBackground {
 						CommsWifi.receiveFile(
 							path,
 							requestData.getLong("length"),
@@ -156,8 +153,8 @@ object CommsBT {
 	}
 	fun restart(){
 		disconnect = true
-		try { bluetoothServerSocket?.close() } catch (_: Exception) { }
-		try { bluetoothSocket?.close() } catch (_: Exception) { }
+		tryIgnore { bluetoothServerSocket?.close() }
+		tryIgnore { bluetoothSocket?.close() }
 		bluetoothServerSocket = null
 		bluetoothSocket = null
 		commsBTConnect = null
@@ -169,8 +166,8 @@ object CommsBT {
 	fun stop() {
 		//logD("CommsBT.stop")
 		disconnect = true
-		try { bluetoothServerSocket?.close() } catch (_: Exception) { }
-		try { bluetoothSocket?.close() } catch (_: Exception) { }
+		tryIgnore { bluetoothServerSocket?.close() }
+		tryIgnore { bluetoothSocket?.close() }
 		bluetoothServerSocket = null
 		bluetoothSocket = null
 		bluetoothAdapter = null
@@ -221,7 +218,7 @@ object CommsBT {
 
 		override fun run() {
 			logD("CommsBTConnected.run")
-			CoroutineScope(Dispatchers.Default).launch { process() }
+			runInBackground { process() }
 		}
 
 		suspend fun process() {
@@ -295,6 +292,5 @@ object CommsBT {
 			return true
 		}
 	}
-	fun onError(message: Int) =
-		CoroutineScope(Dispatchers.Default).launch { error.emit(message) }
+	fun onError(message: Int) = runInBackground { error.emit(message) }
 }

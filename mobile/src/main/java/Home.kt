@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
@@ -54,11 +53,10 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun Home(
 	commsBTStatus: CommsBT.Status?,
-	commsBTError: String,
 	showLoading: Boolean,
-	onIconClick: () -> Unit = {},
-	onOpenFolderClick: () -> Unit = {},
-	onItemIconClick: (LibItem) -> Unit = {}
+	onIconClick: () -> Unit,
+	onOpenFolderClick: () -> Unit,
+	onItemIconClick: (LibItem) -> Unit
 ) {
 	val iconWatchConnecting =
 		AnimatedImageVector.animatedVectorResource(R.drawable.icon_watch_connecting)
@@ -69,18 +67,15 @@ fun Home(
 			.fillMaxWidth()
 			.fillMaxHeight()
 			.padding(5.dp, 10.dp)
-			.safeDrawingPadding()
 	) {
-		Row(
-			modifier = Modifier
-				.fillMaxWidth()
-				.height(70.dp)
-		) {
+		Row(modifier = Modifier
+			.fillMaxWidth()
+			.height(70.dp)) {
 			Box(
 				Modifier.size(70.dp),
 				contentAlignment = Alignment.Center
 			) {
-				if (commsBTStatus in listOf(CommsBT.Status.CONNECTING, CommsBT.Status.STARTING)) {
+				if(commsBTStatus in listOf(CommsBT.Status.CONNECTING, CommsBT.Status.STARTING)) {
 					Image(
 						modifier = Modifier
 							.size(70.dp)
@@ -98,7 +93,7 @@ fun Home(
 							.size(70.dp)
 							.clickable { onIconClick() },
 						imageVector = ImageVector.vectorResource(R.drawable.icon_watch),
-						tint = when (commsBTStatus) {
+						tint = when(commsBTStatus) {
 							CommsBT.Status.DISCONNECTED, null -> colorScheme.onBackground.copy(alpha = 0.38f)
 							CommsBT.Status.ERROR -> colorScheme.error
 							else -> colorScheme.onBackground
@@ -122,21 +117,24 @@ fun Home(
 			Column(modifier = Modifier.fillMaxWidth()) {
 				Text(
 					modifier = Modifier.fillMaxWidth(),
-					text = when (commsBTStatus) {
-						CommsBT.Status.DISCONNECTED -> "Tap icon to connect to watch"
-						CommsBT.Status.CONNECTING -> "Connecting to " + CommsBT.deviceName
-						CommsBT.Status.CONNECTED -> "Connected to " + CommsBT.deviceName
+					text = when(commsBTStatus) {
+						CommsBT.Status.DISCONNECTED ->
+							stringResource(R.string.disconnected)
+						CommsBT.Status.CONNECTING ->
+							stringResource(R.string.connecting_to, CommsBT.deviceName)
+						CommsBT.Status.CONNECTED ->
+							stringResource(R.string.connected_to, CommsBT.deviceName)
 						CommsBT.Status.STARTING, null ->
-							if(Permissions.hasBT) "Looking for known watch"
-							else "Tap icon to allow permission"
-						CommsBT.Status.ERROR -> commsBTError
+							if(Permissions.hasBT) stringResource(R.string.starting)
+							else stringResource(R.string.no_permission)
+						CommsBT.Status.ERROR -> stringResource(CommsBT.error)
 					},
 					fontSize = 18.sp
 				)
 				Text(
 					modifier = Modifier.fillMaxWidth(),
-					text = if (CommsBT.messageStatus > 0) stringResource(CommsBT.messageStatus)
-						else "",
+					text = if(CommsBT.messageStatus <= 0) ""
+					else stringResource(CommsBT.messageStatus),
 					fontSize = 14.sp
 				)
 			}
@@ -145,89 +143,98 @@ fun Home(
 			modifier = Modifier.fillMaxWidth(),
 			horizontalArrangement = Arrangement.End
 		) {
-			OutlinedButton(onClick = onOpenFolderClick) { Text(text = "open other folder") }
+			OutlinedButton(onClick = onOpenFolderClick) { Text(R.string.open_folder) }
 		}
-		if (showLoading) {
+		if(showLoading) {
 			Text(
 				modifier = Modifier.fillMaxWidth(),
-				text = if(Permissions.hasRead) "loading file list"
-					else "Tap icon to allow permission",
+				text = stringResource(
+					if(Permissions.hasRead) R.string.loading
+					else R.string.no_permission
+				),
 				fontSize = 24.sp,
 				textAlign = TextAlign.Center
 			)
 		} else {
-			LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
-				Library.rootLibDir.libDirs.forEachIndexed { i, it -> item { Item(it, i > 0, onItemIconClick) } }
-				Library.rootLibDir.libTracks.forEachIndexed { i, it -> item { Item(it, i == 0, onItemIconClick) } }
-			}
-		}
-		if (Library.watchLibDir.status == LibItem.Status.NOT) {
-			HorizontalDivider(
-				modifier = Modifier.fillMaxWidth().padding(0.dp, 5.dp),
-				color = colorScheme.onBackground
-			)
-			Text(
-				modifier = Modifier.fillMaxWidth(),
-				text = "Tracks only on the watch",
-				fontSize = 16.sp,
-				textAlign = TextAlign.Center
-			)
-			HorizontalDivider(
-				modifier = Modifier.fillMaxWidth().padding(0.dp, 5.dp),
-				color = colorScheme.onBackground
-			)
-			LazyColumn(modifier = Modifier.fillMaxWidth().weight(0.5f)) {
-				Library.watchLibDir.libDirs.forEachIndexed { i, it ->
-					if(it.status != LibItem.Status.NOT) return@forEachIndexed
+			LazyColumn(modifier = Modifier
+				.fillMaxWidth()
+				.weight(1f)) {
+				Library.rootLibDir.libDirs.forEachIndexed { i, it ->
 					item { Item(it, i > 0, onItemIconClick) }
 				}
-				Library.watchLibDir.libTracks.forEachIndexed { i, it ->
-					if(it.status == LibItem.Status.NOT) return@forEachIndexed
+				Library.rootLibDir.libTracks.forEachIndexed { i, it ->
 					item { Item(it, i == 0, onItemIconClick) }
+				}
+			}
+			if(Library.watchLibDir.status == LibItem.Status.NOT) {
+				HorizontalDivider(
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(0.dp, 5.dp),
+					color = colorScheme.onBackground
+				)
+				Text(
+					modifier = Modifier.fillMaxWidth(),
+					text = stringResource(R.string.watch_tracks),
+					fontSize = 16.sp,
+					textAlign = TextAlign.Center
+				)
+				HorizontalDivider(
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(0.dp, 5.dp),
+					color = colorScheme.onBackground
+				)
+				LazyColumn(modifier = Modifier
+					.fillMaxWidth()
+					.weight(0.5f)) {
+					Library.watchLibDir.libDirs.forEachIndexed { i, it ->
+						if(it.status != LibItem.Status.NOT) return@forEachIndexed
+						item { Item(it, i > 0, onItemIconClick) }
+					}
+					Library.watchLibDir.libTracks.forEachIndexed { i, it ->
+						if(it.status == LibItem.Status.NOT) return@forEachIndexed
+						item { Item(it, i == 0, onItemIconClick) }
+					}
 				}
 			}
 		}
 	}
 }
-
 @Composable
 fun Item(
 	libItem: LibItem,
 	showDivider: Boolean,
-	onItemIconClick: (LibItem) -> Unit = {}
+	onItemIconClick: (LibItem) -> Unit
 ) {
 	var showSubItems by remember { mutableStateOf(false) }
-	if (showDivider) {
+	if(showDivider) {
 		HorizontalDivider(
 			modifier = Modifier
 				.fillMaxWidth()
-				.padding((libItem.depth * 7 + 48).dp, 0.dp, 0.dp, 0.dp),
+				.padding(start = (libItem.depth * 7 + 48).dp),
 			thickness = 1.dp
 		)
 	}
-	Row(
-		modifier = Modifier
-			.fillMaxWidth()
-			.padding((libItem.depth * 7).dp, 0.dp, 0.dp, 0.dp)
-	) {
+	Row(modifier = Modifier
+		.fillMaxWidth()
+		.padding(start = (libItem.depth * 7).dp)) {
 		Box(
 			Modifier.size(48.dp),
 			contentAlignment = Alignment.Center
 		) {
-			when (libItem.status) {
+			when(libItem.status) {
 				LibItem.Status.PENDING -> {
 					CircularProgressIndicator(
 						trackColor = colorScheme.onBackground.copy(alpha = 0.2f)
 					)
 				}
-
 				LibItem.Status.SENDING -> {
 					CircularProgressIndicator(
 						trackColor = colorScheme.onBackground.copy(alpha = 0.2f),
 						progress = { libItem.progress / 100F }
 					)
 				}
-
 				else -> {
 					IconButton(
 						modifier = Modifier.size(48.dp),
@@ -236,14 +243,14 @@ fun Item(
 						Icon(
 							imageVector = ImageVector.vectorResource(
 								id =
-									if (libItem is LibDir) {
-										when (libItem.status) {
+									if(libItem is LibDir) {
+										when(libItem.status) {
 											LibItem.Status.FULL -> R.drawable.icon_full
 											LibItem.Status.PARTIAL -> R.drawable.icon_partial
 											else -> R.drawable.icon_empty
 										}
 									} else {
-										when (libItem.status) {
+										when(libItem.status) {
 											LibItem.Status.FULL -> R.drawable.icon_delete
 											LibItem.Status.NOT -> R.drawable.icon_upload
 											else -> R.drawable.icon_empty
@@ -259,7 +266,7 @@ fun Item(
 		TextButton(
 			modifier = Modifier.fillMaxWidth(),
 			onClick = {
-				if (libItem is LibDir) {
+				if(libItem is LibDir) {
 					showSubItems = !showSubItems
 				}
 			}
@@ -273,14 +280,15 @@ fun Item(
 			)
 		}
 	}
-	if (libItem is LibDir && showSubItems) {
+	if(libItem is LibDir && showSubItems) {
 		Column {
 			libItem.libDirs.forEach { Item(it, true, onItemIconClick) }
 			libItem.libTracks.forEach { Item(it, false, onItemIconClick) }
 		}
 	}
 }
-
+@Composable
+fun Text(text: Int) = Text(stringResource(text))
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, apiLevel = 35)
 @Composable
 fun PreviewHome() {
@@ -313,19 +321,30 @@ fun PreviewHome() {
 	CommsBT.deviceName = "Test watch"
 	CommsBT.freeSpace = " 10 GB"
 	CommsBT.messageStatus = R.string.sync_done
-	W8Theme { Surface { Home(
-		commsBTStatus = CommsBT.Status.CONNECTING,
-		commsBTError = "Some error",
-		showLoading = false
-	) } }
+	W8Theme {
+		Surface {
+			Home(
+				commsBTStatus = CommsBT.Status.CONNECTING,
+				showLoading = false,
+				onIconClick = {},
+				onOpenFolderClick = {},
+				onItemIconClick = {}
+			)
+		}
+	}
 }
-
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, apiLevel = 35)
 @Composable
 fun PreviewHomeDay() {
-	W8Theme { Surface { Home(
-		commsBTStatus = CommsBT.Status.CONNECTING,
-		commsBTError = "Some error",
-		showLoading = false
-	) } }
+	W8Theme {
+		Surface {
+			Home(
+				commsBTStatus = CommsBT.Status.CONNECTING,
+				showLoading = false,
+				onIconClick = {},
+				onOpenFolderClick = {},
+				onItemIconClick = {}
+			)
+		}
+	}
 }

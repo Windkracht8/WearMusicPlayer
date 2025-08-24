@@ -12,6 +12,9 @@ import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 const val LOG_TAG = "WearMusicPlayer"
 fun logE(message: String) = Log.e(LOG_TAG, message)
@@ -23,12 +26,12 @@ fun Context.toast(message: Int) = Toast.makeText(this, message, Toast.LENGTH_SHO
 fun Context.hasPermission(permission: String): Boolean =
 	ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
-fun String.singularPlural(count: Int): String =
-	if (count == 1) "$count $this" else "$count ${this}s"
-
 fun String.isPathUnsave(): Boolean =
 	contains("..") || contains("/./") || contains("//") ||
 	contains("\\u0000") ||
 	startsWith("/") || endsWith("/") ||
 	startsWith(".") || endsWith(".") ||
 	startsWith(" ") || endsWith(" ")
+
+fun tryIgnore(block: () -> Unit) = try { block() } catch (_: Exception) {}
+fun runInBackground(block: suspend () -> Unit) = CoroutineScope(Dispatchers.Default).launch { block() }

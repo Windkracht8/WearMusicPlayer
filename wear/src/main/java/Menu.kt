@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
@@ -49,34 +50,34 @@ fun Menu(
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = "Library"
+					label = stringResource(R.string.library)
 				)
 			}
 			item {
 				MenuItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = "All",
+					label = stringResource(R.string.all),
 					onClick = onMenuAllClick
 				)
 			}
 			item {
 				MenuItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = "Albums",
+					label = stringResource(R.string.albums),
 					onClick = onMenuAlbumsClick
 				)
 			}
 			item {
 				MenuItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = "Artists",
+					label = stringResource(R.string.artists),
 					onClick = onMenuArtistsClick
 				)
 			}
 			item {
 				MenuItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = "Rescan",
+					label = stringResource(R.string.rescan),
 					onClick = onRescanClick
 				)
 			}
@@ -85,9 +86,8 @@ fun Menu(
 }
 
 @Composable
-fun MenuHeaderItem(transformation: SurfaceTransformation, label: String) {
-	ListHeader(transformation = transformation) { Text(text = label) }
-}
+fun MenuHeaderItem(transformation: SurfaceTransformation, label: String) =
+	ListHeader(transformation = transformation) { Text(label) }
 
 @Composable
 fun MenuItem(
@@ -129,3 +129,12 @@ fun MenuItem(
 		}
 	}
 }
+
+@Composable
+fun trackOrTracks(count: Int): String =
+	if (count == 1) "$count " + stringResource(R.string.track)
+	else "$count " + stringResource(R.string.tracks)
+@Composable
+fun albumOrAlbums(count: Int): String =
+	if (count == 1) "$count " + stringResource(R.string.album)
+	else "$count " + stringResource(R.string.albums).lowercase()

@@ -19,8 +19,8 @@ android {
 		applicationId = "com.windkracht8.wearmusicplayer"
 		minSdk = 26
 		targetSdk = 36
-		versionCode = 144
-		versionName = "m2.1"
+		versionCode = 145
+		versionName = "m2.2"
 	}
 	buildTypes {
 		debug {
@@ -52,9 +52,7 @@ dependencies {
 	implementation("androidx.compose.animation:animation-graphics-android:1.9.0")
 	implementation("androidx.compose.runtime:runtime-android:1.9.0")
 	implementation("androidx.compose.material3:material3-android:1.3.2")
-	implementation("androidx.navigation:navigation-runtime-android:2.9.3")
-
 	//actually only for debug, but release won't compile without it
-	implementation("androidx.compose.ui:ui-tooling-preview")
-	debugImplementation("androidx.compose.ui:ui-tooling")
+	implementation("androidx.compose.ui:ui-tooling-preview:1.9.0")
+	debugImplementation("androidx.compose.ui:ui-tooling:1.9.0")
 }

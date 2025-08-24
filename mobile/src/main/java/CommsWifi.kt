@@ -20,7 +20,7 @@ object CommsWifi {
 	var serverSocket: ServerSocket? = null
 	var isSending = false
 	fun sendFile(libItem: LibItem) {
-		if (ipAddress == null) return CommsBT.onMessageError(R.string.fail_no_wifi)
+		if(ipAddress == null) return CommsBT.onMessageError(R.string.fail_no_wifi)
 		logD("CommsWifi.sendFile " + libItem.name)
 		isSending = true
 		libItem.status = LibItem.Status.SENDING
@@ -31,10 +31,10 @@ object CommsWifi {
 					FileInputStream(libItem.fullPath).use { fileInputStream ->
 						var bytesDone: Long = 0
 						socket.outputStream.use { outputStream ->
-							while (fileInputStream.available() > 0) {
+							while(fileInputStream.available() > 0) {
 								val buffer = ByteArray(2048)
 								val numBytes: Int = fileInputStream.read(buffer)
-								if (numBytes < 0) {
+								if(numBytes < 0) {
 									logE("CommsWifi.sendFile read error")
 									return CommsBT.onMessageError(R.string.fail_send_file)
 								}
@@ -46,7 +46,7 @@ object CommsWifi {
 					}
 				}
 			}
-		} catch (e: Exception) {
+		} catch(e: Exception) {
 			logE("CommsWifi.sendFile exception: $e")
 			logE("CommsWifi.sendFile exception: " + e.message)
 			CommsBT.onMessageError(R.string.fail_send_file)
@@ -57,15 +57,14 @@ object CommsWifi {
 		}
 	}
 
-	fun stop() = try { serverSocket?.close() } catch (_: Exception) {}
-
+	fun stop() = tryIgnore { serverSocket?.close() }
 	fun getIpAddress(activity: Activity): Boolean {
 		val connectivityManager =
 			activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 		connectivityManager.activeNetwork?.let { network ->
 			connectivityManager.getLinkProperties(network)?.let { linkProperties ->
-				for (linkAddress in linkProperties.linkAddresses) {
-					if (linkAddress.address is Inet4Address) {
+				for(linkAddress in linkProperties.linkAddresses) {
+					if(linkAddress.address is Inet4Address) {
 						ipAddress = linkAddress.address.hostAddress ?: continue
 						return true
 					}
