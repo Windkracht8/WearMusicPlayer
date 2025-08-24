@@ -127,11 +127,7 @@ fun Home(
 				text = currentTrackTitle,
 				color = { ColorW8Blue },
 				maxLines = 2,
-				autoSize = TextAutoSize.StepBased(
-					minFontSize = 10.sp,
-					maxFontSize = 20.sp,
-					stepSize = 1.sp
-				),
+				autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 20.sp),
 				style = TextStyle.Default.copy(textAlign = TextAlign.Center)
 			)
 		}
@@ -144,11 +140,7 @@ fun Home(
 				color = { ColorWhite },
 				maxLines = 1,
 				overflow = TextOverflow.Ellipsis,
-				autoSize = TextAutoSize.StepBased(
-					minFontSize = 10.sp,
-					maxFontSize = 20.sp,
-					stepSize = 1.sp
-				)
+				autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 20.sp)
 			)
 		}
 		IconButton(

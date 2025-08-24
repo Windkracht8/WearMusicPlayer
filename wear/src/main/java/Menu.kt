@@ -107,11 +107,7 @@ fun MenuItem(
 				color = { ColorWhite },
 				maxLines = if (subLabel == null) 2 else 1,
 				softWrap = subLabel == null,
-				autoSize = TextAutoSize.StepBased(
-					minFontSize = 10.sp,
-					maxFontSize = 14.sp,
-					stepSize = 1.sp
-				)
+				autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 14.sp)
 			)
 			if (subLabel != null) {
 				BasicText(
@@ -119,11 +115,7 @@ fun MenuItem(
 					color = { ColorW8Blue },
 					maxLines = 1,
 					softWrap = false,
-					autoSize = TextAutoSize.StepBased(
-						minFontSize = 10.sp,
-						maxFontSize = 14.sp,
-						stepSize = 1.sp
-					)
+					autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 14.sp)
 				)
 			}
 		}

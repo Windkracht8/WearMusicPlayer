@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -114,18 +115,10 @@ class Permissions : ComponentActivity() {
 fun Context.hasPermission(permission: String): Boolean =
 	checkSelfPermission(this, permission) == PERMISSION_GRANTED
 @Composable
-fun PermissionsScreen(
-	onNearbyClick: () -> Unit,
-	onReadClick: () -> Unit
-) {
-	Column(modifier = Modifier
-		.fillMaxWidth()
-		.fillMaxHeight()
-		.padding(10.dp)) {
+fun PermissionsScreen(onNearbyClick: () -> Unit, onReadClick: () -> Unit) {
+	Column(modifier = Modifier.fillMaxWidth().fillMaxHeight().safeContentPadding()) {
 		Text(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(vertical = 10.dp),
+			modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
 			text = stringResource(R.string.permission_title),
 			color = colorScheme.primary,
 			fontSize = 20.sp,
@@ -133,9 +126,7 @@ fun PermissionsScreen(
 			textAlign = TextAlign.Center
 		)
 		Text(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(bottom = 10.dp),
+			modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
 			text = stringResource(
 				if(Permissions.hasBT) R.string.permission_nearby_allowed
 				else R.string.permission_nearby_title
@@ -150,15 +141,11 @@ fun PermissionsScreen(
 			) { Text(R.string.permission_nearby) }
 		}
 		HorizontalDivider(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(vertical = 10.dp),
+			modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
 			thickness = 2.dp,
 		)
 		Text(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(bottom = 10.dp),
+			modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
 			text = stringResource(
 				if(Permissions.hasRead) R.string.permission_read_allowed
 				else R.string.permission_read_title
@@ -171,9 +158,7 @@ fun PermissionsScreen(
 			onClick = onReadClick
 		) { Text(R.string.permission_read) }
 		HorizontalDivider(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(vertical = 10.dp),
+			modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
 			thickness = 2.dp,
 		)
 		Text(

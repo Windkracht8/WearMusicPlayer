@@ -111,13 +111,15 @@ object CommsBT {
 
 	fun stop() {
 		disconnect = true
+		requestQueue.clear()
+		lastRequest = null
+		status.value = Status.DISCONNECTED
+		freeSpace = ""
+		messageStatus = -1
 		tryIgnore { bluetoothSocket?.close() }
 		bluetoothSocket = null
 		commsBTConnect = null
 		commsBTConnected = null
-		status.value = Status.DISCONNECTED
-		freeSpace = ""
-		messageStatus = -1
 	}
 
 	fun getBondedDevices(): Set<BluetoothDevice>? {
@@ -394,9 +396,9 @@ object CommsBT {
 
 	class Request(val type: Type, val libItem: LibItem? = null) {
 		enum class Type { SYNC, SEND_FILE, DELETE_FILE }
-
 		override fun toString(): String {
 			val request = JSONObject()
+			request.put("version", 1)
 			when(type) {
 				Type.SYNC -> {
 					//{"requestType":"sync","requestData":{}}
@@ -418,8 +420,7 @@ object CommsBT {
 					}
 					val file = File(libItem.fullPath)
 					libItem.length = file.length()
-					request.put(
-						"requestData",
+					request.put("requestData",
 						JSONObject()
 							.put("path", libItem.path)
 							.put("length", libItem.length)

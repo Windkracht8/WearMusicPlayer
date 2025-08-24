@@ -127,6 +127,7 @@ object CommsBT {
 	}
 	fun sendResponse(requestType: String, responseData: Any) {
 		responseQueue.add(JSONObject()
+			.put("version", 1)
 			.put("requestType", requestType)
 			.put("responseData", responseData)
 		)

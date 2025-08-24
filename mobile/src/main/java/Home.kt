@@ -5,7 +5,6 @@
  * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package com.windkracht8.wearmusicplayer
 
 import android.content.res.Configuration
@@ -22,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
@@ -62,24 +62,15 @@ fun Home(
 		AnimatedImageVector.animatedVectorResource(R.drawable.icon_watch_connecting)
 	var iconWatchConnectingAtEnd by remember { mutableStateOf(false) }
 
-	Column(
-		modifier = Modifier
-			.fillMaxWidth()
-			.fillMaxHeight()
-			.padding(5.dp, 10.dp)
-	) {
-		Row(modifier = Modifier
-			.fillMaxWidth()
-			.height(70.dp)) {
+	Column(modifier = Modifier.fillMaxWidth().fillMaxHeight().safeContentPadding()) {
+		Row(modifier = Modifier.fillMaxWidth().height(70.dp)) {
 			Box(
 				Modifier.size(70.dp),
 				contentAlignment = Alignment.Center
 			) {
 				if(commsBTStatus in listOf(CommsBT.Status.CONNECTING, CommsBT.Status.STARTING)) {
 					Image(
-						modifier = Modifier
-							.size(70.dp)
-							.clickable { onIconClick() },
+						modifier = Modifier.size(70.dp).clickable { onIconClick() },
 						painter = rememberAnimatedVectorPainter(
 							iconWatchConnecting,
 							iconWatchConnectingAtEnd
@@ -89,9 +80,7 @@ fun Home(
 					iconWatchConnectingAtEnd = true
 				} else {
 					Icon(
-						modifier = Modifier
-							.size(70.dp)
-							.clickable { onIconClick() },
+						modifier = Modifier.size(70.dp).clickable { onIconClick() },
 						imageVector = ImageVector.vectorResource(R.drawable.icon_watch),
 						tint = when(commsBTStatus) {
 							CommsBT.Status.DISCONNECTED, null -> colorScheme.onBackground.copy(alpha = 0.38f)
@@ -107,11 +96,7 @@ fun Home(
 					text = CommsBT.freeSpace,
 					color = { colorOnBackground },
 					maxLines = 1,
-					autoSize = TextAutoSize.StepBased(
-						minFontSize = 6.sp,
-						maxFontSize = 20.sp,
-						stepSize = 1.sp
-					)
+					autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 20.sp)
 				)
 			}
 			Column(modifier = Modifier.fillMaxWidth()) {
@@ -133,8 +118,9 @@ fun Home(
 				)
 				Text(
 					modifier = Modifier.fillMaxWidth(),
-					text = if(CommsBT.messageStatus <= 0) ""
-					else stringResource(CommsBT.messageStatus),
+					text =
+						if(CommsBT.messageStatus <= 0) ""
+						else stringResource(CommsBT.messageStatus),
 					fontSize = 14.sp
 				)
 			}
@@ -148,7 +134,7 @@ fun Home(
 		if(showLoading) {
 			Text(
 				modifier = Modifier.fillMaxWidth(),
-				text = stringResource(
+				text = stringResource(id =
 					if(Permissions.hasRead) R.string.loading
 					else R.string.no_permission
 				),
@@ -156,9 +142,7 @@ fun Home(
 				textAlign = TextAlign.Center
 			)
 		} else {
-			LazyColumn(modifier = Modifier
-				.fillMaxWidth()
-				.weight(1f)) {
+			LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
 				Library.rootLibDir.libDirs.forEachIndexed { i, it ->
 					item { Item(it, i > 0, onItemIconClick) }
 				}
@@ -168,9 +152,7 @@ fun Home(
 			}
 			if(Library.watchLibDir.status == LibItem.Status.NOT) {
 				HorizontalDivider(
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(0.dp, 5.dp),
+					modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
 					color = colorScheme.onBackground
 				)
 				Text(
@@ -180,14 +162,10 @@ fun Home(
 					textAlign = TextAlign.Center
 				)
 				HorizontalDivider(
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(0.dp, 5.dp),
+					modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
 					color = colorScheme.onBackground
 				)
-				LazyColumn(modifier = Modifier
-					.fillMaxWidth()
-					.weight(0.5f)) {
+				LazyColumn(modifier = Modifier.fillMaxWidth().weight(0.5f)) {
 					Library.watchLibDir.libDirs.forEachIndexed { i, it ->
 						if(it.status != LibItem.Status.NOT) return@forEachIndexed
 						item { Item(it, i > 0, onItemIconClick) }
@@ -210,15 +188,11 @@ fun Item(
 	var showSubItems by remember { mutableStateOf(false) }
 	if(showDivider) {
 		HorizontalDivider(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(start = (libItem.depth * 7 + 48).dp),
+			modifier = Modifier.fillMaxWidth().padding(start = (libItem.depth * 7 + 48).dp),
 			thickness = 1.dp
 		)
 	}
-	Row(modifier = Modifier
-		.fillMaxWidth()
-		.padding(start = (libItem.depth * 7).dp)) {
+	Row(modifier = Modifier.fillMaxWidth().padding(start = (libItem.depth * 7).dp)) {
 		Box(
 			Modifier.size(48.dp),
 			contentAlignment = Alignment.Center
@@ -241,21 +215,20 @@ fun Item(
 						onClick = { onItemIconClick(libItem) }
 					) {
 						Icon(
-							imageVector = ImageVector.vectorResource(
-								id =
-									if(libItem is LibDir) {
-										when(libItem.status) {
-											LibItem.Status.FULL -> R.drawable.icon_full
-											LibItem.Status.PARTIAL -> R.drawable.icon_partial
-											else -> R.drawable.icon_empty
-										}
-									} else {
-										when(libItem.status) {
-											LibItem.Status.FULL -> R.drawable.icon_delete
-											LibItem.Status.NOT -> R.drawable.icon_upload
-											else -> R.drawable.icon_empty
-										}
+							imageVector = ImageVector.vectorResource(id =
+								if(libItem is LibDir) {
+									when(libItem.status) {
+										LibItem.Status.FULL -> R.drawable.icon_full
+										LibItem.Status.PARTIAL -> R.drawable.icon_partial
+										else -> R.drawable.icon_empty
 									}
+								} else {
+									when(libItem.status) {
+										LibItem.Status.FULL -> R.drawable.icon_delete
+										LibItem.Status.NOT -> R.drawable.icon_upload
+										else -> R.drawable.icon_empty
+									}
+								}
 							),
 							contentDescription = "Item icon and action button"
 						)
@@ -265,11 +238,7 @@ fun Item(
 		}
 		TextButton(
 			modifier = Modifier.fillMaxWidth(),
-			onClick = {
-				if(libItem is LibDir) {
-					showSubItems = !showSubItems
-				}
-			}
+			onClick = { if(libItem is LibDir) { showSubItems = !showSubItems } }
 		) {
 			Text(
 				modifier = Modifier.fillMaxWidth(),

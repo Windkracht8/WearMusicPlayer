@@ -56,9 +56,7 @@ object Library {
 		try {
 			for(i in 0..<filesOnWatch.length()) {
 				pathsOnWatch.add(
-					Uri.decode(
-						filesOnWatch.getJSONObject(i).getString("path")
-					)
+					Uri.decode(filesOnWatch.getJSONObject(i).getString("path"))
 				)
 			}
 			runInBackground { updateWithFilesOnWatch(pathsOnWatch) }
@@ -69,7 +67,7 @@ object Library {
 
 	suspend fun updateWithFilesOnWatch(pathsOnWatch: TreeSet<String>? = null) {
 		waitForReady()
-		rootLibDir.clearStatuses()
+		rootLibDir.setStatusNot()
 		watchLibDir = LibDir("")
 		if(pathsOnWatch == null) return
 		var somethingNotOnPhone = false
@@ -120,7 +118,6 @@ object Library {
 			libDir.status = LibItem.Status.NOT
 		}
 	}
-
 	suspend fun waitForReady() {
 		repeat(100) {
 			if(status.value == Status.READY) return
@@ -131,14 +128,11 @@ object Library {
 
 open class LibItem(fullPath: String) : Comparable<LibItem?> {
 	enum class Status { UNKNOWN, FULL, PARTIAL, NOT, PENDING, SENDING }
-
 	var status by mutableStateOf(Status.UNKNOWN)
 	val fullPath: String = fullPath.removePrefix("/")
-	val path: String = try {
-		this.fullPath.removePrefix(rootLibDir.fullPath + "/")
-	} catch(_: Exception) {
-		this.fullPath
-	} //above fails for rootLibDir itself
+	val path: String =
+		try { this.fullPath.removePrefix(rootLibDir.fullPath + "/") }
+		catch(_: Exception) { this.fullPath } //above fails for rootLibDir itself
 	val name: String = path.substring(path.lastIndexOf("/") + 1)
 	val depth: Int = path.count { it == '/' }
 	var length: Long = 1
@@ -148,16 +142,16 @@ open class LibItem(fullPath: String) : Comparable<LibItem?> {
 		status = Status.FULL
 		Library.checkStatuses(rootLibDir)
 	}
-
-	fun setStatusNot() {
-		status = Status.NOT
-		Library.checkStatuses(rootLibDir)
-	}
-
+	open fun setStatusNot() {}
 	override fun compareTo(other: LibItem?): Int = name.compareTo(other?.name ?: "")
 }
 
-class LibTrack(fullPath: String) : LibItem(fullPath)
+class LibTrack(fullPath: String) : LibItem(fullPath) {
+	override fun setStatusNot() {
+		status = Status.NOT
+		Library.checkStatuses(rootLibDir)
+	}
+}
 class LibDir(fullPath: String) : LibItem(fullPath) {
 	val libTracks: ArrayList<LibTrack> = ArrayList()
 	val libDirs: ArrayList<LibDir> = ArrayList<LibDir>()
@@ -165,12 +159,18 @@ class LibDir(fullPath: String) : LibItem(fullPath) {
 		libTracks.sort()
 		libDirs.sort()
 	}
-
 	fun clearStatuses() {
 		libTracks.forEach { it.status = Status.UNKNOWN }
 		libDirs.forEach {
 			it.clearStatuses()
 			it.status = Status.UNKNOWN
+		}
+	}
+	override fun setStatusNot() {
+		libTracks.forEach { it.status = Status.NOT }
+		libDirs.forEach {
+			it.setStatusNot()
+			it.status = Status.NOT
 		}
 	}
 }

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -106,10 +107,7 @@ fun DeviceSelectScreen(
 	val longPressTimeoutMillis = LocalViewConfiguration.current.longPressTimeoutMillis
 	var confirmDelDevice by remember { mutableStateOf("") }
 	var showNewWatch by remember { mutableStateOf(true) }
-	LazyColumn(modifier = Modifier
-		.fillMaxWidth()
-		.fillMaxHeight()
-		.padding(10.dp)) {
+	LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight().safeContentPadding()) {
 		item {
 			Text(
 				modifier = Modifier

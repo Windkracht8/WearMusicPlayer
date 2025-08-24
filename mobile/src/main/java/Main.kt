@@ -67,8 +67,10 @@ class Main : ComponentActivity() {
 				when(commsBTStatus) {
 					CommsBT.Status.CONNECTING ->
 						startActivity(Intent(this@Main, DeviceConnect::class.java))
-					CommsBT.Status.DISCONNECTED, CommsBT.Status.ERROR ->
-						Library.updateWithFilesOnWatch()
+					CommsBT.Status.DISCONNECTED, CommsBT.Status.ERROR -> {
+						Library.rootLibDir.clearStatuses()
+						Library.watchLibDir = LibDir("")
+					}
 					else -> {}
 				}
 			}

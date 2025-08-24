@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -56,10 +57,7 @@ fun DeviceConnectScreen() {
 	val iconWatchConnecting =
 		AnimatedImageVector.animatedVectorResource(R.drawable.icon_watch_connecting)
 	var iconWatchConnectingAtEnd by remember { mutableStateOf(false) }
-	Column(modifier = Modifier
-		.fillMaxWidth()
-		.fillMaxHeight()
-		.padding(10.dp)) {
+	Column(modifier = Modifier.fillMaxWidth().fillMaxHeight().safeContentPadding()) {
 		Text(
 			modifier = Modifier.fillMaxWidth(),
 			text = stringResource(R.string.connecting_to, CommsBT.deviceName),
@@ -76,9 +74,7 @@ fun DeviceConnectScreen() {
 			fontWeight = FontWeight.Bold
 		)
 		Image(
-			modifier = Modifier
-				.fillMaxWidth()
-				.fillMaxHeight(),
+			modifier = Modifier.fillMaxWidth().fillMaxHeight(),
 			painter = rememberAnimatedVectorPainter(
 				iconWatchConnecting,
 				iconWatchConnectingAtEnd

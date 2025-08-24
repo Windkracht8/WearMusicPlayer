@@ -80,11 +80,7 @@ fun ProgressScreen() {
 			}),
 			color = { ColorWhite },
 			maxLines = 1,
-			autoSize = TextAutoSize.StepBased(
-				minFontSize = 8.sp,
-				maxFontSize = 20.sp,
-				stepSize = 1.sp
-			)
+			autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 20.sp)
 		)
 		BasicText(
 			modifier = Modifier.padding(horizontal = 10.dp),
@@ -94,11 +90,7 @@ fun ProgressScreen() {
 			),
 			color = { ColorWhite },
 			maxLines = 2,
-			autoSize = TextAutoSize.StepBased(
-				minFontSize = 8.sp,
-				maxFontSize = 20.sp,
-				stepSize = 1.sp
-			),
+			autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 20.sp),
 			style = TextStyle.Default.copy(textAlign = TextAlign.Center)
 		)
 	}

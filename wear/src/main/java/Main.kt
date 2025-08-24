@@ -46,10 +46,12 @@ import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavHostState
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
 var hasReadPermission = false
 var hasBTPermission = false
+val error = MutableSharedFlow<Int>()
 
 class Main : ComponentActivity() {
 	lateinit var navController: NavHostController
@@ -61,8 +63,8 @@ class Main : ComponentActivity() {
 	var currentTracksType = TrackListType.ALL
 	var currentTracksId = -1
 	var currentTrackId by mutableIntStateOf(-1)
-	var currentTrackTitle by mutableStateOf(getString(R.string.loading))
-	var currentTrackArtist by mutableStateOf(getString(R.string.loading))
+	var currentTrackTitle by mutableStateOf("")
+	var currentTrackArtist by mutableStateOf("")
 	var hasPrevious by mutableStateOf(false)
 	var hasNext by mutableStateOf(false)
 	var isPlaying by mutableStateOf(false)
@@ -162,6 +164,7 @@ class Main : ComponentActivity() {
 				}
 			}
 		}
+		lifecycleScope.launch { error.collect { toast(it) } }
 		checkPermissions()
 		if (hasReadPermission) {
 			runInBackground {

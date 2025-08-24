@@ -91,7 +91,7 @@ object Library {
 				//logD("Library.scanMediaStore query done")
 				if (cursor == null) {
 					logE("Library.scanUri: Cursor is null")
-					context.toast(R.string.fail_scan_media)
+					runInBackground { error.emit(R.string.fail_scan_media) }
 					return
 				}
 				val id: Int = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
@@ -124,7 +124,7 @@ object Library {
 			}
 		} catch (e: Exception) {
 			logE("Library.scanUri cursor exception: " + e.message)
-			context.toast(R.string.fail_scan_media)
+			runInBackground { error.emit(R.string.fail_scan_media) }
 		}
 		try {
 			//logD("Library.scanUri sort")
@@ -135,7 +135,7 @@ object Library {
 			albums.forEach { it.sort() }
 		} catch (e: Exception) {
 			logE("Library.scanUri sort exception: " + e.message)
-			context.toast(R.string.fail_scan_media)
+			runInBackground { error.emit(R.string.fail_scan_media) }
 		}
 	}
 	fun ensurePath(path: String): Int {

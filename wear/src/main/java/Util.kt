@@ -21,7 +21,8 @@ fun logE(message: String) = Log.e(LOG_TAG, message)
 fun logI(message: String) = Log.i(LOG_TAG, message)
 fun logD(message: String) = Log.d(LOG_TAG, message)
 
-fun Context.toast(message: Int) = Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+fun Context.toast(message: Int) =
+	Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
 fun Context.hasPermission(permission: String): Boolean =
 	ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
