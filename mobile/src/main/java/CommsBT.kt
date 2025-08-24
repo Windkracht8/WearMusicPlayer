@@ -169,6 +169,95 @@ object CommsBT {
 		)
 	}
 
+	fun gotResponse(response: JSONObject) {
+		try {
+			val requestType = response.getString("requestType")
+			val responseData = response.get("responseData")
+			when(requestType) {
+				"sync" -> {
+					//{"requestType":"sync","responseData":{"tracks":[{"path":"directory\/track1.mp3"},{"path":"track2.mp3"}],"freeSpace":5672968192}}
+					//CODE_FAIL
+					//CODE_UNKNOWN_REQUEST_TYPE
+					if(responseData is JSONObject) {
+						freeSpace = bytesToHuman(responseData.getLong("freeSpace"))
+						runInBackground {
+							Library.updateLibWithFilesOnWatch(
+								responseData.getJSONArray("tracks")
+							)
+							messageStatus = R.string.sync_done
+						}
+					} else {
+						logE("CommsBT.gotResponse sync responseData: $responseData")
+						messageStatus = R.string.fail_response
+					}
+					lastRequest = null
+				}
+				"fileDetails" -> {
+					//{"requestType":"fileDetails","responseData":1}
+					//CODE_PENDING
+					//CODE_FAIL
+					//CODE_UNKNOWN_REQUEST_TYPE
+					//CODE_FAIL_CREATE_DIRECTORY
+					//CODE_FAIL_CREATE_FILE
+					//CODE_FILE_EXISTS
+					if(responseData is Int && responseData < 1) {
+						CommsWifi.stop()
+						logE("CommsBT.gotResponse fileDetails responseData: $responseData")
+						messageStatus = R.string.fail_send_file
+					}
+					lastRequest = null
+				}
+				"fileBinary" -> {
+					//{"requestType":"fileBinary","responseData":{"path":"directory\/track.mp3","freeSpace":12345}}
+					//CODE_FAIL
+					//CODE_UNKNOWN_REQUEST_TYPE
+					if(responseData is JSONObject) {
+						freeSpace = bytesToHuman(responseData.getLong("freeSpace"))
+						lastRequest?.libItem?.setStatusFull()
+						logD("CommsBT.gotResponse fileBinary lastRequest: " + lastRequest?.libItem?.path)
+						messageStatus = R.string.file_sent
+					} else {
+						logE("CommsBT.gotResponse fileBinary responseData: $responseData")
+						messageStatus = R.string.fail_send_file
+					}
+					lastRequest = null
+				}
+				"deleteFile" -> {
+					//{"requestType":"deleteFile","responseData":0}
+					//CODE_PENDING
+					//CODE_OK
+					//CODE_FAIL
+					//CODE_UNKNOWN_REQUEST_TYPE
+					//CODE_FAIL_DEL_FILE
+					//CODE_DECLINED
+					when(responseData) {
+						CODE_PENDING -> messageStatus = R.string.delete_file_confirm
+						CODE_OK -> {
+							lastRequest?.libItem?.setStatusNot()
+							messageStatus = R.string.file_deleted
+							lastRequest = null
+						}
+						CODE_DECLINED -> {
+							lastRequest?.libItem?.setStatusFull()
+							messageStatus = R.string.delete_file_declined
+							lastRequest = null
+						}
+						else -> {
+							logE("CommsBT.gotResponse deleteFile")
+							messageStatus = R.string.fail_delete_file
+							lastRequest = null
+						}
+					}
+				}
+				else -> throw Exception()
+			}
+		} catch(e: Exception) {
+			logE("CommsBT.gotResponse: " + e.message)
+			onMessageError(R.string.fail_response)
+			lastRequest = null
+		}
+	}
+
 	class CommsBTConnect(device: BluetoothDevice) : Thread() {
 		init {
 			logD("CommsBTConnect " + device.name)
@@ -301,95 +390,10 @@ object CommsBT {
 			onMessageError(R.string.fail_response)
 		}
 
-		fun gotResponse(response: JSONObject) {
-			try {
-				val requestType = response.getString("requestType")
-				val responseData = response.get("responseData")
-				when(requestType) {
-					"sync" -> {
-						//{"requestType":"sync","responseData":{"tracks":[{"path":"directory\/track1.mp3"},{"path":"track2.mp3"}],"freeSpace":5672968192}}
-						//CODE_FAIL
-						//CODE_UNKNOWN_REQUEST_TYPE
-						if(responseData is JSONObject) {
-							freeSpace = bytesToHuman(responseData.getLong("freeSpace"))
-							runInBackground {
-								Library.updateLibWithFilesOnWatch(
-									responseData.getJSONArray("tracks")
-								)
-								messageStatus = R.string.sync_done
-							}
-						} else {
-							logE("CommsBT.gotResponse sync responseData: $responseData")
-							messageStatus = R.string.fail_response
-						}
-					}
-					"fileDetails" -> {
-						//{"requestType":"fileDetails","responseData":1}
-						//CODE_PENDING
-						//CODE_FAIL
-						//CODE_UNKNOWN_REQUEST_TYPE
-						//CODE_FAIL_CREATE_DIRECTORY
-						//CODE_FAIL_CREATE_FILE
-						//CODE_FILE_EXISTS
-						if(responseData is Int && responseData < 1) {
-							CommsWifi.stop()
-							logE("CommsBT.gotResponse fileDetails responseData: $responseData")
-							messageStatus = R.string.fail_send_file
-						}
-					}
-					"fileBinary" -> {
-						//{"requestType":"fileBinary","responseData":{"path":"directory\/track.mp3","freeSpace":12345}}
-						//CODE_FAIL
-						//CODE_UNKNOWN_REQUEST_TYPE
-						if(responseData is JSONObject) {
-							freeSpace = bytesToHuman(responseData.getLong("freeSpace"))
-							lastRequest?.libItem?.setStatusFull()
-							logD("CommsBT.gotResponse fileBinary lastRequest: " + lastRequest?.libItem?.path)
-							messageStatus = R.string.file_sent
-						} else {
-							logE("CommsBT.gotResponse fileBinary responseData: $responseData")
-							messageStatus = R.string.fail_send_file
-						}
-					}
-					"deleteFile" -> {
-						//{"requestType":"deleteFile","responseData":0}
-						//CODE_PENDING
-						//CODE_OK
-						//CODE_FAIL
-						//CODE_UNKNOWN_REQUEST_TYPE
-						//CODE_FAIL_DEL_FILE
-						//CODE_DECLINED
-						when(responseData) {
-							CODE_PENDING -> messageStatus = R.string.delete_file_confirm
-							CODE_OK -> {
-								lastRequest?.libItem?.setStatusNot()
-								messageStatus = R.string.file_deleted
-							}
-							CODE_DECLINED -> {
-								lastRequest?.libItem?.setStatusFull()
-								messageStatus = R.string.delete_file_declined
-							}
-							else -> {
-								logE("CommsBT.gotResponse deleteFile")
-								messageStatus = R.string.fail_delete_file
-							}
-						}
-					}
-				}
-			} catch(e: Exception) {
-				logE("CommsBT.gotResponse: " + e.message)
-				onMessageError(R.string.fail_response)
-			}
-			lastRequest = null
-		}
-
 		fun isValidJSON(json: String): Boolean {
 			if(!json.endsWith("}")) return false
-			try {
-				JSONObject(json)
-			} catch(_: JSONException) {
-				return false
-			}
+			try { JSONObject(json) }
+			catch (_: JSONException) { return false }
 			return true
 		}
 	}

@@ -59,7 +59,7 @@ class Main : ComponentActivity() {
 	var mediaController: MediaController? = null
 	var currentTracks: List<Library.Track> by mutableStateOf(emptyList())
 
-	enum class TrackListType { ALL, ARTIST, ALBUM }
+	enum class TrackListType { ALL, ARTIST, ALBUM, DIR }
 	var currentTracksType = TrackListType.ALL
 	var currentTracksId = -1
 	var currentTrackId by mutableIntStateOf(-1)
@@ -166,11 +166,7 @@ class Main : ComponentActivity() {
 		}
 		lifecycleScope.launch { error.collect { toast(it) } }
 		checkPermissions()
-		if (hasReadPermission) {
-			runInBackground {
-				Library.scanMediaStore(this@Main)
-			}
-		}
+		if (hasReadPermission) runInBackground { Library.scanMediaStore(this@Main) }
 		if (hasBTPermission) {
 			registerReceiver(
 				btBroadcastReceiver,
@@ -218,12 +214,11 @@ class Main : ComponentActivity() {
 		else { mediaController?.pause() }
 	}
 
-	fun rescan() =
-		runInBackground { Library.scanFiles(this@Main) }
+	fun rescan() = runInBackground { Library.scanFiles(this@Main) }
 
 	fun loadTracks(activity: ComponentActivity) {
 		if (mediaController == null) return
-		val mediaItems = ArrayList<MediaItem>()
+		val mediaItems = mutableListOf<MediaItem>()
 		currentTracks.forEach { mediaItems.add(MediaItem.fromUri(it.uri)) }
 		activity.runOnUiThread {
 			logD("Main.loadTracks loading " + mediaItems.size + " items")
@@ -242,12 +237,11 @@ class Main : ComponentActivity() {
 		currentTrackId = index
 		currentTracks = when (type) {
 			TrackListType.ALL -> Library.tracks
-			TrackListType.ARTIST -> Library.artists.firstOrNull { it.id == id }?.tracks
-				?: emptyList()
-
+			TrackListType.ARTIST -> Library.artists.firstOrNull { it.id == id }?.tracks ?: emptyList()
 			TrackListType.ALBUM -> Library.albums.firstOrNull { it.id == id }?.tracks ?: emptyList()
+			TrackListType.DIR -> Library.dirs.firstOrNull { it.id == id }?.tracks ?: emptyList()
 		}
-		val mediaItems = ArrayList<MediaItem>()
+		val mediaItems = mutableListOf<MediaItem>()
 		currentTracks.forEach { mediaItems.add(MediaItem.fromUri(it.uri)) }
 		logD("Main.openTracks loading " + mediaItems.size + " items")
 		mediaController?.clearMediaItems()
@@ -321,15 +315,11 @@ class Main : ComponentActivity() {
 			permissions.entries.forEach {
 				if (it.value && it.key == READ_MEDIA_AUDIO) {
 					hasReadPermission = true
-					runInBackground {
-						Library.scanMediaStore(this@Main)
-					}
+					runInBackground { Library.scanMediaStore(this@Main) }
 				}
 				if (it.value && (it.key == BLUETOOTH_CONNECT || it.key == BLUETOOTH)) {
 					hasBTPermission = true
-					runInBackground {
-						CommsBT.start(this@Main)
-					}
+					runInBackground { CommsBT.start(this@Main) }
 				}
 			}
 		}
@@ -341,9 +331,7 @@ class Main : ComponentActivity() {
 				logD("Main: CommsBT.deleteFilePath.value: " + CommsBT.deleteFilePath.value)
 				if (CommsBT.deleteFilePath.value.isNotEmpty()) {
 					val path = CommsBT.deleteFilePath.value
-					runInBackground {
-						Library.scanFile(this@Main, path)
-					}
+					runInBackground { Library.scanFile(this@Main, path) }
 					CommsBT.deleteFilePath.value = ""
 				}
 			} else {
@@ -384,17 +372,21 @@ fun MainApp(
 										"menu_all/" +
 												main.currentTrackId
 									)
-
 								Main.TrackListType.ARTIST ->
 									navController.navigate(
 										"menu_artist/" +
 												main.currentTracksId +
 												"/" + main.currentTrackId
 									)
-
 								Main.TrackListType.ALBUM ->
 									navController.navigate(
 										"menu_album/" +
+												main.currentTracksId +
+												"/" + main.currentTrackId
+									)
+								Main.TrackListType.DIR ->
+									navController.navigate(
+										"menu_dir/" +
 												main.currentTracksId +
 												"/" + main.currentTrackId
 									)
@@ -416,6 +408,7 @@ fun MainApp(
 						onMenuAllClick = { navController.navigate("menu_all/0") },
 						onMenuAlbumsClick = { navController.navigate("menu_albums") },
 						onMenuArtistsClick = { navController.navigate("menu_artists") },
+						onMenuDirsClick = { navController.navigate("menu_dirs") },
 						onRescanClick = {
 							main.rescan()
 							navController.popBackStack()
@@ -437,13 +430,19 @@ fun MainApp(
 					)
 				}
 				composable("menu_albums") {
-					MenuAlbums(
-						onMenuAlbumClick = { id -> navController.navigate("menu_album/$id/0") }
-					)
+					MenuAlbums { navController.navigate("menu_album/$it/0") }
 				}
 				composable("menu_album/{id}/{trackId}") {
+					val albumId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
 					MenuAlbum(
-						id = it.arguments?.getString("id")?.toIntOrNull() ?: -1,
+						id = albumId,
+						onRandomiseClick = {
+							if(albumId >= 0) {
+								Library.albums.firstOrNull { a -> a.id == albumId }?.tracks?.shuffle()
+								navController.popBackStack()
+								navController.navigate("menu_album/$albumId/0")
+							}
+						},
 						openTracks = { type, id, index ->
 							main.openTracks(type, id, index)
 							navController.popBackStack("home", inclusive = false)
@@ -452,18 +451,45 @@ fun MainApp(
 					)
 				}
 				composable("menu_artists") {
-					MenuArtists(
-						onMenuArtistClick = { id -> navController.navigate("menu_artist/$id/0") }
-					)
+					MenuArtists { navController.navigate("menu_artist/$it/0") }
 				}
 				composable("menu_artist/{id}/{trackId}") {
+					val artistId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
 					MenuArtist(
-						id = it.arguments?.getString("id")?.toIntOrNull() ?: -1,
+						id = artistId,
+						onRandomiseClick = {
+							if(artistId >= 0) {
+								Library.artists.firstOrNull { a -> a.id == artistId }?.tracks?.shuffle()
+								navController.popBackStack()
+								navController.navigate("menu_artist/$artistId/0")
+							}
+						},
 						openTracks = { type, id, index ->
 							main.openTracks(type, id, index)
 							navController.popBackStack("home", inclusive = false)
 						},
 						onMenuAlbumClick = { id -> navController.navigate("menu_album/$id/0") },
+						trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
+					)
+				}
+				composable("menu_dirs") {
+					MenuDirs { navController.navigate("menu_dir/$it/0") }
+				}
+				composable("menu_dir/{id}/{trackId}") {
+					val dirId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
+					MenuDir(
+						id = dirId,
+						onRandomiseClick = {
+							if(dirId >= 0) {
+								Library.dirs.firstOrNull { d -> d.id == dirId }?.tracks?.shuffle()
+								navController.popBackStack()
+								navController.navigate("menu_dir/$dirId/0")
+							}
+						},
+						openTracks = { type, id, index ->
+							main.openTracks(type, id, index)
+							navController.popBackStack("home", inclusive = false)
+						},
 						trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
 					)
 				}

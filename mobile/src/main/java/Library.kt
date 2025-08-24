@@ -153,8 +153,8 @@ class LibTrack(fullPath: String) : LibItem(fullPath) {
 	}
 }
 class LibDir(fullPath: String) : LibItem(fullPath) {
-	val libTracks: ArrayList<LibTrack> = ArrayList()
-	val libDirs: ArrayList<LibDir> = ArrayList<LibDir>()
+	val libTracks = mutableListOf<LibTrack>()
+	val libDirs = mutableListOf<LibDir>()
 	fun sort() {
 		libTracks.sort()
 		libDirs.sort()

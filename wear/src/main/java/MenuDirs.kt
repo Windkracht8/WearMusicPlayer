@@ -8,7 +8,6 @@
 package com.windkracht8.wearmusicplayer
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
@@ -19,55 +18,27 @@ import com.google.android.horologist.compose.layout.ColumnItemType
 import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadding
 
 @Composable
-fun MenuArtist(
-	id: Int,
-	onRandomiseClick: () -> Unit,
-	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
-	onMenuAlbumClick: (id: Int) -> Unit,
-	trackId: Int
-) {
-	val artist = Library.artists.firstOrNull { it.id == id }
+fun MenuDirs(onMenuDirClick: (id: Int) -> Unit) {
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding(
 		first = ColumnItemType.ListHeader,
 		last = ColumnItemType.Button,
 	)
 	val transformationSpec = rememberTransformationSpec()
-	LaunchedEffect(Unit) {
-		if (trackId > 0) columnState.scrollToItem(trackId + 2 + (artist?.albums?.size ?: 0))
-	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = artist?.name ?: stringResource(R.string.oops),
+					label = stringResource(R.string.dirs),
 				)
 			}
-			item {
-				MenuItem(
-					transformation = SurfaceTransformation(transformationSpec),
-					label = stringResource(R.string.randomise),
-					onClick = onRandomiseClick
-				)
-			}
-			artist?.albums?.forEach { album ->
+			Library.dirs.forEach {
 				item {
 					MenuItem(
 						transformation = SurfaceTransformation(transformationSpec),
-						label = album.name,
-						subLabel = stringResource(R.string.album) + ": " +
-								trackOrTracks(album.tracks.size),
-						onClick = { onMenuAlbumClick(album.id) }
-					)
-				}
-			}
-			artist?.tracks?.forEachIndexed { index, track ->
-				item {
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = track.title,
-						onClick = { openTracks(Main.TrackListType.ARTIST, id, index) }
+						label = it.name,
+						onClick = { onMenuDirClick(it.id) }
 					)
 				}
 			}

@@ -21,6 +21,7 @@ import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadd
 @Composable
 fun MenuAlbum(
 	id: Int,
+	onRandomiseClick: () -> Unit,
 	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
 	trackId: Int
 ) {
@@ -32,7 +33,7 @@ fun MenuAlbum(
 	)
 	val transformationSpec = rememberTransformationSpec()
 	LaunchedEffect(Unit) {
-		if (trackId > 0) columnState.scrollToItem(trackId + 1)
+		if (trackId > 0) columnState.scrollToItem(trackId + 2)
 	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
@@ -40,6 +41,13 @@ fun MenuAlbum(
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
 					label = album?.name ?: stringResource(R.string.oops),
+				)
+			}
+			item {
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = stringResource(R.string.randomise),
+					onClick = onRandomiseClick
 				)
 			}
 			album?.tracks?.forEachIndexed { index, track ->

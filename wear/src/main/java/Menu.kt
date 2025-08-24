@@ -31,6 +31,7 @@ fun Menu(
 	onMenuAllClick: () -> Unit,
 	onMenuAlbumsClick: () -> Unit,
 	onMenuArtistsClick: () -> Unit,
+	onMenuDirsClick: () -> Unit,
 	onRescanClick: () -> Unit
 ) {
 	val columnState = rememberTransformingLazyColumnState()
@@ -72,6 +73,13 @@ fun Menu(
 					transformation = SurfaceTransformation(transformationSpec),
 					label = stringResource(R.string.artists),
 					onClick = onMenuArtistsClick
+				)
+			}
+			item {
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = stringResource(R.string.dirs),
+					onClick = onMenuDirsClick
 				)
 			}
 			item {

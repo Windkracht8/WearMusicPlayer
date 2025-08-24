@@ -16,50 +16,53 @@ import android.net.Uri
 import android.os.Environment
 import android.os.Process
 import android.provider.MediaStore
+import android.provider.MediaStore.MediaColumns
+import android.provider.MediaStore.Audio.Media
 import androidx.activity.result.IntentSenderRequest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import kotlin.collections.mutableListOf
 
 object Library {
 	val exStorageDir: String = Environment.getExternalStorageDirectory().toString()
 	val musicDir: String = "$exStorageDir/Music/"
-	val tracks: MutableList<Track> = mutableListOf<Track>()
-	val artists: MutableList<Artist> = mutableListOf<Artist>()
-	val albums: MutableList<Album> = mutableListOf<Album>()
+	val tracks = mutableListOf<Track>()
+	val artists = mutableListOf<Artist>()
+	val albums = mutableListOf<Album>()
+	val dirs = mutableListOf<Dir>()
 	enum class Status { SCAN, READY, UPDATE }
 	val status = MutableSharedFlow<Status>()
 	val projection: Array<String> = arrayOf(
-		MediaStore.Audio.Media._ID,
-		MediaStore.MediaColumns.DATA,
-		MediaStore.Audio.Media.TITLE,
-		MediaStore.Audio.Media.ARTIST,
-		MediaStore.Audio.Media.ALBUM,
-		MediaStore.Audio.Media.ALBUM_ARTIST,
-		MediaStore.Audio.Media.CD_TRACK_NUMBER,
-		MediaStore.Audio.Media.DISC_NUMBER
+		Media._ID,
+		MediaColumns.DATA,
+		Media.TITLE,
+		Media.ARTIST,
+		Media.ALBUM,
+		Media.ALBUM_ARTIST,
+		Media.CD_TRACK_NUMBER,
+		Media.DISC_NUMBER
 	)
 
-	fun scanMediaStore(context: Context) {
+	suspend fun scanMediaStore(context: Context) {
 		logD("Library.scanMediaStore")
-		runInBackground { status.emit(Status.SCAN) }
+		status.emit(Status.SCAN)
 		tracks.clear()
 		artists.clear()
 		albums.clear()
-
-		scanUri(context, MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL))
-		//logD("Library.scanMediaStore ready")
-		runInBackground { status.emit(Status.READY) }
+		dirs.clear()
+		scanUri(context, Media.getContentUri(MediaStore.VOLUME_EXTERNAL))
+		status.emit(Status.READY)
 	}
-	fun scanFiles(context: Context) {
+	suspend fun scanFiles(context: Context) {
 		logD("Library.scanFiles")
-		runInBackground { status.emit(Status.SCAN) }
+		status.emit(Status.SCAN)
 		MediaScannerConnection.scanFile(
 			context,
 			arrayOf(exStorageDir),
 			null
-		) { p: String, u: Uri? -> scanMediaStore(context) }
+		) { p: String, u: Uri? -> runInBackground{ scanMediaStore(context) } }
 	}
 	fun scanFile(context: Context, path: String) {
 		logD("Library.scanFile: $path")
@@ -73,12 +76,14 @@ object Library {
 				removeTrack(path)
 			} else {
 				logD("Library.scanFile path exists")
-				scanUri(context, uri)
-				runInBackground { status.emit(Status.UPDATE) }
+				runInBackground {
+					scanUri(context, uri)
+					status.emit(Status.UPDATE)
+				}
 			}
 		}
 	}
-	fun scanUri(context: Context, uri: Uri) {
+	suspend fun scanUri(context: Context, uri: Uri) {
 		try {
 			context.contentResolver.query(
 				uri,
@@ -91,21 +96,20 @@ object Library {
 				//logD("Library.scanMediaStore query done")
 				if (cursor == null) {
 					logE("Library.scanUri: Cursor is null")
-					runInBackground { error.emit(R.string.fail_scan_media) }
+					error.emit(R.string.fail_scan_media)
 					return
 				}
-				val id: Int = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
-				val data: Int = cursor.getColumnIndex(MediaStore.MediaColumns.DATA)
-				val title: Int = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
-				val artist: Int = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
-				val album: Int = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)
-				val albumArtist: Int = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ARTIST)
-				val cdTrackNumber: Int =
-					cursor.getColumnIndex(MediaStore.Audio.Media.CD_TRACK_NUMBER)
-				val discNumber: Int = cursor.getColumnIndex(MediaStore.Audio.Media.DISC_NUMBER)
+				val id = cursor.getColumnIndex(Media._ID)
+				val data = cursor.getColumnIndex(MediaColumns.DATA)
+				val title = cursor.getColumnIndex(Media.TITLE)
+				val artist = cursor.getColumnIndex(Media.ARTIST)
+				val album = cursor.getColumnIndex(Media.ALBUM)
+				val albumArtist = cursor.getColumnIndex(Media.ALBUM_ARTIST)
+				val cdTrackNumber = cursor.getColumnIndex(Media.CD_TRACK_NUMBER)
+				val discNumber = cursor.getColumnIndex(Media.DISC_NUMBER)
 				while (cursor.moveToNext()) {
 					val uri = ContentUris.withAppendedId(
-						MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+						Media.EXTERNAL_CONTENT_URI,
 						cursor.getLong(id)
 					)
 					if (tracks.any { it.uri == uri }) continue
@@ -124,7 +128,7 @@ object Library {
 			}
 		} catch (e: Exception) {
 			logE("Library.scanUri cursor exception: " + e.message)
-			runInBackground { error.emit(R.string.fail_scan_media) }
+			error.emit(R.string.fail_scan_media)
 		}
 		try {
 			//logD("Library.scanUri sort")
@@ -133,9 +137,10 @@ object Library {
 			albums.sort()
 			artists.forEach { it.sort() }
 			albums.forEach { it.sort() }
+			dirs.sort()
 		} catch (e: Exception) {
 			logE("Library.scanUri sort exception: " + e.message)
-			runInBackground { error.emit(R.string.fail_scan_media) }
+			error.emit(R.string.fail_scan_media)
 		}
 	}
 	fun ensurePath(path: String): Int {
@@ -165,7 +170,7 @@ object Library {
 					IntentSenderRequest.Builder(
 						MediaStore.createDeleteRequest(
 							main.contentResolver,
-							ArrayList(listOf<Uri?>(uri))
+							listOf<Uri?>(uri)
 						).intentSender
 					).build()
 				)
@@ -225,6 +230,12 @@ object Library {
 				artist.addAlbum(album as Album)
 			}
 			tracks.add(this)
+
+			val dir = this.path.substringBeforeLast("/", "")
+			if (dir.isNotEmpty()) {
+				if(dirs.none { it.name == dir }) dirs.add(Dir(dir))
+				dirs.first { it.name == dir }.tracks.add(this)
+			}
 		}
 		fun toJson(): JSONObject {
 			val ret = JSONObject()
@@ -250,8 +261,8 @@ object Library {
 	class Artist(track: Track, artistName: String?) : Comparable<Artist> {
 		val id: Int = artists.size
 		val name: String = artistName ?: "<empty>"//TODO from strings.xml or empty string
-		val tracks: ArrayList<Track> = ArrayList()
-		val albums: ArrayList<Album> = ArrayList()
+		val tracks = mutableListOf<Track>()
+		val albums = mutableListOf<Album>()
 
 		init {
 			tracks.add(track)
@@ -282,7 +293,7 @@ object Library {
 		val id: Int = albums.size
 		val name: String = albumName ?: "<empty>"//TODO from strings.xml or empty string
 		var artist: String = albumArtist ?: track.artist.name
-		val tracks: ArrayList<Track> = ArrayList()
+		val tracks = mutableListOf<Track>()
 
 		init {
 			tracks.add(track)
@@ -304,6 +315,12 @@ object Library {
 				artist = context.getString(R.string.various_artists)
 			}
 		} ?: Album(track, albumName, albumArtist)
+	}
+
+	class Dir(val name: String) : Comparable<Dir> {
+		val id: Int = dirs.size
+		val tracks = mutableListOf<Track>()
+		override fun compareTo(other: Dir): Int = name.compareTo(other.name)
 	}
 
 	fun getUriForPath(path: String): Uri? = tracks.firstOrNull { it.path == path }?.uri

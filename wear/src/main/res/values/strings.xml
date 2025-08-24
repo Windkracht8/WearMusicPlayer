@@ -24,6 +24,7 @@
 	<string name="album">album</string>
 	<string name="track">track</string>
 	<string name="tracks">tracks</string>
+	<string name="dirs">Directories</string>
 
 	<!-- progress -->
 	<string name="requesting">requesting Wifi</string>

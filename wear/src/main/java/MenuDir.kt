@@ -19,14 +19,13 @@ import com.google.android.horologist.compose.layout.ColumnItemType
 import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadding
 
 @Composable
-fun MenuArtist(
+fun MenuDir(
 	id: Int,
 	onRandomiseClick: () -> Unit,
 	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
-	onMenuAlbumClick: (id: Int) -> Unit,
 	trackId: Int
 ) {
-	val artist = Library.artists.firstOrNull { it.id == id }
+	val dir = Library.dirs.firstOrNull { it.id == id }
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding(
 		first = ColumnItemType.ListHeader,
@@ -34,14 +33,14 @@ fun MenuArtist(
 	)
 	val transformationSpec = rememberTransformationSpec()
 	LaunchedEffect(Unit) {
-		if (trackId > 0) columnState.scrollToItem(trackId + 2 + (artist?.albums?.size ?: 0))
+		if (trackId > 0) columnState.scrollToItem(trackId + 2)
 	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = artist?.name ?: stringResource(R.string.oops),
+					label = dir?.name ?: stringResource(R.string.oops),
 				)
 			}
 			item {
@@ -51,23 +50,13 @@ fun MenuArtist(
 					onClick = onRandomiseClick
 				)
 			}
-			artist?.albums?.forEach { album ->
-				item {
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = album.name,
-						subLabel = stringResource(R.string.album) + ": " +
-								trackOrTracks(album.tracks.size),
-						onClick = { onMenuAlbumClick(album.id) }
-					)
-				}
-			}
-			artist?.tracks?.forEachIndexed { index, track ->
+			dir?.tracks?.forEachIndexed { index, track ->
 				item {
 					MenuItem(
 						transformation = SurfaceTransformation(transformationSpec),
 						label = track.title,
-						onClick = { openTracks(Main.TrackListType.ARTIST, id, index) }
+						subLabel = track.artist.name,
+						onClick = { openTracks(Main.TrackListType.DIR, id, index) }
 					)
 				}
 			}
