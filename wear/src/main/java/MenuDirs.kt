@@ -14,16 +14,12 @@ import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
-import com.google.android.horologist.compose.layout.ColumnItemType
 import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadding
 
 @Composable
 fun MenuDirs(onMenuDirClick: (id: Int) -> Unit) {
 	val columnState = rememberTransformingLazyColumnState()
-	val contentPadding = rememberResponsiveColumnPadding(
-		first = ColumnItemType.ListHeader,
-		last = ColumnItemType.Button,
-	)
+	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {

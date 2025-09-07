@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -62,7 +62,7 @@ fun Home(
 		AnimatedImageVector.animatedVectorResource(R.drawable.icon_watch_connecting)
 	var iconWatchConnectingAtEnd by remember { mutableStateOf(false) }
 
-	Column(modifier = Modifier.fillMaxWidth().fillMaxHeight().safeContentPadding()) {
+	Column(modifier = Modifier.fillMaxSize().safeContentPadding()) {
 		Row(modifier = Modifier.fillMaxWidth().height(70.dp)) {
 			Box(
 				Modifier.size(70.dp),

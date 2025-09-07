@@ -21,7 +21,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
@@ -80,35 +80,23 @@ class Permissions : ComponentActivity() {
 
 	fun onNearbyClick() {
 		if(hasBT) return
-		if(Build.VERSION.SDK_INT >= 31) {
-			requestMultiplePermissions.launch(arrayOf(BLUETOOTH_CONNECT))
-		} else {
-			requestMultiplePermissions.launch(arrayOf(BLUETOOTH))
-		}
+		if(Build.VERSION.SDK_INT >= 31) { requestPermissionBT.launch(BLUETOOTH_CONNECT)}
+		else { requestPermissionBT.launch(BLUETOOTH) }
 	}
-
+	val requestPermissionBT = registerForActivityResult(
+		ActivityResultContracts.RequestPermission()){
+		hasBT = it
+		if(hasBT && hasRead) finishAndRemoveTask()
+	}
 	fun onReadClick() {
 		if(hasRead) return
-		if(Build.VERSION.SDK_INT >= 33) {
-			requestMultiplePermissions.launch(arrayOf(READ_MEDIA_AUDIO))
-		} else {
-			requestMultiplePermissions.launch(arrayOf(READ_EXTERNAL_STORAGE))
-		}
+		if(Build.VERSION.SDK_INT >= 33) { requestPermissionRead.launch(READ_MEDIA_AUDIO) }
+		else { requestPermissionRead.launch(READ_EXTERNAL_STORAGE) }
 	}
-
-	val requestMultiplePermissions = registerForActivityResult(
-		ActivityResultContracts.RequestMultiplePermissions()
-	) { permissions ->
-		permissions.entries.forEach {
-			if(it.value && it.key in listOf(BLUETOOTH_CONNECT, BLUETOOTH)) {
-				hasBT = true
-				if(hasRead) finishAndRemoveTask()
-			}
-			if(it.value && it.key in listOf(READ_MEDIA_AUDIO, READ_EXTERNAL_STORAGE)) {
-				hasRead = true
-				if(hasBT) finishAndRemoveTask()
-			}
-		}
+	val requestPermissionRead = registerForActivityResult(
+		ActivityResultContracts.RequestPermission()){
+		hasRead = it
+		if(hasBT && hasRead) finishAndRemoveTask()
 	}
 }
 
@@ -116,7 +104,7 @@ fun Context.hasPermission(permission: String): Boolean =
 	checkSelfPermission(this, permission) == PERMISSION_GRANTED
 @Composable
 fun PermissionsScreen(onNearbyClick: () -> Unit, onReadClick: () -> Unit) {
-	Column(modifier = Modifier.fillMaxWidth().fillMaxHeight().safeContentPadding()) {
+	Column(modifier = Modifier.fillMaxSize().safeContentPadding()) {
 		Text(
 			modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
 			text = stringResource(R.string.permission_title),

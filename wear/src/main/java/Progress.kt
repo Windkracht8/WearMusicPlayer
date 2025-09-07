@@ -14,8 +14,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
@@ -57,7 +56,7 @@ class Progress : ComponentActivity() {
 fun ProgressScreen() {
 	LocalActivity.current?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 	CircularProgressIndicator(
-		modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+		modifier = Modifier.fillMaxSize(),
 		colors = ProgressIndicatorDefaults.colors(
 			indicatorColor = ColorW8Blue,
 			trackColor = ColorBlack
@@ -65,10 +64,7 @@ fun ProgressScreen() {
 		progress = { CommsWifi.progress }
 	)
 	Column(
-		modifier = Modifier
-			.fillMaxWidth()
-			.fillMaxHeight()
-			.padding(10.dp, 10.dp, 10.dp, 0.dp),
+		modifier = Modifier.fillMaxSize().padding(10.dp, 10.dp, 10.dp, 0.dp),
 		horizontalAlignment = Alignment.CenterHorizontally,
 		verticalArrangement = Arrangement.Center
 	) {

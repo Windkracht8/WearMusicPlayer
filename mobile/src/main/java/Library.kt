@@ -14,8 +14,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.windkracht8.wearmusicplayer.Library.rootLibDir
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.io.File
 import java.util.TreeSet
@@ -51,22 +53,25 @@ object Library {
 		libDir.sort()
 	}
 
-	fun updateLibWithFilesOnWatch(filesOnWatch: JSONArray) {
-		val pathsOnWatch = TreeSet<String>()
+	suspend fun updateLibWithFilesOnWatch(filesOnWatch: JSONArray) {
 		try {
+			val pathsOnWatch = TreeSet<String>()
 			for(i in 0..<filesOnWatch.length()) {
 				pathsOnWatch.add(
 					Uri.decode(filesOnWatch.getJSONObject(i).getString("path"))
 				)
 			}
-			runInBackground { updateWithFilesOnWatch(pathsOnWatch) }
+			repeat(100) {
+				if(status.value == Status.READY) return@repeat
+				delay(100)
+			}
+			withContext(Dispatchers.Main) { updateWithFilesOnWatch(pathsOnWatch) }
 		} catch(e: Exception) {
 			logE("Library.updateLibWithFilesOnWatch: " + e.message)
 		}
 	}
 
-	suspend fun updateWithFilesOnWatch(pathsOnWatch: TreeSet<String>? = null) {
-		waitForReady()
+	fun updateWithFilesOnWatch(pathsOnWatch: TreeSet<String>? = null) {
 		rootLibDir.setStatusNot()
 		watchLibDir = LibDir("")
 		if(pathsOnWatch == null) return
@@ -118,15 +123,9 @@ object Library {
 			libDir.status = LibItem.Status.NOT
 		}
 	}
-	suspend fun waitForReady() {
-		repeat(100) {
-			if(status.value == Status.READY) return
-			delay(100)
-		}
-	}
 }
 
-open class LibItem(fullPath: String) : Comparable<LibItem?> {
+open class LibItem(fullPath: String) : Comparable<LibItem> {
 	enum class Status { UNKNOWN, FULL, PARTIAL, NOT, PENDING, SENDING }
 	var status by mutableStateOf(Status.UNKNOWN)
 	val fullPath: String = fullPath.removePrefix("/")
@@ -143,7 +142,7 @@ open class LibItem(fullPath: String) : Comparable<LibItem?> {
 		Library.checkStatuses(rootLibDir)
 	}
 	open fun setStatusNot() {}
-	override fun compareTo(other: LibItem?): Int = name.compareTo(other?.name ?: "")
+	override fun compareTo(other: LibItem): Int = name.compareTo(other.name)
 }
 
 class LibTrack(fullPath: String) : LibItem(fullPath) {

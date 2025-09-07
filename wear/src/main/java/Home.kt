@@ -11,7 +11,7 @@ import android.media.AudioManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
@@ -46,12 +46,7 @@ fun Home(
 	currentTrackArtist: String,
 	audioManager: AudioManager?
 ) {
-	Column(
-		modifier = Modifier
-			.fillMaxWidth()
-			.fillMaxHeight()
-			.padding(10.dp, 10.dp, 10.dp, 0.dp)
-	) {
+	Column(modifier = Modifier.fillMaxSize().padding(10.dp, 10.dp, 10.dp, 0.dp)) {
 		Row(modifier = Modifier.fillMaxWidth().weight(1F)) {
 			Spacer(modifier = Modifier.weight(2F))
 			IconButton(

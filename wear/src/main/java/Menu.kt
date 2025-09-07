@@ -23,7 +23,6 @@ import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
-import com.google.android.horologist.compose.layout.ColumnItemType
 import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadding
 
 @Composable
@@ -35,10 +34,7 @@ fun Menu(
 	onRescanClick: () -> Unit
 ) {
 	val columnState = rememberTransformingLazyColumnState()
-	val contentPadding = rememberResponsiveColumnPadding(
-		first = ColumnItemType.ListHeader,
-		last = ColumnItemType.Button,
-	)
+	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
 	ScreenScaffold(
 		scrollState = columnState,

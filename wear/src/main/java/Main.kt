@@ -38,7 +38,6 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import androidx.navigation.NavHostController
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
@@ -54,7 +53,6 @@ var hasBTPermission = false
 val error = MutableSharedFlow<Int>()
 
 class Main : ComponentActivity() {
-	lateinit var navController: NavHostController
 	lateinit var mediaControllerFuture: ListenableFuture<MediaController>
 	var mediaController: MediaController? = null
 	var currentTracks: List<Library.Track> by mutableStateOf(emptyList())
@@ -74,10 +72,7 @@ class Main : ComponentActivity() {
 		super.onCreate(savedInstanceState)
 
 		setTheme(android.R.style.Theme_DeviceDefault)
-		setContent {
-			navController = rememberSwipeDismissableNavController()
-			MainApp(navController, this)
-		}
+		setContent { W8Theme { MainApp(this) } }
 
 		mediaControllerFuture = MediaController.Builder(
 			this,
@@ -277,7 +272,7 @@ class Main : ComponentActivity() {
 			hasReadPermission = hasPermission(READ_MEDIA_AUDIO)
 			hasBTPermission = hasPermission(BLUETOOTH_CONNECT)
 			if (!hasReadPermission || !hasBTPermission || !hasPermission(POST_NOTIFICATIONS)) {
-				requestMultiplePermissions.launch(
+				requestPermissions.launch(
 					arrayOf(
 						POST_NOTIFICATIONS,
 						READ_MEDIA_AUDIO,
@@ -289,7 +284,7 @@ class Main : ComponentActivity() {
 			hasReadPermission = hasPermission(MANAGE_EXTERNAL_STORAGE)
 			hasBTPermission = hasPermission(BLUETOOTH_CONNECT)
 			if (!hasReadPermission || !hasBTPermission) {
-				requestMultiplePermissions.launch(
+				requestPermissions.launch(
 					arrayOf(
 						MANAGE_EXTERNAL_STORAGE,
 						BLUETOOTH_CONNECT
@@ -300,7 +295,7 @@ class Main : ComponentActivity() {
 			hasReadPermission = hasPermission(READ_EXTERNAL_STORAGE)
 			hasBTPermission = hasPermission(BLUETOOTH)
 			if (!hasReadPermission || !hasBTPermission) {
-				requestMultiplePermissions.launch(
+				requestPermissions.launch(
 					arrayOf(
 						READ_EXTERNAL_STORAGE,
 						BLUETOOTH
@@ -310,7 +305,7 @@ class Main : ComponentActivity() {
 		}
 	}
 
-	val requestMultiplePermissions =
+	val requestPermissions =
 		registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
 			permissions.entries.forEach {
 				if (it.value && it.key == READ_MEDIA_AUDIO) {
@@ -350,149 +345,142 @@ class Main : ComponentActivity() {
 }
 
 @Composable
-fun MainApp(
-	navController: NavHostController,
-	main: Main
-) {
+fun MainApp(main: Main) {
+	val navController = rememberSwipeDismissableNavController()
 	val navHostState = rememberSwipeDismissableNavHostState()
-	W8Theme {
-		AppScaffold {
-			SwipeDismissableNavHost(
-				navController = navController,
-				startDestination = "home",
-				state = navHostState
-			) {
-				composable("home") {
-					Home(
-						onLibraryClick = { navController.navigate("menu") },
-						onTrackClick = {
-							when (main.currentTracksType) {
-								Main.TrackListType.ALL ->
-									navController.navigate(
-										"menu_all/" +
-												main.currentTrackId
-									)
-								Main.TrackListType.ARTIST ->
-									navController.navigate(
-										"menu_artist/" +
-												main.currentTracksId +
-												"/" + main.currentTrackId
-									)
-								Main.TrackListType.ALBUM ->
-									navController.navigate(
-										"menu_album/" +
-												main.currentTracksId +
-												"/" + main.currentTrackId
-									)
-								Main.TrackListType.DIR ->
-									navController.navigate(
-										"menu_dir/" +
-												main.currentTracksId +
-												"/" + main.currentTrackId
-									)
-							}
-						},
-						onPreviousClick = main::previous,
-						onPlayPauseClick = main::playPause,
-						onNextClick = main::next,
-						hasPrevious = main.hasPrevious,
-						hasNext = main.hasNext,
-						isPlaying = main.isPlaying,
-						currentTrackTitle = main.currentTrackTitle,
-						currentTrackArtist = main.currentTrackArtist,
-						audioManager = navController.context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-					)
-				}
-				composable("menu") {
-					Menu(
-						onMenuAllClick = { navController.navigate("menu_all/0") },
-						onMenuAlbumsClick = { navController.navigate("menu_albums") },
-						onMenuArtistsClick = { navController.navigate("menu_artists") },
-						onMenuDirsClick = { navController.navigate("menu_dirs") },
-						onRescanClick = {
-							main.rescan()
-							navController.popBackStack()
+	AppScaffold {
+		SwipeDismissableNavHost(
+			navController = navController,
+			startDestination = "home",
+			state = navHostState
+		) {
+			composable("home") {
+				Home(
+					onLibraryClick = { navController.navigate("menu") },
+					onTrackClick = {
+						when (main.currentTracksType) {
+							Main.TrackListType.ALL ->
+								navController.navigate("menu_all/" + main.currentTrackId)
+							Main.TrackListType.ARTIST ->
+								navController.navigate(
+									"menu_artist/" +
+											main.currentTracksId +
+											"/" + main.currentTrackId
+								)
+							Main.TrackListType.ALBUM ->
+								navController.navigate(
+									"menu_album/" +
+											main.currentTracksId +
+											"/" + main.currentTrackId
+								)
+							Main.TrackListType.DIR ->
+								navController.navigate(
+									"menu_dir/" +
+											main.currentTracksId +
+											"/" + main.currentTrackId
+								)
 						}
-					)
-				}
-				composable("menu_all/{trackId}") {
-					MenuAll(
-						onRandomiseClick = {
-							Library.tracks.shuffle()
+					},
+					onPreviousClick = main::previous,
+					onPlayPauseClick = main::playPause,
+					onNextClick = main::next,
+					hasPrevious = main.hasPrevious,
+					hasNext = main.hasNext,
+					isPlaying = main.isPlaying,
+					currentTrackTitle = main.currentTrackTitle,
+					currentTrackArtist = main.currentTrackArtist,
+					audioManager = navController.context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+				)
+			}
+			composable("menu") {
+				Menu(
+					onMenuAllClick = { navController.navigate("menu_all/0") },
+					onMenuAlbumsClick = { navController.navigate("menu_albums") },
+					onMenuArtistsClick = { navController.navigate("menu_artists") },
+					onMenuDirsClick = { navController.navigate("menu_dirs") },
+					onRescanClick = {
+						main.rescan()
+						navController.popBackStack()
+					}
+				)
+			}
+			composable("menu_all/{trackId}") {
+				MenuAll(
+					onRandomiseClick = {
+						Library.tracks.shuffle()
+						navController.popBackStack()
+						navController.navigate("menu_all/0")
+					},
+					openTracks = { type, id, index ->
+						main.openTracks(type, id, index)
+						navController.popBackStack("home", inclusive = false)
+					},
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
+				)
+			}
+			composable("menu_albums") {
+				MenuAlbums { navController.navigate("menu_album/$it/0") }
+			}
+			composable("menu_album/{id}/{trackId}") {
+				val albumId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
+				MenuAlbum(
+					id = albumId,
+					onRandomiseClick = {
+						if(albumId >= 0) {
+							Library.albums.firstOrNull { a -> a.id == albumId }?.tracks?.shuffle()
 							navController.popBackStack()
-							navController.navigate("menu_all/0")
-						},
-						openTracks = { type, id, index ->
-							main.openTracks(type, id, index)
-							navController.popBackStack("home", inclusive = false)
-						},
-						trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
-					)
-				}
-				composable("menu_albums") {
-					MenuAlbums { navController.navigate("menu_album/$it/0") }
-				}
-				composable("menu_album/{id}/{trackId}") {
-					val albumId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
-					MenuAlbum(
-						id = albumId,
-						onRandomiseClick = {
-							if(albumId >= 0) {
-								Library.albums.firstOrNull { a -> a.id == albumId }?.tracks?.shuffle()
-								navController.popBackStack()
-								navController.navigate("menu_album/$albumId/0")
-							}
-						},
-						openTracks = { type, id, index ->
-							main.openTracks(type, id, index)
-							navController.popBackStack("home", inclusive = false)
-						},
-						trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
-					)
-				}
-				composable("menu_artists") {
-					MenuArtists { navController.navigate("menu_artist/$it/0") }
-				}
-				composable("menu_artist/{id}/{trackId}") {
-					val artistId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
-					MenuArtist(
-						id = artistId,
-						onRandomiseClick = {
-							if(artistId >= 0) {
-								Library.artists.firstOrNull { a -> a.id == artistId }?.tracks?.shuffle()
-								navController.popBackStack()
-								navController.navigate("menu_artist/$artistId/0")
-							}
-						},
-						openTracks = { type, id, index ->
-							main.openTracks(type, id, index)
-							navController.popBackStack("home", inclusive = false)
-						},
-						onMenuAlbumClick = { id -> navController.navigate("menu_album/$id/0") },
-						trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
-					)
-				}
-				composable("menu_dirs") {
-					MenuDirs { navController.navigate("menu_dir/$it/0") }
-				}
-				composable("menu_dir/{id}/{trackId}") {
-					val dirId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
-					MenuDir(
-						id = dirId,
-						onRandomiseClick = {
-							if(dirId >= 0) {
-								Library.dirs.firstOrNull { d -> d.id == dirId }?.tracks?.shuffle()
-								navController.popBackStack()
-								navController.navigate("menu_dir/$dirId/0")
-							}
-						},
-						openTracks = { type, id, index ->
-							main.openTracks(type, id, index)
-							navController.popBackStack("home", inclusive = false)
-						},
-						trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
-					)
-				}
+							navController.navigate("menu_album/$albumId/0")
+						}
+					},
+					openTracks = { type, id, index ->
+						main.openTracks(type, id, index)
+						navController.popBackStack("home", inclusive = false)
+					},
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
+				)
+			}
+			composable("menu_artists") {
+				MenuArtists { navController.navigate("menu_artist/$it/0") }
+			}
+			composable("menu_artist/{id}/{trackId}") {
+				val artistId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
+				MenuArtist(
+					id = artistId,
+					onRandomiseClick = {
+						if(artistId >= 0) {
+							Library.artists.firstOrNull { a -> a.id == artistId }?.tracks?.shuffle()
+							navController.popBackStack()
+							navController.navigate("menu_artist/$artistId/0")
+						}
+					},
+					openTracks = { type, id, index ->
+						main.openTracks(type, id, index)
+						navController.popBackStack("home", inclusive = false)
+					},
+					onMenuAlbumClick = { id -> navController.navigate("menu_album/$id/0") },
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
+				)
+			}
+			composable("menu_dirs") {
+				MenuDirs { navController.navigate("menu_dir/$it/0") }
+			}
+			composable("menu_dir/{id}/{trackId}") {
+				val dirId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
+				MenuDir(
+					id = dirId,
+					onRandomiseClick = {
+						if(dirId >= 0) {
+							Library.dirs.firstOrNull { d -> d.id == dirId }?.tracks?.shuffle()
+							navController.popBackStack()
+							navController.navigate("menu_dir/$dirId/0")
+						}
+					},
+					openTracks = { type, id, index ->
+						main.openTracks(type, id, index)
+						navController.popBackStack("home", inclusive = false)
+					},
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
+				)
 			}
 		}
 	}

@@ -54,9 +54,9 @@ dependencies {
 	implementation("androidx.media3:media3-exoplayer:1.8.0")
 	implementation("androidx.media3:media3-session:1.8.0")
 	implementation("androidx.navigation:navigation-runtime-android:2.9.3")
-	implementation("androidx.wear.compose:compose-foundation:1.4.1")
-	implementation("androidx.wear.compose:compose-material3:1.4.1")
-	implementation("androidx.wear.compose:compose-navigation:1.4.1")
+	implementation("androidx.wear.compose:compose-foundation:1.5.0")
+	implementation("androidx.wear.compose:compose-material3:1.5.0")
+	implementation("androidx.wear.compose:compose-navigation:1.5.0")
 	implementation("androidx.wear:wear-ongoing:1.0.0")
 
 	//actually only for debug, but release won't compile without it
