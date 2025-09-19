@@ -55,7 +55,7 @@ fun DeviceConnectScreen() {
 	val iconWatchConnecting =
 		AnimatedImageVector.animatedVectorResource(R.drawable.icon_watch_connecting)
 	var iconWatchConnectingAtEnd by remember { mutableStateOf(false) }
-	Column(modifier = Modifier.fillMaxSize().safeContentPadding()) {
+	Column(Modifier.fillMaxSize().safeContentPadding()) {
 		Text(
 			modifier = Modifier.fillMaxWidth(),
 			text = stringResource(R.string.connecting_to, CommsBT.deviceName),

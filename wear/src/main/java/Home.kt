@@ -46,9 +46,9 @@ fun Home(
 	currentTrackArtist: String,
 	audioManager: AudioManager?
 ) {
-	Column(modifier = Modifier.fillMaxSize().padding(10.dp, 10.dp, 10.dp, 0.dp)) {
-		Row(modifier = Modifier.fillMaxWidth().weight(1F)) {
-			Spacer(modifier = Modifier.weight(2F))
+	Column(Modifier.fillMaxSize().padding(10.dp, 10.dp, 10.dp, 0.dp)) {
+		Row(Modifier.fillMaxWidth().weight(1F)) {
+			Spacer(Modifier.weight(2F))
 			IconButton(
 				modifier = Modifier.weight(6F),
 				onClick = {
@@ -77,9 +77,9 @@ fun Home(
 					contentDescription = "volume up"
 				)
 			}
-			Spacer(modifier = Modifier.weight(2F))
+			Spacer(Modifier.weight(2F))
 		}
-		Row(modifier = Modifier.fillMaxWidth().weight(1F)) {
+		Row(Modifier.fillMaxWidth().weight(1F)) {
 			IconButton(
 				modifier = Modifier.weight(1F),
 				onClick = onPreviousClick

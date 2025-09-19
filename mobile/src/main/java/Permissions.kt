@@ -104,7 +104,7 @@ fun Context.hasPermission(permission: String): Boolean =
 	checkSelfPermission(this, permission) == PERMISSION_GRANTED
 @Composable
 fun PermissionsScreen(onNearbyClick: () -> Unit, onReadClick: () -> Unit) {
-	Column(modifier = Modifier.fillMaxSize().safeContentPadding()) {
+	Column(Modifier.fillMaxSize().safeContentPadding()) {
 		Text(
 			modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
 			text = stringResource(R.string.permission_title),

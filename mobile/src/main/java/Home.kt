@@ -62,8 +62,8 @@ fun Home(
 		AnimatedImageVector.animatedVectorResource(R.drawable.icon_watch_connecting)
 	var iconWatchConnectingAtEnd by remember { mutableStateOf(false) }
 
-	Column(modifier = Modifier.fillMaxSize().safeContentPadding()) {
-		Row(modifier = Modifier.fillMaxWidth().height(70.dp)) {
+	Column(Modifier.fillMaxSize().safeContentPadding()) {
+		Row(Modifier.fillMaxWidth().height(70.dp)) {
 			Box(
 				Modifier.size(70.dp),
 				contentAlignment = Alignment.Center
@@ -99,7 +99,7 @@ fun Home(
 					autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 20.sp)
 				)
 			}
-			Column(modifier = Modifier.fillMaxWidth()) {
+			Column(Modifier.fillMaxWidth()) {
 				Text(
 					modifier = Modifier.fillMaxWidth(),
 					text = when(commsBTStatus) {
@@ -142,7 +142,7 @@ fun Home(
 				textAlign = TextAlign.Center
 			)
 		} else {
-			LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+			LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
 				Library.rootLibDir.libDirs.forEachIndexed { i, it ->
 					item { Item(it, i > 0, onItemIconClick) }
 				}
@@ -165,7 +165,7 @@ fun Home(
 					modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
 					color = colorScheme.onBackground
 				)
-				LazyColumn(modifier = Modifier.fillMaxWidth().weight(0.5f)) {
+				LazyColumn(Modifier.fillMaxWidth().weight(0.5f)) {
 					Library.watchLibDir.libDirs.forEachIndexed { i, it ->
 						if(it.status != LibItem.Status.NOT) return@forEachIndexed
 						item { Item(it, i > 0, onItemIconClick) }
@@ -192,7 +192,7 @@ fun Item(
 			thickness = 1.dp
 		)
 	}
-	Row(modifier = Modifier.fillMaxWidth().padding(start = (libItem.depth * 7).dp)) {
+	Row(Modifier.fillMaxWidth().padding(start = (libItem.depth * 7).dp)) {
 		Box(
 			Modifier.size(48.dp),
 			contentAlignment = Alignment.Center

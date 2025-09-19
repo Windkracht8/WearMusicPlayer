@@ -39,9 +39,9 @@ class Main : ComponentActivity() {
 					Home(
 						commsBTStatus,
 						showLoading,
-						this::onIconClick,
-						this::onOpenFolderClick,
-						this::onItemIconClick
+						::onIconClick,
+						::onOpenFolderClick,
+						::onItemIconClick
 					)
 				}
 			}

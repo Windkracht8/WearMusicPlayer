@@ -207,21 +207,18 @@ object CommsBT {
 	class CommsBTConnected : Thread() {
 		var inputStream: InputStream? = null
 		var outputStream: OutputStream? = null
-
 		init {
 			try {
-				inputStream = bluetoothSocket!!.inputStream
-				outputStream = bluetoothSocket!!.outputStream
+				inputStream = bluetoothSocket?.inputStream
+				outputStream = bluetoothSocket?.outputStream
 			} catch (e: Exception) {
 				logE("CommsBTConnected init Exception: " + e.message)
 			}
 		}
-
 		override fun run() {
 			logD("CommsBTConnected.run")
 			runInBackground { process() }
 		}
-
 		suspend fun process() {
 			while (!disconnect) {
 				read()
@@ -245,9 +242,9 @@ object CommsBT {
 				val response = responseQueue.first()
 				responseQueue.remove(response)
 				logD("CommsBTConnected.sendNextResponse: $response")
-				outputStream?.write(response.toString().toByteArray())
+				outputStream!!.write(response.toString().toByteArray())
 			} catch (e: Exception) {
-				logE("CommsBTConnected.sendNextResponse Exception: " + e.message)
+				logE("CommsBTConnected.sendNextResponse: " + e.message)
 				onError(R.string.fail_respond)
 				return false
 			}
@@ -281,7 +278,7 @@ object CommsBT {
 				}
 				logE("CommsBTConnected.read no valid message and no new data after 3 sec: $request")
 			} catch (e: Exception) {
-				logE("CommsBTConnected.read Exception: " + e.message)
+				logE("CommsBTConnected.read: " + e.message)
 			}
 			onError(R.string.fail_request)
 		}

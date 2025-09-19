@@ -107,7 +107,7 @@ fun DeviceSelectScreen(
 	val longPressTimeoutMillis = LocalViewConfiguration.current.longPressTimeoutMillis
 	var confirmDelDevice by remember { mutableStateOf("") }
 	var showNewWatch by remember { mutableStateOf(true) }
-	LazyColumn(modifier = Modifier.fillMaxSize().safeContentPadding()) {
+	LazyColumn(Modifier.fillMaxSize().safeContentPadding()) {
 		item {
 			Text(
 				modifier = Modifier
