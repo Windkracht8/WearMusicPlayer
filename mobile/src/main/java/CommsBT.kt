@@ -8,7 +8,6 @@
 package com.windkracht8.wearmusicplayer
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
@@ -63,17 +62,16 @@ object CommsBT {
 	var disconnect = false
 	val requestQueue: MutableSet<Request> = mutableSetOf()
 	var lastRequest: Request? = null
-	fun start(activity: Activity) {
+	fun start(context: Context) {
 		if(!Permissions.hasBT) return onError(R.string.fail_BT_denied)
 		status.value = Status.STARTING
-		val bm = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+		val bm = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		bluetoothAdapter = bm.adapter
 		if(bluetoothAdapter?.state != BluetoothAdapter.STATE_ON) return onError(R.string.fail_BT_off)
 
-		sharedPreferences =
-			activity.applicationContext.getSharedPreferences("CommsBT", MODE_PRIVATE)
+		sharedPreferences = context.getSharedPreferences("CommsBT", MODE_PRIVATE)
 		knownAddresses = sharedPreferences?.getStringSet("knownAddresses", null) ?: mutableSetOf()
-		logD("CommsBT.startBT " + knownAddresses.size + " known addresses")
+		logD("CommsBT.start " + knownAddresses.size + " known addresses")
 		val bondedBTDevices = bluetoothAdapter?.bondedDevices ?: emptySet()
 		//Find and clean known devices
 		knownAddresses.forEach { checkKnownAddress(it, bondedBTDevices) }
@@ -344,7 +342,8 @@ object CommsBT {
 				requestQueue.remove(lastRequest)
 				logD("CommsBTConnected.sendNextRequest: $lastRequest")
 				if(lastRequest!!.type == Request.Type.SEND_FILE) {
-					runInBackground { CommsWifi.sendFile(lastRequest!!.libItem!!) }
+					val libItem = lastRequest!!.libItem!!
+					runInBackground { CommsWifi.sendFile(libItem) }
 				}
 				outputStream!!.write(lastRequest.toString().toByteArray())
 			} catch(e: Exception) {

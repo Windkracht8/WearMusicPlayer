@@ -7,7 +7,6 @@
  */
 package com.windkracht8.wearmusicplayer
 
-import android.app.Activity
 import android.content.Context
 import android.net.ConnectivityManager
 import java.io.FileInputStream
@@ -58,9 +57,9 @@ object CommsWifi {
 	}
 
 	fun stop() = tryIgnore { serverSocket?.close() }
-	fun getIpAddress(activity: Activity): Boolean {
+	fun getIpAddress(context: Context): Boolean {
 		val connectivityManager =
-			activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+			context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 		connectivityManager.activeNetwork?.let { network ->
 			connectivityManager.getLinkProperties(network)?.let { linkProperties ->
 				for(linkAddress in linkProperties.linkAddresses) {

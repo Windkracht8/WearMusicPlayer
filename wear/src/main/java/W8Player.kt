@@ -7,6 +7,7 @@
  */
 package com.windkracht8.wearmusicplayer
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -73,6 +74,7 @@ class W8Player : MediaSessionService() {
 
 	override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
+	@SuppressLint("MissingPermission")//handled by Permissions
 	override fun onUpdateNotification(
 		session: MediaSession,
 		startInForegroundRequired: Boolean

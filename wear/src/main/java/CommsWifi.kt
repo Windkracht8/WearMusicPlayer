@@ -7,7 +7,7 @@
  */
 package com.windkracht8.wearmusicplayer
 
-import android.app.Activity
+import android.content.Context
 import android.content.Context.CONNECTIVITY_SERVICE
 import android.net.ConnectivityManager
 import android.net.Network
@@ -23,7 +23,7 @@ import java.io.FileOutputStream
 import java.net.Socket
 
 object CommsWifi {
-	var connectivityManager: ConnectivityManager? = null
+	lateinit var connectivityManager: ConnectivityManager
 	var path: String = ""
 	enum class Status { DONE, PREPARING, RECEIVING, ERROR }
 	val status = MutableSharedFlow<Status>()
@@ -32,8 +32,8 @@ object CommsWifi {
 	var progress by mutableFloatStateOf(0F)
 	var error = 0
 
-	fun init(activity: Activity) {
-		connectivityManager = activity.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager?
+	fun init(context: Context) {
+		connectivityManager = context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 	}
 
 	fun receiveFile(
@@ -43,12 +43,6 @@ object CommsWifi {
 		port: Int
 	) {
 		logD("CommsWifi path: $path length: $length ip: $ip port: $port")
-		if(connectivityManager == null){
-			error = R.string.fail_wifi
-			runInBackground { status.emit(Status.ERROR) }
-			return
-		}
-		val connectivityManager = connectivityManager ?: return
 		this.path = path
 		runInBackground { status.emit(Status.PREPARING) }
 		connectionType = ConnectionType.REQUESTING

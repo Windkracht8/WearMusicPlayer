@@ -8,7 +8,6 @@
 package com.windkracht8.wearmusicplayer
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothServerSocket
@@ -134,12 +133,12 @@ object CommsBT {
 		logD("CommsBT.sendResponse " + responseQueue.lastOrNull())
 	}
 
-	fun start(activity: Activity) {
+	fun start(context: Context) {
 		//logD("CommsBT.start")
-		CommsWifi.init(activity)
+		CommsWifi.init(context)
 		disconnect = false
 		if (bluetoothAdapter == null) {
-			val bluetoothManager = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+			val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 			bluetoothAdapter = bluetoothManager.adapter
 			if (bluetoothAdapter?.isEnabled != true) {
 				logD("CommsBT.start bluetooth disabled")
