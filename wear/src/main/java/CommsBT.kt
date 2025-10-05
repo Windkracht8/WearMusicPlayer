@@ -47,7 +47,7 @@ object CommsBT {
 	val deleteFilePath = MutableStateFlow("")
 
 	fun gotRequest(request: String) {
-		logD("CommsBT.gotRequest: $request")
+		logD{"CommsBT.gotRequest: $request"}
 		var requestType = "unknown"
 		try {
 			val requestMessage = JSONObject(request)
@@ -122,7 +122,7 @@ object CommsBT {
 			.put("path", CommsWifi.path)
 			.put("freeSpace", Library.getFreeSpace())
 		)
-		logD("CommsBT.sendFileBinaryResponse " + responseQueue.lastOrNull())
+		logD{"CommsBT.sendFileBinaryResponse ${responseQueue.lastOrNull()}"}
 	}
 	fun sendResponse(requestType: String, responseData: Any) {
 		responseQueue.add(JSONObject()
@@ -130,23 +130,23 @@ object CommsBT {
 			.put("requestType", requestType)
 			.put("responseData", responseData)
 		)
-		logD("CommsBT.sendResponse " + responseQueue.lastOrNull())
+		logD{"CommsBT.sendResponse ${responseQueue.lastOrNull()}"}
 	}
 
 	fun start(context: Context) {
-		//logD("CommsBT.start")
+		//logD{"CommsBT.start"}
 		CommsWifi.init(context)
 		disconnect = false
 		if (bluetoothAdapter == null) {
 			val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 			bluetoothAdapter = bluetoothManager.adapter
 			if (bluetoothAdapter?.isEnabled != true) {
-				logD("CommsBT.start bluetooth disabled")
+				logD{"CommsBT.start bluetooth disabled"}
 				return
 			}
 		}
 		if (commsBTConnect == null) {
-			logD("CommsBT.start start listening")
+			logD{"CommsBT.start start listening"}
 			commsBTConnect = CommsBTConnect()
 			commsBTConnect?.start()
 		}
@@ -164,7 +164,7 @@ object CommsBT {
 		commsBTConnect?.start()
 	}
 	fun stop() {
-		//logD("CommsBT.stop")
+		//logD{"CommsBT.stop"}
 		disconnect = true
 		tryIgnore { bluetoothServerSocket?.close() }
 		tryIgnore { bluetoothSocket?.close() }
@@ -179,7 +179,7 @@ object CommsBT {
 	constructor() : Thread() {
 		init {
 			try {
-				//logD("CommsBTConnect")
+				//logD{"CommsBTConnect"}
 				bluetoothServerSocket = bluetoothAdapter?.listenUsingRfcommWithServiceRecord(
 					"WearMusicPlayer",
 					WMP_UUID
@@ -193,7 +193,7 @@ object CommsBT {
 			try {
 				bluetoothSocket = bluetoothServerSocket?.accept()
 				if (!disconnect) {
-					logD("CommsBTConnect.run accepted")
+					logD{"CommsBTConnect.run accepted"}
 					commsBTConnected = CommsBTConnected()
 					commsBTConnected?.start()
 				}
@@ -215,7 +215,7 @@ object CommsBT {
 			}
 		}
 		override fun run() {
-			logD("CommsBTConnected.run")
+			logD{"CommsBTConnected.run"}
 			runInBackground { process() }
 		}
 		suspend fun process() {
@@ -224,7 +224,7 @@ object CommsBT {
 				try {
 					outputStream!!.write("".toByteArray())
 				} catch (_: Exception) {
-					logD("Connection closed")
+					logD{"Connection closed"}
 					restart()
 					return
 				}
@@ -240,7 +240,7 @@ object CommsBT {
 			try {
 				val response = responseQueue.first()
 				responseQueue.remove(response)
-				logD("CommsBTConnected.sendNextResponse: $response")
+				logD{"CommsBTConnected.sendNextResponse: $response"}
 				outputStream!!.write(response.toString().toByteArray())
 			} catch (e: Exception) {
 				logE("CommsBTConnected.sendNextResponse: " + e.message)

@@ -45,6 +45,8 @@ import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavHostState
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
@@ -85,14 +87,14 @@ class Main : ComponentActivity() {
 			try {
 				mediaController = mediaControllerFuture.get()
 				mediaController?.addListener(playerListener)
-				loadTracks(this)
+				loadTracks()
 			} catch (e: Exception) {
-				logE("Main.MediaController exception: " + e.message)
+				logE("Main.MediaController: ${e.message}")
 			}
 		}, MoreExecutors.directExecutor())
 		lifecycleScope.launch {
 			Library.status.collect { libraryStatus ->
-				logD("Main: Library status change: $libraryStatus")
+				logD{"Main: Library status change: $libraryStatus"}
 				when (libraryStatus) {
 					Library.Status.SCAN -> {
 						currentTrackTitle = getString(R.string.loading)
@@ -106,7 +108,7 @@ class Main : ComponentActivity() {
 								currentTrackTitle = getString(R.string.no_tracks)
 								currentTrackArtist = getString(R.string.upload)
 							} else {
-								loadTracks(this@Main)
+								loadTracks()
 							}
 						}
 						if (CommsBT.commsBTConnected != null) CommsBT.sendSyncResponse()
@@ -121,7 +123,7 @@ class Main : ComponentActivity() {
 							currentTrackTitle = getString(R.string.no_tracks)
 							currentTrackArtist = getString(R.string.upload)
 						}
-						loadTracks(this@Main)
+						loadTracks()
 					}
 				}
 			}
@@ -135,7 +137,7 @@ class Main : ComponentActivity() {
 					toast(R.string.fail_delete_file)
 					logE("Main: Library.deleteFile result: $result")
 				} else {
-					logD("Main: Library.deleteFile result: $result")
+					logD{"Main: Library.deleteFile result: $result"}
 				}
 				CommsBT.sendResponse("deleteFile", result)
 				if(result != CommsBT.CODE_PENDING) CommsBT.deleteFilePath.value = ""
@@ -143,7 +145,7 @@ class Main : ComponentActivity() {
 		}
 		lifecycleScope.launch {
 			CommsWifi.status.collect { wifiStatus ->
-				logD("Main: CommsWifi status change: $wifiStatus")
+				logD{"Main: CommsWifi status change: $wifiStatus"}
 				when (wifiStatus) {
 					CommsWifi.Status.PREPARING ->
 						startActivity(Intent(this@Main, Progress::class.java))
@@ -171,12 +173,12 @@ class Main : ComponentActivity() {
 		}
 	}
 	override fun onStop() {
-		//logD("MainActivity.onStop")
+		//logD{"MainActivity.onStop"}
 		super.onStop()
-		if (!isPlaying) mediaController?.stop() //stop notification when MainActivity is stopped
+		if (!isPlaying) tryIgnore{ mediaController?.stop() } //stop notification when MainActivity is stopped
 	}
 	override fun onDestroy() {
-		//logD("MainActivity.onDestroy")
+		//logD{"MainActivity.onDestroy"}
 		super.onDestroy()
 		tryIgnore { MediaController.releaseFuture(mediaControllerFuture) }
 		tryIgnore { unregisterReceiver(btBroadcastReceiver) }
@@ -211,12 +213,12 @@ class Main : ComponentActivity() {
 
 	fun rescan() = runInBackground { Library.scanFiles(this@Main) }
 
-	fun loadTracks(activity: ComponentActivity) {
+	fun loadTracks() {
 		if (mediaController == null) return
 		val mediaItems = mutableListOf<MediaItem>()
 		currentTracks.forEach { mediaItems.add(MediaItem.fromUri(it.uri)) }
-		activity.runOnUiThread {
-			logD("Main.loadTracks loading " + mediaItems.size + " items")
+		CoroutineScope(Dispatchers.Main).launch {
+			logD{"Main.loadTracks loading ${mediaItems.size} items"}
 			mediaController?.clearMediaItems()
 			if(currentTracks.isNotEmpty()) {
 				mediaController?.addMediaItems(mediaItems)
@@ -238,7 +240,7 @@ class Main : ComponentActivity() {
 		}
 		val mediaItems = mutableListOf<MediaItem>()
 		currentTracks.forEach { mediaItems.add(MediaItem.fromUri(it.uri)) }
-		logD("Main.openTracks loading " + mediaItems.size + " items")
+		logD{"Main.openTracks loading ${mediaItems.size} items"}
 		mediaController?.clearMediaItems()
 		mediaController?.addMediaItems(mediaItems)
 		mediaController?.prepare()
@@ -248,11 +250,11 @@ class Main : ComponentActivity() {
 
 	val playerListener: Player.Listener = object : Player.Listener {
 		override fun onIsPlayingChanged(isPlayingMedia: Boolean) {
-			//logD("Player.Listener.onIsPlayingChanged $isPlayingMedia")
+			//logD{"Player.Listener.onIsPlayingChanged $isPlayingMedia"}
 			isPlaying = isPlayingMedia
 		}
 		override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-			//logD("Player.Listener.onMediaMetadataChanged " + mediaMetadata.title)
+			//logD{"Player.Listener.onMediaMetadataChanged ${mediaMetadata.title}"}
 			if (mediaMetadata.title != null) {
 				currentTrackTitle = mediaMetadata.title.toString()
 				currentTrackArtist = mediaMetadata.artist.toString()
@@ -263,7 +265,7 @@ class Main : ComponentActivity() {
 		}
 		override fun onPlayerError(error: PlaybackException) {
 			logE("Player.Listener.onPlayerError: $error")
-			logE("Player.Listener.onPlayerError: " + error.message)
+			logE("Player.Listener.onPlayerError: ${error.message}")
 		}
 	}
 
@@ -323,7 +325,7 @@ class Main : ComponentActivity() {
 		registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
 			if (result.resultCode == RESULT_OK) {
 				CommsBT.sendResponse("deleteFile", CommsBT.CODE_OK)
-				logD("Main: CommsBT.deleteFilePath.value: " + CommsBT.deleteFilePath.value)
+				logD{"Main: CommsBT.deleteFilePath.value: ${CommsBT.deleteFilePath.value}"}
 				if (CommsBT.deleteFilePath.value.isNotEmpty()) {
 					val path = CommsBT.deleteFilePath.value
 					runInBackground { Library.scanFile(this@Main, path) }

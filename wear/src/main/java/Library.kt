@@ -46,7 +46,7 @@ object Library {
 	)
 
 	suspend fun scanMediaStore(context: Context) {
-		logD("Library.scanMediaStore")
+		logD{"Library.scanMediaStore"}
 		status.emit(Status.SCAN)
 		tracks.clear()
 		artists.clear()
@@ -56,7 +56,7 @@ object Library {
 		status.emit(Status.READY)
 	}
 	suspend fun scanFiles(context: Context) {
-		logD("Library.scanFiles")
+		logD{"Library.scanFiles"}
 		status.emit(Status.SCAN)
 		MediaScannerConnection.scanFile(
 			context,
@@ -65,17 +65,17 @@ object Library {
 		) { p: String, u: Uri? -> runInBackground{ scanMediaStore(context) } }
 	}
 	fun scanFile(context: Context, path: String) {
-		logD("Library.scanFile: $path")
+		logD{"Library.scanFile: $path"}
 		MediaScannerConnection.scanFile(
 			context,
 			arrayOf("$musicDir$path"),
 			null
 		) { p: String, uri: Uri? ->
 			if (uri == null) {
-				logD("Library.scanFile path does not exists")
+				logD{"Library.scanFile path does not exists"}
 				removeTrack(path)
 			} else {
-				logD("Library.scanFile path exists")
+				logD{"Library.scanFile path exists"}
 				runInBackground {
 					scanUri(context, uri)
 					status.emit(Status.UPDATE)
@@ -93,7 +93,7 @@ object Library {
 				null,
 				null
 			).use { cursor ->
-				//logD("Library.scanMediaStore query done")
+				//logD{"Library.scanMediaStore query done"}
 				if (cursor == null) {
 					logE("Library.scanUri: Cursor is null")
 					error.emit(R.string.fail_scan_media)
@@ -131,7 +131,7 @@ object Library {
 			error.emit(R.string.fail_scan_media)
 		}
 		try {
-			//logD("Library.scanUri sort")
+			//logD{"Library.scanUri sort"}
 			tracks.sort()
 			artists.sort()
 			albums.sort()
@@ -154,7 +154,7 @@ object Library {
 	fun deleteFile(main: Main, path: String): Int {
 		val file = File("$musicDir$path")
 		if (!file.exists()) {
-			logI("Library.deleteFile: path does not exists")
+			logI{"Library.deleteFile: path does not exists"}
 			return CommsBT.CODE_OK
 		}
 		val uri = getUriForPath(path) ?: return CommsBT.CODE_FAIL

@@ -20,7 +20,7 @@ object CommsWifi {
 	var isSending = false
 	fun sendFile(libItem: LibItem) {
 		if(ipAddress == null) return CommsBT.onMessageError(R.string.fail_no_wifi)
-		logD("CommsWifi.sendFile " + libItem.name)
+		logD{"CommsWifi.sendFile ${libItem.name}"}
 		isSending = true
 		libItem.status = LibItem.Status.SENDING
 		try {

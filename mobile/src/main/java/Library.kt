@@ -136,7 +136,7 @@ open class LibItem(fullPath: String) : Comparable<LibItem> {
 	val depth: Int = path.count { it == '/' }
 	var length: Long = 1
 	var progress by mutableIntStateOf(-1)
-	//init { logD("libItem name:$name depth:$depth path:$path fullPath:${this.fullPath}") }
+	//init { logD{"libItem name:$name depth:$depth path:$path fullPath:${this.fullPath}"} }
 	fun setStatusFull() {
 		status = Status.FULL
 		Library.checkStatuses(rootLibDir)

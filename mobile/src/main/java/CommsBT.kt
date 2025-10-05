@@ -71,7 +71,7 @@ object CommsBT {
 
 		sharedPreferences = context.getSharedPreferences("CommsBT", MODE_PRIVATE)
 		knownAddresses = sharedPreferences?.getStringSet("knownAddresses", null) ?: mutableSetOf()
-		logD("CommsBT.start " + knownAddresses.size + " known addresses")
+		logD{"CommsBT.start ${knownAddresses.size} known addresses"}
 		val bondedBTDevices = bluetoothAdapter?.bondedDevices ?: emptySet()
 		//Find and clean known devices
 		knownAddresses.forEach { checkKnownAddress(it, bondedBTDevices) }
@@ -133,7 +133,7 @@ object CommsBT {
 	}
 
 	fun connectDevice(device: BluetoothDevice) {
-		logD("CommsBT.connectDevice: " + device.name)
+		logD{"CommsBT.connectDevice: ${device.name}"}
 		if(status.value in listOf(Status.CONNECTED, Status.CONNECTING) ||
 			bluetoothAdapter?.isEnabled != true
 		) return
@@ -146,7 +146,7 @@ object CommsBT {
 
 	fun sendRequestSync() = requestQueue.add(Request(Request.Type.SYNC))
 	fun sendRequestSendFile(libItem: LibItem) {
-		logD("CommsBT.sendRequestSendFile " + libItem.name)
+		logD{"CommsBT.sendRequestSendFile ${libItem.name}"}
 		libItem.status = LibItem.Status.PENDING
 		requestQueue.add(
 			Request(
@@ -157,7 +157,7 @@ object CommsBT {
 	}
 
 	fun sendRequestDeleteFile(libItem: LibItem) {
-		logD("CommsBT.sendRequestDeleteFile " + libItem.name)
+		logD{"CommsBT.sendRequestDeleteFile ${libItem.name}"}
 		libItem.status = LibItem.Status.PENDING
 		requestQueue.add(
 			Request(
@@ -212,7 +212,7 @@ object CommsBT {
 					if(responseData is JSONObject) {
 						freeSpace = bytesToHuman(responseData.getLong("freeSpace"))
 						lastRequest?.libItem?.setStatusFull()
-						logD("CommsBT.gotResponse fileBinary lastRequest: " + lastRequest?.libItem?.path)
+						logD{"CommsBT.gotResponse fileBinary lastRequest: ${lastRequest?.libItem?.path}"}
 						messageStatus = R.string.file_sent
 					} else {
 						logE("CommsBT.gotResponse fileBinary responseData: $responseData")
@@ -258,7 +258,7 @@ object CommsBT {
 
 	class CommsBTConnect(device: BluetoothDevice) : Thread() {
 		init {
-			logD("CommsBTConnect " + device.name)
+			logD{"CommsBTConnect ${device.name}"}
 			try {
 				bluetoothSocket = device.createRfcommSocketToServiceRecord(WMP_UUID)
 			} catch(e: Exception) {
@@ -273,7 +273,7 @@ object CommsBT {
 				commsBTConnected = CommsBTConnected()
 				commsBTConnected?.start()
 			} catch(e: Exception) {
-				logD("CommsBTConnect.run failed: " + e.message)
+				logD{"CommsBTConnect.run failed: ${e.message}"}
 				tryIgnore { bluetoothSocket?.close() }
 				status.value = Status.DISCONNECTED
 			}
@@ -285,7 +285,7 @@ object CommsBT {
 		var outputStream: OutputStream? = null
 
 		init {
-			logD("CommsBTConnected")
+			logD{"CommsBTConnected"}
 			try {
 				inputStream = bluetoothSocket!!.inputStream
 				outputStream = bluetoothSocket!!.outputStream
@@ -306,7 +306,7 @@ object CommsBT {
 		}
 
 		fun close() {
-			logD("CommsBTConnected.close")
+			logD{"CommsBTConnected.close"}
 			status.value = Status.DISCONNECTED
 			freeSpace = ""
 			messageStatus = -1
@@ -324,7 +324,7 @@ object CommsBT {
 				try {
 					outputStream!!.write("".toByteArray())
 				} catch(_: Exception) {
-					logD("Connection closed")
+					logD{"Connection closed"}
 					break
 				}
 				sendNextRequest()
@@ -340,7 +340,7 @@ object CommsBT {
 				if(requestQueue.isEmpty() || CommsWifi.isSending || lastRequest != null) return
 				lastRequest = requestQueue.first()
 				requestQueue.remove(lastRequest)
-				logD("CommsBTConnected.sendNextRequest: $lastRequest")
+				logD{"CommsBTConnected.sendNextRequest: $lastRequest"}
 				if(lastRequest!!.type == Request.Type.SEND_FILE) {
 					val libItem = lastRequest!!.libItem!!
 					runInBackground { CommsWifi.sendFile(libItem) }
@@ -375,7 +375,7 @@ object CommsBT {
 					val temp = String(buffer)
 					response += temp
 					if(isValidJSON(response)) {
-						logD("CommsBTConnected.read got message: $response")
+						logD{"CommsBTConnected.read got message: $response"}
 						gotResponse(JSONObject(response))
 						return
 					}

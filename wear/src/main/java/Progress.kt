@@ -42,7 +42,7 @@ class Progress : ComponentActivity() {
 
 		lifecycleScope.launch {
 			CommsWifi.status.collect { wifiStatus ->
-				logD("ProgressActivity: CommsWifi status change: $wifiStatus")
+				logD{"ProgressActivity: CommsWifi status change: $wifiStatus"}
 				when (wifiStatus) {
 					CommsWifi.Status.ERROR, CommsWifi.Status.DONE -> finish()
 					else -> {}

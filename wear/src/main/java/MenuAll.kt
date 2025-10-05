@@ -7,11 +7,17 @@
  */
 package com.windkracht8.wearmusicplayer
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
+import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.IconButton
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
@@ -38,11 +44,22 @@ fun MenuAll(
 				)
 			}
 			item {
-				MenuItem(
-					transformation = SurfaceTransformation(transformationSpec),
-					label = stringResource(R.string.randomise),
-					onClick = onRandomiseClick
-				)
+				Row {
+					IconButton(onClick = { openTracks(Main.TrackListType.ALL, 0, 0) }) {
+						Icon(
+							imageVector = Icons.Default.PlayArrow,
+							contentDescription = "play",
+							tint = ColorW8Blue
+						)
+					}
+					IconButton(onClick = onRandomiseClick) {
+						Icon(
+							imageVector = Icons.Default.Shuffle,
+							contentDescription = "randomise",
+							tint = ColorW8Blue
+						)
+					}
+				}
 			}
 			Library.tracks.forEachIndexed { index, track ->
 				item {

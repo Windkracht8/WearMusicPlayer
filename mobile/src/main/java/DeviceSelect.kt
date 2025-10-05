@@ -57,7 +57,7 @@ class DeviceSelect : ComponentActivity() {
 
 		lifecycleScope.launch {
 			CommsBT.status.collect { status ->
-				logD("DeviceSelect: CommsBT status change: $status")
+				logD{"DeviceSelect: CommsBT status change: $status"}
 				when(status) {
 					CommsBT.Status.CONNECTING -> {
 						startActivity(Intent(this@DeviceSelect, DeviceConnect::class.java))
@@ -84,12 +84,12 @@ class DeviceSelect : ComponentActivity() {
 	}
 
 	fun onDeviceClick(device: BluetoothDevice) {
-		logD("onDeviceClick: " + device.name)
+		logD{"onDeviceClick: ${device.name}"}
 		runInBackground { CommsBT.connectDevice(device) }
 	}
 
 	fun onNewDeviceClick() {
-		logD("onNewDeviceClick")
+		logD{"onNewDeviceClick"}
 		runInBackground {
 			bondedDevices = CommsBT.getBondedDevices()
 			showNewDevices = true

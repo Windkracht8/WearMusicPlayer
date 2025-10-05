@@ -42,7 +42,7 @@ object CommsWifi {
 		ip: String,
 		port: Int
 	) {
-		logD("CommsWifi path: $path length: $length ip: $ip port: $port")
+		logD{"CommsWifi path: $path length: $length ip: $ip port: $port"}
 		this.path = path
 		runInBackground { status.emit(Status.PREPARING) }
 		connectionType = ConnectionType.REQUESTING
@@ -56,7 +56,7 @@ object CommsWifi {
 				object : ConnectivityManager.NetworkCallback() {
 					override fun onAvailable(network: Network) {
 						super.onAvailable(network)
-						logD("CommsWifi.NetworkCallback.onAvailable")
+						logD{"CommsWifi.NetworkCallback.onAvailable"}
 						connectivityManager.bindProcessToNetwork(network)
 						runInBackground {
 							connectionType = ConnectionType.FAST
@@ -65,7 +65,7 @@ object CommsWifi {
 					}
 					override fun onUnavailable() {
 						super.onUnavailable()
-						logD("CommsWifi.NetworkCallback.onUnavailable")
+						logD{"CommsWifi.NetworkCallback.onUnavailable"}
 						runInBackground {
 							connectionType = ConnectionType.SLOW
 							readFileFromStream(connectivityManager, path, length, ip, port)
@@ -90,7 +90,7 @@ object CommsWifi {
 		ip: String,
 		port: Int
 	) {
-		logD("CommsWifi.readFileFromStream")
+		logD{"CommsWifi.readFileFromStream"}
 		runInBackground { status.emit(Status.RECEIVING) }
 		var bytesDone: Long = 0
 		try {
@@ -115,7 +115,7 @@ object CommsWifi {
 							fileOutputStream.write(buffer, 0, numBytes)
 							bytesDone += numBytes.toLong()
 							progress = bytesDone.toFloat() / length.toFloat()
-							//logD("CommsWifi.read bytesDone: $bytesDone length: $length progress: $progress")
+							//logD{"CommsWifi.read bytesDone: $bytesDone length: $length progress: $progress"}
 							if (bytesDone >= length) {
 								runInBackground { status.emit(Status.DONE) }
 								connectivityManager.bindProcessToNetwork(null)

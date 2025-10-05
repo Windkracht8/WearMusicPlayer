@@ -18,8 +18,8 @@ import kotlinx.coroutines.launch
 
 const val LOG_TAG = "WearMusicPlayer"
 fun logE(message: String) = Log.e(LOG_TAG, message)
-fun logI(message: String) = Log.i(LOG_TAG, message)
-fun logD(message: String) = Log.d(LOG_TAG, message)
+fun logI(message: () -> String) { if(BuildConfig.DEBUG) { Log.i(LOG_TAG, message()) } }
+fun logD(message: () -> String) { if(BuildConfig.DEBUG) { Log.d(LOG_TAG, message()) } }
 
 fun Context.toast(message: Int) =
 	Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -35,4 +35,5 @@ fun String.isPathUnsave(): Boolean =
 	startsWith(" ") || endsWith(" ")
 
 fun tryIgnore(block: () -> Unit) = try { block() } catch (_: Exception) {}
-fun runInBackground(block: suspend () -> Unit) = CoroutineScope(Dispatchers.Default).launch { block() }
+fun runInBackground(block: suspend () -> Unit) =
+	CoroutineScope(Dispatchers.Default).launch { block() }

@@ -17,7 +17,8 @@ import java.util.Locale
 
 const val LOG_TAG = "WearMusicPlayer"
 fun logE(message: String) = Log.e(LOG_TAG, message)
-fun logD(message: String) = Log.d(LOG_TAG, message)
+fun logD(message: () -> String) { if(BuildConfig.DEBUG) { Log.d(LOG_TAG, message()) } }
+
 fun Context.toast(message: Int) =
 	Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
@@ -41,10 +42,6 @@ fun bytesToHuman(bytes: Long): String {
 	return "$bytes B"
 }
 
-fun tryIgnore(block: () -> Unit) = try {
-	block()
-} catch(_: Exception) {
-}
-
+fun tryIgnore(block: () -> Unit) = try { block() } catch(_: Exception) {}
 fun runInBackground(block: suspend () -> Unit) =
 	CoroutineScope(Dispatchers.Default).launch { block() }

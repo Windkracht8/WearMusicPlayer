@@ -30,9 +30,8 @@ class Main : ComponentActivity() {
 	var showLoading by mutableStateOf(true)
 	override fun onCreate(savedInstanceState: Bundle?) {
 		installSplashScreen()
-		super.onCreate(savedInstanceState)
-
 		enableEdgeToEdge()
+		super.onCreate(savedInstanceState)
 		setContent {
 			W8Theme {
 				Surface {
@@ -49,7 +48,7 @@ class Main : ComponentActivity() {
 
 		lifecycleScope.launch {
 			Library.status.collect { libraryStatus ->
-				logD("Main: Library status change: $libraryStatus")
+				logD{"Main: Library status change: $libraryStatus"}
 				when(libraryStatus) {
 					Library.Status.SCAN -> showLoading = true
 					Library.Status.READY -> {
@@ -62,7 +61,7 @@ class Main : ComponentActivity() {
 		}
 		lifecycleScope.launch {
 			CommsBT.status.collect { status ->
-				logD("Main: CommsBT status change: $status")
+				logD{"Main: CommsBT status change: $status"}
 				commsBTStatus = CommsBT.status.value
 				when(commsBTStatus) {
 					CommsBT.Status.CONNECTING ->
@@ -109,7 +108,7 @@ class Main : ComponentActivity() {
 	}
 
 	fun onIconClick() {
-		logD("onIconClick: " + CommsBT.status.value)
+		logD{"onIconClick: ${CommsBT.status.value}"}
 		if(!Permissions.hasBT || !Permissions.hasRead) {
 			startActivity(Intent(this, Permissions::class.java))
 		} else if(CommsBT.status.value == CommsBT.Status.DISCONNECTED) {
@@ -130,7 +129,7 @@ class Main : ComponentActivity() {
 
 	val openFolderResult =
 		registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-			logD("Main.openFolderResult: " + uri?.path)
+			logD{"Main.openFolderResult: ${uri?.path}"}
 			val fullPath = uri?.path
 			if(fullPath == null) {
 				logE("Main.openFolderResult empty uri")
@@ -143,7 +142,7 @@ class Main : ComponentActivity() {
 		}
 
 	fun onItemIconClick(libItem: LibItem) {
-		logD("Main.onItemIconClick: " + libItem.name)
+		logD{"Main.onItemIconClick: ${libItem.name}"}
 		if(libItem is LibDir || CommsBT.status.value != CommsBT.Status.CONNECTED) return
 		if(libItem.status == LibItem.Status.FULL) {
 			CommsBT.sendRequestDeleteFile(libItem)

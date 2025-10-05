@@ -37,7 +37,7 @@ class W8Player : MediaSessionService() {
 	var ongoingActivity: OngoingActivity? = null
 
 	override fun onCreate() {
-		logD("W8player.onCreate")
+		logD{"W8player.onCreate"}
 		super.onCreate()
 
 		val exoPlayer = ExoPlayer.Builder(this).build()
@@ -65,7 +65,7 @@ class W8Player : MediaSessionService() {
 	}
 
 	override fun onDestroy() {
-		logD("W8player.onDestroy")
+		logD{"W8player.onDestroy"}
 		super.onDestroy()
 		mediaSession?.player?.release()
 		mediaSession?.release()
@@ -108,7 +108,7 @@ class W8Player : MediaSessionService() {
 		intent: PendingIntent,
 		status: Status
 	) {
-		//logD("W8Player.start")
+		//logD{"W8Player.start"}
 		ongoingActivity = OngoingActivity.Builder(this, NOTIFICATION_ID, notificationBuilder)
 			.setStaticIcon(R.drawable.icon_vector)
 			.setTouchIntent(intent)
@@ -122,7 +122,7 @@ class W8Player : MediaSessionService() {
 	}
 
 	fun stop() {
-		logD("W8Player.stop")
+		logD{"W8Player.stop"}
 		notificationManager?.cancel(NOTIFICATION_ID)
 		ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
 		ongoingActivity = null

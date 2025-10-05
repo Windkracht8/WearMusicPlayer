@@ -19,8 +19,11 @@ android {
 		applicationId = "com.windkracht8.wearmusicplayer"
 		minSdk = 30
 		targetSdk = 36
-		versionCode = 256
-		versionName = "w2.4"
+		versionCode = 257
+		versionName = "w2.5"
+	}
+	buildFeatures {
+		buildConfig = true
 	}
 	buildTypes {
 		debug {
@@ -35,6 +38,7 @@ android {
 				getDefaultProguardFile("proguard-android-optimize.txt"),
 				"../proguard-rules.pro"
 			)
+			signingConfig = signingConfigs.getByName("debug")
 		}
 	}
 	compileOptions {
@@ -49,6 +53,7 @@ android {
 dependencies {
 	implementation("com.google.android.horologist:horologist-compose-layout:0.7.15")
 	implementation("androidx.activity:activity-compose:1.11.0")
+	implementation("androidx.compose.material:material-icons-extended:1.7.8")
 	implementation("androidx.core:core-splashscreen:1.0.1")
 	implementation("androidx.fragment:fragment-ktx:1.8.9")
 	implementation("androidx.media3:media3-exoplayer:1.8.0")
