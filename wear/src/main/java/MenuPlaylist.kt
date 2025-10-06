@@ -18,13 +18,15 @@ import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadding
 
 @Composable
-fun MenuAll(
+fun MenuPlaylist(
+	id: Int,
 	onRandomiseClick: () -> Unit,
 	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
 	trackId: Int,
 	loopEnabled: Boolean,
 	onLoopClick: () -> Unit
 ) {
+	val playlist = Playlists.all.firstOrNull { it.id == id }
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
@@ -36,24 +38,24 @@ fun MenuAll(
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = stringResource(R.string.all),
+					label = playlist?.name ?: stringResource(R.string.oops),
 				)
 			}
 			item {
 				MenuButtonRow(
-					onPlayClick = { openTracks(Main.TrackListType.ALL, 0, 0) },
+					onPlayClick = { openTracks(Main.TrackListType.PLAYLIST, id, 0) },
 					onRandomiseClick,
 					loopEnabled,
 					onLoopClick
 				)
 			}
-			Library.tracks.forEachIndexed { index, track ->
+			playlist?.tracks?.forEachIndexed { index, track ->
 				item {
 					MenuItem(
 						transformation = SurfaceTransformation(transformationSpec),
-						label = track.artist.name,
-						subLabel = track.title,
-						onClick = { openTracks(Main.TrackListType.ALL, 0, index) }
+						label = track.title,
+						subLabel = track.artist.name,
+						onClick = { openTracks(Main.TrackListType.PLAYLIST, id, index) }
 					)
 				}
 			}

@@ -7,17 +7,11 @@
  */
 package com.windkracht8.wearmusicplayer
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
-import androidx.wear.compose.material3.Icon
-import androidx.wear.compose.material3.IconButton
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
@@ -29,7 +23,9 @@ fun MenuArtist(
 	onRandomiseClick: () -> Unit,
 	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
 	onMenuAlbumClick: (id: Int) -> Unit,
-	trackId: Int
+	trackId: Int,
+	loopEnabled: Boolean,
+	onLoopClick: () -> Unit
 ) {
 	val artist = Library.artists.firstOrNull { it.id == id }
 	val columnState = rememberTransformingLazyColumnState()
@@ -47,22 +43,12 @@ fun MenuArtist(
 				)
 			}
 			item {
-				Row {
-					IconButton(onClick = { openTracks(Main.TrackListType.ARTIST, id, 0) }) {
-						Icon(
-							imageVector = Icons.Default.PlayArrow,
-							contentDescription = "play",
-							tint = ColorW8Blue
-						)
-					}
-					IconButton(onClick = onRandomiseClick) {
-						Icon(
-							imageVector = Icons.Default.Shuffle,
-							contentDescription = "randomise",
-							tint = ColorW8Blue
-						)
-					}
-				}
+				MenuButtonRow(
+					onPlayClick = { openTracks(Main.TrackListType.ARTIST, id, 0) },
+					onRandomiseClick,
+					loopEnabled,
+					onLoopClick
+				)
 			}
 			artist?.albums?.forEach { album ->
 				item {

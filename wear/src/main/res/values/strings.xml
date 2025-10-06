@@ -18,6 +18,8 @@
 	<string name="all">All</string>
 	<string name="albums">Albums</string>
 	<string name="artists">Artists</string>
+	<string name="playlists">Playlists</string>
+	<string name="no_playlists">Create playlists in the phone app</string>
 	<string name="rescan">Rescan</string>
 	<string name="oops">oops</string>
 	<string name="album">album</string>
@@ -47,5 +49,6 @@
 	<string name="fail_read_wifi">Error in receiving file</string>
 	<string name="fail_delete_file">Failed to delete file</string>
 	<string name="fail_scan_media">Problem with finding tracks</string>
+	<string name="fail_read_playlist">Error reading playlist</string>
 
 </resources>

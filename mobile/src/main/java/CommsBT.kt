@@ -155,7 +155,6 @@ object CommsBT {
 			)
 		)
 	}
-
 	fun sendRequestDeleteFile(libItem: LibItem) {
 		logD{"CommsBT.sendRequestDeleteFile ${libItem.name}"}
 		libItem.status = LibItem.Status.PENDING
@@ -166,6 +165,10 @@ object CommsBT {
 			)
 		)
 	}
+	fun sendRequestPutPlaylist(playlistId: Int) =
+		requestQueue.add(Request(Request.Type.PUT_PLAYLIST, playlistId = playlistId))
+	fun sendRequestDelPlaylist(playlistId: Int) =
+		requestQueue.add(Request(Request.Type.DEL_PLAYLIST, playlistId = playlistId))
 
 	fun gotResponse(response: JSONObject) {
 		try {
@@ -173,7 +176,7 @@ object CommsBT {
 			val responseData = response.get("responseData")
 			when(requestType) {
 				"sync" -> {
-					//{"requestType":"sync","responseData":{"tracks":[{"path":"directory\/track1.mp3"},{"path":"track2.mp3"}],"freeSpace":5672968192}}
+					//{"requestType":"sync","responseData":{"tracks":[{"path":"directory\/track1.mp3"},{"path":"track2.mp3"}],"freeSpace":5672968192,"playlistIds":[123,124]}}
 					//CODE_FAIL
 					//CODE_UNKNOWN_REQUEST_TYPE
 					if(responseData is JSONObject) {
@@ -182,7 +185,22 @@ object CommsBT {
 							Library.updateLibWithFilesOnWatch(
 								responseData.getJSONArray("tracks")
 							)
-							messageStatus = R.string.sync_done
+							if(requestQueue.isEmpty()) messageStatus = R.string.sync_done
+						}
+						if(responseData.has("playlistIds")) {
+							val playlistIds = responseData.getJSONArray("playlistIds")
+							for(i in 0 until playlistIds.length()) {
+								val playlistId = playlistIds.getInt(i)
+								if(Playlists.all.none { it.id == playlistId }) {
+									sendRequestDelPlaylist(playlistId)
+								}
+							}
+							Playlists.all.filter { it.trackPaths.isNotEmpty() }.forEach { playlist ->
+								for(i in 0 until playlistIds.length()) {
+									if(playlist.id == playlistIds.getInt(i)) return@forEach
+								}
+								sendRequestPutPlaylist(playlist.id)
+							}
 						}
 					} else {
 						logE("CommsBT.gotResponse sync responseData: $responseData")
@@ -241,11 +259,23 @@ object CommsBT {
 							lastRequest = null
 						}
 						else -> {
-							logE("CommsBT.gotResponse deleteFile")
+							logE("CommsBT.gotResponse deleteFile: $responseData")
 							messageStatus = R.string.fail_delete_file
 							lastRequest = null
 						}
 					}
+				}
+				"putPlaylist", "delPlaylist" -> {
+					//{"requestType":"put/delPlaylist","responseData":0}
+					//CODE_OK
+					//CODE_FAIL
+					if(responseData == CODE_OK) {
+						if(requestQueue.isEmpty()) messageStatus = R.string.sync_done
+					} else {
+						logE("CommsBT.gotResponse put/delPlaylist: $responseData")
+						messageStatus = R.string.fail_sync_playlists
+					}
+					lastRequest = null
 				}
 				else -> throw Exception()
 			}
@@ -397,16 +427,15 @@ object CommsBT {
 		}
 	}
 
-	class Request(val type: Type, val libItem: LibItem? = null) {
-		enum class Type { SYNC, SEND_FILE, DELETE_FILE }
+	class Request(val type: Type, val libItem: LibItem? = null, val playlistId: Int? = null) {
+		enum class Type { SYNC, SEND_FILE, DELETE_FILE, PUT_PLAYLIST, DEL_PLAYLIST }
 		override fun toString(): String {
 			val request = JSONObject()
-			request.put("version", 1)
+			request.put("version", 2)
 			when(type) {
 				Type.SYNC -> {
-					//{"requestType":"sync","requestData":{}}
+					//{"requestType":"sync","requestData":{}]}
 					request.put("requestType", "sync")
-					request.put("requestData", JSONObject())
 					messageStatus = R.string.sync
 				}
 				Type.SEND_FILE -> {
@@ -442,6 +471,18 @@ object CommsBT {
 					}
 					request.put("requestData", path)
 					messageStatus = R.string.delete_file
+				}
+				Type.PUT_PLAYLIST -> {
+					//{"requestType":"putPlaylist","requestData":{"id":123,"name":"Favorites","tracks":["path1","path2"]}}
+					request.put("requestType", "putPlaylist")
+					request.put("requestData", Playlists.all.first { it.id == playlistId }.toJson())
+					messageStatus = R.string.sync
+				}
+				Type.DEL_PLAYLIST -> {
+					//{"requestType":"delPlaylist","requestData":123}
+					request.put("requestType", "delPlaylist")
+					request.put("requestData", playlistId)
+					messageStatus = R.string.sync
 				}
 			}
 			return request.toString()

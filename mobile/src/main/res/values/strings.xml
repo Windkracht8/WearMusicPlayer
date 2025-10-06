@@ -13,6 +13,7 @@
 	<string name="starting">Looking for known watch</string>
 	<string name="no_permission">Tap icon to allow permission</string>
 	<string name="open_folder">Open other folder</string>
+	<string name="open_playlists">Playlists</string>
 	<string name="loading">loading file list</string>
 	<string name="watch_tracks">Tracks only on the watch</string>
 
@@ -38,6 +39,8 @@
 	<string name="device_select_none">No Bluetooth device found, first pair your watch</string>
 	<string name="delete_device">Delete device?</string>
 	<string name="delete">Delete</string>
+	<string name="create">Create</string>
+	<string name="save">Save</string>
 	<string name="device_connect_instruct">keep the app on the watch open while trying to
         connect</string>
 	<string name="cancel">Cancel</string>
@@ -57,6 +60,7 @@
 	<string name="delete_file_declined">Delete declined on watch</string>
 	<string name="file_deleted">File deleted on watch</string>
 	<string name="fail_delete_file">Failed to delete the file on the watch</string>
+	<string name="fail_sync_playlists">Failed to sync playlists</string>
 
 	<string name="fail_no_wifi">To send a file, first connect to a Wifi network</string>
 	<string name="fail_send_message">Failed to send message to watch</string>
@@ -64,4 +68,13 @@
 
 	<string name="fail_BT_denied">No Bluetooth permission, tap icon</string>
 	<string name="fail_BT_off">Bluetooth turned off</string>
+
+	<!-- playlists -->
+	<string name="playlists_title">Playlists</string>
+	<string name="playlists_new">New playlist name</string>
+	<string name="playlists_rename">Rename playlist</string>
+	<string name="rename">Rename</string>
+	<string name="add_to_playlist">Add to playlist</string>
+	<string name="no_playlists">No playlists yet</string>
+	<string name="fail_read_playlist">Error reading playlist</string>
 </resources>

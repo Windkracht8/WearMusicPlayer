@@ -8,53 +8,46 @@
 package com.windkracht8.wearmusicplayer
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
+import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadding
 
 @Composable
-fun MenuAll(
-	onRandomiseClick: () -> Unit,
-	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
-	trackId: Int,
-	loopEnabled: Boolean,
-	onLoopClick: () -> Unit
-) {
+fun MenuPlaylists(onMenuPlaylistClick: (id: Int) -> Unit) {
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
-	LaunchedEffect(Unit) {
-		if (trackId > 0) columnState.scrollToItem(trackId + 2)
-	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = stringResource(R.string.all),
+					label = stringResource(R.string.playlists),
 				)
 			}
-			item {
-				MenuButtonRow(
-					onPlayClick = { openTracks(Main.TrackListType.ALL, 0, 0) },
-					onRandomiseClick,
-					loopEnabled,
-					onLoopClick
-				)
-			}
-			Library.tracks.forEachIndexed { index, track ->
+			if (Playlists.all.isEmpty()) {
 				item {
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = track.artist.name,
-						subLabel = track.title,
-						onClick = { openTracks(Main.TrackListType.ALL, 0, index) }
+					Text(
+						text = stringResource(R.string.no_playlists),
+						textAlign = TextAlign.Center
 					)
+				}
+			} else {
+				Playlists.all.forEach {
+					item {
+						MenuItem(
+							transformation = SurfaceTransformation(transformationSpec),
+							label = it.name,
+							subLabel = "${it.trackPaths.size} songs",
+							onClick = { onMenuPlaylistClick(it.id) }
+						)
+					}
 				}
 			}
 		}

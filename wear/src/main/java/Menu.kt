@@ -8,16 +8,24 @@
 package com.windkracht8.wearmusicplayer
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
+import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.IconButton
 import androidx.wear.compose.material3.ListHeader
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.OutlinedButton
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -30,6 +38,7 @@ fun Menu(
 	onMenuAllClick: () -> Unit,
 	onMenuAlbumsClick: () -> Unit,
 	onMenuArtistsClick: () -> Unit,
+	onMenuPlaylistsClick: () -> Unit,
 	onMenuDirsClick: () -> Unit,
 	onRescanClick: () -> Unit
 ) {
@@ -74,6 +83,13 @@ fun Menu(
 			item {
 				MenuItem(
 					transformation = SurfaceTransformation(transformationSpec),
+					label = stringResource(R.string.playlists),
+					onClick = onMenuPlaylistsClick
+				)
+			}
+			item {
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
 					label = stringResource(R.string.dirs),
 					onClick = onMenuDirsClick
 				)
@@ -92,6 +108,38 @@ fun Menu(
 @Composable
 fun MenuHeaderItem(transformation: SurfaceTransformation, label: String) =
 	ListHeader(transformation = transformation) { Text(label) }
+
+@Composable
+fun MenuButtonRow(
+	onPlayClick: () -> Unit,
+	onRandomiseClick: () -> Unit,
+	loopEnabled: Boolean,
+	onLoopClick: () -> Unit,
+){
+	Row {
+		IconButton(onClick = onPlayClick) {
+			Icon(
+				imageVector = Icons.Default.PlayArrow,
+				contentDescription = "play",
+				tint = ColorW8Blue
+			)
+		}
+		IconButton(onClick = onRandomiseClick) {
+			Icon(
+				imageVector = Icons.Default.Shuffle,
+				contentDescription = "randomise",
+				tint = MaterialTheme.colorScheme.onBackground
+			)
+		}
+		IconButton(onClick = onLoopClick) {
+			Icon(
+				imageVector = Icons.Default.Repeat,
+				contentDescription = "loop",
+				tint = if (loopEnabled) ColorW8Blue else MaterialTheme.colorScheme.onBackground
+			)
+		}
+	}
+}
 
 @Composable
 fun MenuItem(

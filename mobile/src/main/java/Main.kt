@@ -95,6 +95,7 @@ class Main : ComponentActivity() {
 			)
 			if(CommsBT.status.value == null) runInBackground { CommsBT.start(this@Main) }
 		}
+		Playlists.init(this) { toast(R.string.fail_read_playlist) }
 	}
 
 	override fun onPause() {
@@ -126,6 +127,7 @@ class Main : ComponentActivity() {
 			toast(R.string.fail_open_folder_request)
 		}
 	}
+
 
 	val openFolderResult =
 		registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->

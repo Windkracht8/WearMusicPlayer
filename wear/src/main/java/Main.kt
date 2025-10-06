@@ -59,7 +59,7 @@ class Main : ComponentActivity() {
 	var mediaController: MediaController? = null
 	var currentTracks: List<Library.Track> by mutableStateOf(emptyList())
 
-	enum class TrackListType { ALL, ARTIST, ALBUM, DIR }
+	enum class TrackListType { ALL, ARTIST, ALBUM, PLAYLIST, DIR }
 	var currentTracksType = TrackListType.ALL
 	var currentTracksId = -1
 	var currentTrackId by mutableIntStateOf(-1)
@@ -68,6 +68,7 @@ class Main : ComponentActivity() {
 	var hasPrevious by mutableStateOf(false)
 	var hasNext by mutableStateOf(false)
 	var isPlaying by mutableStateOf(false)
+	var loopEnabled by mutableStateOf(false)
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		installSplashScreen()
@@ -87,6 +88,7 @@ class Main : ComponentActivity() {
 			try {
 				mediaController = mediaControllerFuture.get()
 				mediaController?.addListener(playerListener)
+				loopEnabled = mediaController?.repeatMode == Player.REPEAT_MODE_ALL
 				loadTracks()
 			} catch (e: Exception) {
 				logE("Main.MediaController: ${e.message}")
@@ -171,6 +173,7 @@ class Main : ComponentActivity() {
 			)
 			runInBackground { CommsBT.start(this@Main) }
 		}
+		Playlists.init(this){ toast(R.string.fail_read_playlist) }
 	}
 	override fun onStop() {
 		//logD{"MainActivity.onStop"}
@@ -211,6 +214,14 @@ class Main : ComponentActivity() {
 		else { mediaController?.pause() }
 	}
 
+	fun toggleLoop() {
+		if (mediaController?.repeatMode == Player.REPEAT_MODE_ALL) {
+			mediaController?.repeatMode = Player.REPEAT_MODE_OFF
+		} else {
+			mediaController?.repeatMode = Player.REPEAT_MODE_ALL
+		}
+	}
+
 	fun rescan() = runInBackground { Library.scanFiles(this@Main) }
 
 	fun loadTracks() {
@@ -236,6 +247,7 @@ class Main : ComponentActivity() {
 			TrackListType.ALL -> Library.tracks
 			TrackListType.ARTIST -> Library.artists.firstOrNull { it.id == id }?.tracks ?: emptyList()
 			TrackListType.ALBUM -> Library.albums.firstOrNull { it.id == id }?.tracks ?: emptyList()
+			TrackListType.PLAYLIST -> Playlists.all.firstOrNull { it.id == id }?.tracks ?: emptyList()
 			TrackListType.DIR -> Library.dirs.firstOrNull { it.id == id }?.tracks ?: emptyList()
 		}
 		val mediaItems = mutableListOf<MediaItem>()
@@ -266,6 +278,10 @@ class Main : ComponentActivity() {
 		override fun onPlayerError(error: PlaybackException) {
 			logE("Player.Listener.onPlayerError: $error")
 			logE("Player.Listener.onPlayerError: ${error.message}")
+		}
+		override fun onRepeatModeChanged(repeatMode: Int) {
+			super.onRepeatModeChanged(repeatMode)
+			loopEnabled = repeatMode == Player.REPEAT_MODE_ALL
 		}
 	}
 
@@ -375,6 +391,12 @@ fun MainApp(main: Main) {
 											main.currentTracksId +
 											"/" + main.currentTrackId
 								)
+							Main.TrackListType.PLAYLIST ->
+								navController.navigate(
+									"menu_playlist/" +
+											main.currentTracksId +
+											"/" + main.currentTrackId
+								)
 							Main.TrackListType.DIR ->
 								navController.navigate(
 									"menu_dir/" +
@@ -399,6 +421,7 @@ fun MainApp(main: Main) {
 					onMenuAllClick = { navController.navigate("menu_all/0") },
 					onMenuAlbumsClick = { navController.navigate("menu_albums") },
 					onMenuArtistsClick = { navController.navigate("menu_artists") },
+					onMenuPlaylistsClick = { navController.navigate("menu_playlists") },
 					onMenuDirsClick = { navController.navigate("menu_dirs") },
 					onRescanClick = {
 						main.rescan()
@@ -417,7 +440,9 @@ fun MainApp(main: Main) {
 						main.openTracks(type, id, index)
 						navController.popBackStack("home", inclusive = false)
 					},
-					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
+					loopEnabled = main.loopEnabled,
+					onLoopClick = main::toggleLoop
 				)
 			}
 			composable("menu_albums") {
@@ -438,7 +463,9 @@ fun MainApp(main: Main) {
 						main.openTracks(type, id, index)
 						navController.popBackStack("home", inclusive = false)
 					},
-					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
+					loopEnabled = main.loopEnabled,
+					onLoopClick = main::toggleLoop
 				)
 			}
 			composable("menu_artists") {
@@ -460,7 +487,32 @@ fun MainApp(main: Main) {
 						navController.popBackStack("home", inclusive = false)
 					},
 					onMenuAlbumClick = { id -> navController.navigate("menu_album/$id/0") },
-					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
+					loopEnabled = main.loopEnabled,
+					onLoopClick = main::toggleLoop
+				)
+			}
+			composable("menu_playlists") {
+				MenuPlaylists { navController.navigate("menu_playlist/$it/0") }
+			}
+			composable("menu_playlist/{id}/{trackId}") {
+				val playlistId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
+				MenuPlaylist(
+					id = playlistId,
+					onRandomiseClick = {
+						if(playlistId >= 0) {
+							Playlists.all.firstOrNull { p -> p.id == playlistId }?.tracks?.shuffle()
+							navController.popBackStack()
+							navController.navigate("menu_playlist/$playlistId/0")
+						}
+					},
+					openTracks = { type, id, index ->
+						main.openTracks(type, id, index)
+						navController.popBackStack("home", inclusive = false)
+					},
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
+					loopEnabled = main.loopEnabled,
+					onLoopClick = main::toggleLoop
 				)
 			}
 			composable("menu_dirs") {
@@ -481,7 +533,9 @@ fun MainApp(main: Main) {
 						main.openTracks(type, id, index)
 						navController.popBackStack("home", inclusive = false)
 					},
-					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
+					loopEnabled = main.loopEnabled,
+					onLoopClick = main::toggleLoop
 				)
 			}
 		}

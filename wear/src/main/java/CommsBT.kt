@@ -16,6 +16,7 @@ import android.content.Context
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.InputStream
@@ -54,9 +55,9 @@ object CommsBT {
 			requestType = requestMessage.getString("requestType")
 			when (requestType) {
 				"sync" -> {
-					//{"requestType":"sync","requestData":{}}
+					//{"requestType":"sync","requestData":{}]}
 					sendSyncResponse()
-					//{"requestType":"sync","responseData":{"tracks":[{"path":"directory\/track1.mp3"},{"path":"track2.mp3"}],"freeSpace":5672968192}}
+					//{"requestType":"sync","responseData":{"tracks":[{"path":"directory\/track1.mp3"},{"path":"track2.mp3"}],"freeSpace":5672968192,"playlistIds":[123,124]}}
 				}
 				"fileDetails" -> {
 					//{"requestType":"fileDetails","requestData":{"path":"directory\/track3.mp3","length":12345,"ip":"192.168.1.100","port":9002}}
@@ -100,6 +101,21 @@ object CommsBT {
 					deleteFilePath.value = path
 					//{"requestType":"deleteFile","responseData":0}
 				}
+				"putPlaylist" -> {
+					//{"requestType":"putPlaylist","requestData":{"id":123,"name":"Favorites","tracks":["path1","path2"]}}
+					val playlistJson = requestMessage.getJSONObject("requestData")
+					val playlist = Playlists.create(playlistJson)
+					sendResponse("putPlaylist",
+						if(playlist == null) CODE_FAIL else CODE_OK
+					)
+					//{"requestType":"putPlaylist","responseData":0}
+				}
+				"delPlaylist" -> {
+					//{"requestType":"delPlaylist","requestData":123}
+					Playlists.delete(requestMessage.getInt("requestData"))
+					sendResponse("delPlaylist", CODE_OK)
+					//{"requestType":"delPlaylist","responseData":0}
+				}
 				else -> {
 					logE("CommsBT.gotRequest Unknown requestType: $requestType")
 					sendResponse(requestType, CODE_UNKNOWN_REQUEST_TYPE)
@@ -112,10 +128,13 @@ object CommsBT {
 		}
 	}
 	fun sendSyncResponse() {
-		sendResponse("sync", JSONObject()
+		val responseData = JSONObject()
 			.put("tracks", Library.getTracksJson())
 			.put("freeSpace", Library.getFreeSpace())
-		)
+		val playlistIds = JSONArray()
+		Playlists.all.forEach { playlistIds.put(it.id) }
+		responseData.put("playlistIds", playlistIds)
+		sendResponse("sync", responseData)
 	}
 	fun sendFileBinaryResponse() {
 		sendResponse("fileBinary", JSONObject()
@@ -126,7 +145,7 @@ object CommsBT {
 	}
 	fun sendResponse(requestType: String, responseData: Any) {
 		responseQueue.add(JSONObject()
-			.put("version", 1)
+			.put("version", 2)
 			.put("requestType", requestType)
 			.put("responseData", responseData)
 		)
