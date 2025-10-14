@@ -19,6 +19,9 @@ import android.provider.MediaStore
 import android.provider.MediaStore.MediaColumns
 import android.provider.MediaStore.Audio.Media
 import androidx.activity.result.IntentSenderRequest
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.json.JSONArray
 import org.json.JSONObject
@@ -29,6 +32,7 @@ object Library {
 	val exStorageDir: String = Environment.getExternalStorageDirectory().toString()
 	val musicDir: String = "$exStorageDir/Music/"
 	val tracks = mutableListOf<Track>()
+	var shuffleCounter by mutableIntStateOf(0)
 	val artists = mutableListOf<Artist>()
 	val albums = mutableListOf<Album>()
 	val dirs = mutableListOf<Dir>()
@@ -133,11 +137,14 @@ object Library {
 		try {
 			//logD{"Library.scanUri sort"}
 			tracks.sort()
+			shuffleCounter = 0
 			artists.sort()
 			albums.sort()
 			artists.forEach { it.sort() }
 			albums.forEach { it.sort() }
 			dirs.sort()
+			dirs.forEach { it.shuffleCounter = 0 }
+			Playlists.init(context)
 		} catch (e: Exception) {
 			logE("Library.scanUri sort exception: " + e.message)
 			error.emit(R.string.fail_scan_media)
@@ -262,6 +269,7 @@ object Library {
 		val id: Int = artists.size
 		val name: String = artistName ?: "<empty>"//TODO from strings.xml or empty string
 		val tracks = mutableListOf<Track>()
+		var shuffleCounter by mutableIntStateOf(0)
 		val albums = mutableListOf<Album>()
 
 		init {
@@ -275,6 +283,7 @@ object Library {
 		override fun compareTo(other: Artist): Int = name.compareTo(other.name)
 		fun sort() {
 			tracks.sort()
+			shuffleCounter = 0
 			albums.sort()
 		}
 	}
@@ -294,13 +303,17 @@ object Library {
 		val name: String = albumName ?: "<empty>"//TODO from strings.xml or empty string
 		var artist: String = albumArtist ?: track.artist.name
 		val tracks = mutableListOf<Track>()
+		var shuffleCounter by mutableIntStateOf(0)
 
 		init {
 			tracks.add(track)
 			albums.add(this)
 		}
 		override fun compareTo(other: Album): Int = name.compareTo(other.name)
-		fun sort() = tracks.sort()
+		fun sort() {
+			tracks.sort()
+			shuffleCounter = 0
+		}
 	}
 
 	fun getAlbumForNewTrack(
@@ -320,6 +333,7 @@ object Library {
 	class Dir(val name: String) : Comparable<Dir> {
 		val id: Int = dirs.size
 		val tracks = mutableListOf<Track>()
+		var shuffleCounter by mutableIntStateOf(0)
 		override fun compareTo(other: Dir): Int = name.compareTo(other.name)
 	}
 

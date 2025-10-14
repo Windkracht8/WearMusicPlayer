@@ -13,7 +13,6 @@
 	<string name="starting">Looking for known watch</string>
 	<string name="no_permission">Tap icon to allow permission</string>
 	<string name="open_folder">Open other folder</string>
-	<string name="open_playlists">Playlists</string>
 	<string name="loading">loading file list</string>
 	<string name="watch_tracks">Tracks only on the watch</string>
 
@@ -74,7 +73,6 @@
 	<string name="playlists_new">New playlist name</string>
 	<string name="playlists_rename">Rename playlist</string>
 	<string name="rename">Rename</string>
-	<string name="add_to_playlist">Add to playlist</string>
 	<string name="no_playlists">No playlists yet</string>
 	<string name="fail_read_playlist">Error reading playlist</string>
 </resources>

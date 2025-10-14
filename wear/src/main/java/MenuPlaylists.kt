@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -39,15 +40,13 @@ fun MenuPlaylists(onMenuPlaylistClick: (id: Int) -> Unit) {
 					)
 				}
 			} else {
-				Playlists.all.forEach {
-					item {
-						MenuItem(
-							transformation = SurfaceTransformation(transformationSpec),
-							label = it.name,
-							subLabel = "${it.trackPaths.size} songs",
-							onClick = { onMenuPlaylistClick(it.id) }
-						)
-					}
+				items(Playlists.all) {
+					MenuItem(
+						transformation = SurfaceTransformation(transformationSpec),
+						label = it.name,
+						subLabel = "${it.trackPaths.size} songs",
+						onClick = { onMenuPlaylistClick(it.id) }
+					)
 				}
 			}
 		}

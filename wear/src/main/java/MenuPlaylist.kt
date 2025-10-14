@@ -9,8 +9,8 @@ package com.windkracht8.wearmusicplayer
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.itemsIndexed
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -19,14 +19,14 @@ import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadd
 
 @Composable
 fun MenuPlaylist(
-	id: Int,
-	onRandomiseClick: () -> Unit,
-	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
+	playlist: Playlist,
 	trackId: Int,
-	loopEnabled: Boolean,
-	onLoopClick: () -> Unit
+	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
+	onShuffleClick: () -> Unit,
+	shuffleCounter: Int,
+	onLoopClick: () -> Unit,
+	loopEnabled: Boolean
 ) {
-	val playlist = Playlists.all.firstOrNull { it.id == id }
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
@@ -38,26 +38,25 @@ fun MenuPlaylist(
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = playlist?.name ?: stringResource(R.string.oops),
+					label = playlist.name,
 				)
 			}
 			item {
 				MenuButtonRow(
-					onPlayClick = { openTracks(Main.TrackListType.PLAYLIST, id, 0) },
-					onRandomiseClick,
-					loopEnabled,
-					onLoopClick
+					onPlayClick = { openTracks(Main.TrackListType.PLAYLIST, playlist.id, 0) },
+					onShuffleClick,
+					isShuffled = shuffleCounter > 0,
+					onLoopClick,
+					loopEnabled
 				)
 			}
-			playlist?.tracks?.forEachIndexed { index, track ->
-				item {
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = track.title,
-						subLabel = track.artist.name,
-						onClick = { openTracks(Main.TrackListType.PLAYLIST, id, index) }
-					)
-				}
+			itemsIndexed(playlist.tracks) { index, track ->
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = track.title,
+					subLabel = track.artist.name,
+					onClick = { openTracks(Main.TrackListType.PLAYLIST, playlist.id, index) }
+				)
 			}
 		}
 	}

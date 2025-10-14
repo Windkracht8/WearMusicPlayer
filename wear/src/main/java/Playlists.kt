@@ -10,6 +10,8 @@ package com.windkracht8.wearmusicplayer
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.core.content.edit
@@ -21,7 +23,8 @@ data class Playlist(
     var id: Int,
     var name: String,
     val trackPaths: MutableList<String> = mutableListOf(),
-    var tracks: MutableList<Track> = mutableListOf()
+    var tracks: MutableList<Track> = mutableListOf(),
+    var shuffleCounter: MutableIntState = mutableIntStateOf(0)
 ){
     fun toJson(): JSONObject {
         val obj = JSONObject()
@@ -37,14 +40,14 @@ data class Playlist(
 object Playlists {
     lateinit var sharedPreferences: SharedPreferences
     val all: SnapshotStateList<Playlist> = mutableStateListOf()
-    fun init(context: Context, onError: () -> Unit) {
+    fun init(context: Context) {
         sharedPreferences = context.getSharedPreferences("Playlists", MODE_PRIVATE)
         all.clear()
         sharedPreferences.all.forEach { (_, value) ->
-            try { all.add(create(value as String)!!) }
+            try { create(value as String) ?: throw Exception("create failed") }
             catch(e: Exception) {
                 logE("Playlists.init : ${e.message}")
-                onError()
+                context.toastFromBG(R.string.fail_read_playlist)
             }
         }
     }

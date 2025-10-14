@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.itemsIndexed
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -19,11 +20,12 @@ import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadd
 
 @Composable
 fun MenuAll(
-	onRandomiseClick: () -> Unit,
-	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
 	trackId: Int,
-	loopEnabled: Boolean,
-	onLoopClick: () -> Unit
+	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
+	onShuffleClick: () -> Unit,
+	shuffleCounter: Int,
+	onLoopClick: () -> Unit,
+	loopEnabled: Boolean
 ) {
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
@@ -42,20 +44,19 @@ fun MenuAll(
 			item {
 				MenuButtonRow(
 					onPlayClick = { openTracks(Main.TrackListType.ALL, 0, 0) },
-					onRandomiseClick,
-					loopEnabled,
-					onLoopClick
+					onShuffleClick,
+					isShuffled = shuffleCounter > 0,
+					onLoopClick,
+					loopEnabled
 				)
 			}
-			Library.tracks.forEachIndexed { index, track ->
-				item {
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = track.artist.name,
-						subLabel = track.title,
-						onClick = { openTracks(Main.TrackListType.ALL, 0, index) }
-					)
-				}
+			itemsIndexed(Library.tracks) { index, track ->
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = track.artist.name,
+					subLabel = track.title,
+					onClick = { openTracks(Main.TrackListType.ALL, 0, index) }
+				)
 			}
 		}
 	}

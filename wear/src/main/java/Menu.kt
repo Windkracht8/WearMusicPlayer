@@ -25,7 +25,7 @@ import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.IconButton
 import androidx.wear.compose.material3.ListHeader
-import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.MaterialTheme.colorScheme
 import androidx.wear.compose.material3.OutlinedButton
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -112,9 +112,10 @@ fun MenuHeaderItem(transformation: SurfaceTransformation, label: String) =
 @Composable
 fun MenuButtonRow(
 	onPlayClick: () -> Unit,
-	onRandomiseClick: () -> Unit,
-	loopEnabled: Boolean,
+	onShuffleClick: () -> Unit,
+	isShuffled: Boolean,
 	onLoopClick: () -> Unit,
+	loopEnabled: Boolean
 ){
 	Row {
 		IconButton(onClick = onPlayClick) {
@@ -124,18 +125,18 @@ fun MenuButtonRow(
 				tint = ColorW8Blue
 			)
 		}
-		IconButton(onClick = onRandomiseClick) {
+		IconButton(onClick = onShuffleClick) {
 			Icon(
 				imageVector = Icons.Default.Shuffle,
-				contentDescription = "randomise",
-				tint = MaterialTheme.colorScheme.onBackground
+				contentDescription = "shuffle",
+				tint = if(isShuffled) ColorW8Blue else colorScheme.onBackground
 			)
 		}
 		IconButton(onClick = onLoopClick) {
 			Icon(
 				imageVector = Icons.Default.Repeat,
 				contentDescription = "loop",
-				tint = if (loopEnabled) ColorW8Blue else MaterialTheme.colorScheme.onBackground
+				tint = if(loopEnabled) ColorW8Blue else colorScheme.onBackground
 			)
 		}
 	}

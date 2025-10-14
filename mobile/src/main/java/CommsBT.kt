@@ -48,7 +48,7 @@ object CommsBT {
 	var bluetoothSocket: BluetoothSocket? = null
 	var commsBTConnect: CommsBTConnect? = null
 	var commsBTConnected: CommsBTConnected? = null
-	val knownDevices: MutableSet<BluetoothDevice> = mutableSetOf()
+	val knownDevices: MutableList<BluetoothDevice> = mutableListOf()
 	var knownAddresses: MutableSet<String> = mutableSetOf()
 
 	enum class Status { STARTING, DISCONNECTED, CONNECTING, CONNECTED, ERROR }

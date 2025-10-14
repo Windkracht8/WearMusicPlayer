@@ -10,6 +10,7 @@ package com.windkracht8.wearmusicplayer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -29,14 +30,12 @@ fun MenuDirs(onMenuDirClick: (id: Int) -> Unit) {
 					label = stringResource(R.string.dirs),
 				)
 			}
-			Library.dirs.forEach {
-				item {
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = it.name,
-						onClick = { onMenuDirClick(it.id) }
-					)
-				}
+			items(Library.dirs) {
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = it.name,
+					onClick = { onMenuDirClick(it.id) }
+				)
 			}
 		}
 	}

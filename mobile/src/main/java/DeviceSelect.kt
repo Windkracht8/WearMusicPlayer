@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
@@ -110,48 +111,38 @@ fun DeviceSelectScreen(
 	LazyColumn(Modifier.fillMaxSize().safeContentPadding()) {
 		item {
 			Text(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(bottom = 10.dp),
+				modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
 				text = stringResource(R.string.device_select_title),
 				fontSize = 20.sp,
 				textAlign = TextAlign.Center
 			)
 		}
-		CommsBT.knownDevices.forEach { device ->
-			item {
-				var isShort = true
-				val interactionSource = remember { MutableInteractionSource() }
-				LaunchedEffect(interactionSource) {
-					interactionSource.interactions.collectLatest { interaction ->
-						when(interaction) {
-							is PressInteraction.Press -> {
-								isShort = true
-								delay(longPressTimeoutMillis)
-								isShort = false
-								confirmDelDevice = device.address
-							}
-							is PressInteraction.Release -> if(isShort) onDeviceClick(device)
+		items(CommsBT.knownDevices) { device ->
+			var isShort = true
+			val interactionSource = remember { MutableInteractionSource() }
+			LaunchedEffect(interactionSource) {
+				interactionSource.interactions.collectLatest { interaction ->
+					when(interaction) {
+						is PressInteraction.Press -> {
+							isShort = true
+							delay(longPressTimeoutMillis)
+							isShort = false
+							confirmDelDevice = device.address
 						}
+						is PressInteraction.Release -> if(isShort) onDeviceClick(device)
 					}
 				}
-				OutlinedButton(
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(60.dp)
-						.padding(10.dp),
-					interactionSource = interactionSource,
-					onClick = {}
-				) { Text(device.name ?: "<no name>") }
 			}
+			Button(
+				modifier = Modifier.fillMaxWidth().height(60.dp).padding(10.dp),
+				interactionSource = interactionSource,
+				onClick = {}
+			) { Text(device.name ?: "<no name>") }
 		}
 		if(showNewWatch) {
 			item {
-				Button(
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(60.dp)
-						.padding(10.dp),
+				OutlinedButton(
+					modifier = Modifier.fillMaxWidth().height(60.dp).padding(10.dp),
 					onClick = {
 						showNewWatch = false
 						onNewDeviceClick()
@@ -159,20 +150,15 @@ fun DeviceSelectScreen(
 				) { Text(R.string.device_select_new) }
 			}
 		}
-		if(showNewDevices) {
-			if(bondedDevices?.isEmpty() ?: true) {
+		if(showNewDevices && bondedDevices != null) {
+			if(bondedDevices.isEmpty()) {
 				item { Text(R.string.device_select_none) }
 			}
-			bondedDevices?.forEach { device ->
-				item {
-					OutlinedButton(
-						modifier = Modifier
-							.fillMaxWidth()
-							.height(60.dp)
-							.padding(10.dp),
-						onClick = { onDeviceClick(device) }
-					) { Text(device.name ?: "<no name>") }
-				}
+			items(bondedDevices.toList()) { device ->
+				Button(
+					modifier = Modifier.fillMaxWidth().height(60.dp).padding(10.dp),
+					onClick = { onDeviceClick(device) }
+				) { Text(device.name ?: "<no name>") }
 			}
 		}
 		if(confirmDelDevice.isNotEmpty()) {

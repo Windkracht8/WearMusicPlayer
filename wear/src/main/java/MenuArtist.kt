@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.itemsIndexed
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -19,15 +20,15 @@ import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadd
 
 @Composable
 fun MenuArtist(
-	id: Int,
-	onRandomiseClick: () -> Unit,
-	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
-	onMenuAlbumClick: (id: Int) -> Unit,
+	artist: Library.Artist,
 	trackId: Int,
-	loopEnabled: Boolean,
-	onLoopClick: () -> Unit
+	onMenuAlbumClick: (id: Int) -> Unit,
+	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
+	onShuffleClick: () -> Unit,
+	shuffleCounter: Int,
+	onLoopClick: () -> Unit,
+	loopEnabled: Boolean
 ) {
-	val artist = Library.artists.firstOrNull { it.id == id }
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
@@ -39,36 +40,33 @@ fun MenuArtist(
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = artist?.name ?: stringResource(R.string.oops),
+					label = artist.name,
+				)
+			}
+			itemsIndexed(artist.albums) { index, album ->
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = album.name,
+					subLabel = stringResource(R.string.album) + ": " +
+							trackOrTracks(album.tracks.size),
+					onClick = { onMenuAlbumClick(album.id) }
 				)
 			}
 			item {
 				MenuButtonRow(
-					onPlayClick = { openTracks(Main.TrackListType.ARTIST, id, 0) },
-					onRandomiseClick,
-					loopEnabled,
-					onLoopClick
+					onPlayClick = { openTracks(Main.TrackListType.ARTIST, artist.id, 0) },
+					onShuffleClick,
+					isShuffled = shuffleCounter > 0,
+					onLoopClick,
+					loopEnabled
 				)
 			}
-			artist?.albums?.forEach { album ->
-				item {
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = album.name,
-						subLabel = stringResource(R.string.album) + ": " +
-								trackOrTracks(album.tracks.size),
-						onClick = { onMenuAlbumClick(album.id) }
-					)
-				}
-			}
-			artist?.tracks?.forEachIndexed { index, track ->
-				item {
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = track.title,
-						onClick = { openTracks(Main.TrackListType.ARTIST, id, index) }
-					)
-				}
+			itemsIndexed(artist.tracks) { index, track ->
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = track.title,
+					onClick = { openTracks(Main.TrackListType.ARTIST, artist.id, index) }
+				)
 			}
 		}
 	}

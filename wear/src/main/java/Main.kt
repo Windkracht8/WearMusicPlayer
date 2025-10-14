@@ -173,7 +173,7 @@ class Main : ComponentActivity() {
 			)
 			runInBackground { CommsBT.start(this@Main) }
 		}
-		Playlists.init(this){ toast(R.string.fail_read_playlist) }
+		runInBackground { Playlists.init(this@Main) }
 	}
 	override fun onStop() {
 		//logD{"MainActivity.onStop"}
@@ -431,18 +431,18 @@ fun MainApp(main: Main) {
 			}
 			composable("menu_all/{trackId}") {
 				MenuAll(
-					onRandomiseClick = {
-						Library.tracks.shuffle()
-						navController.popBackStack()
-						navController.navigate("menu_all/0")
-					},
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
 					openTracks = { type, id, index ->
 						main.openTracks(type, id, index)
 						navController.popBackStack("home", inclusive = false)
 					},
-					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
-					loopEnabled = main.loopEnabled,
-					onLoopClick = main::toggleLoop
+					onShuffleClick = {
+						Library.tracks.shuffle()
+						Library.shuffleCounter++
+					},
+					shuffleCounter = Library.shuffleCounter,
+					onLoopClick = main::toggleLoop,
+					loopEnabled = main.loopEnabled
 				)
 			}
 			composable("menu_albums") {
@@ -450,22 +450,26 @@ fun MainApp(main: Main) {
 			}
 			composable("menu_album/{id}/{trackId}") {
 				val albumId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
+				val album = Library.albums.firstOrNull { album ->  album.id == albumId }
+				if (album == null) {
+					navController.popBackStack()
+					main.toast(R.string.oops)
+					return@composable
+				}
 				MenuAlbum(
-					id = albumId,
-					onRandomiseClick = {
-						if(albumId >= 0) {
-							Library.albums.firstOrNull { a -> a.id == albumId }?.tracks?.shuffle()
-							navController.popBackStack()
-							navController.navigate("menu_album/$albumId/0")
-						}
-					},
+					album,
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
 					openTracks = { type, id, index ->
 						main.openTracks(type, id, index)
 						navController.popBackStack("home", inclusive = false)
 					},
-					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
-					loopEnabled = main.loopEnabled,
-					onLoopClick = main::toggleLoop
+					onShuffleClick = {
+						album.tracks.shuffle()
+						album.shuffleCounter++
+					},
+					shuffleCounter = album.shuffleCounter,
+					onLoopClick = main::toggleLoop,
+					loopEnabled = main.loopEnabled
 				)
 			}
 			composable("menu_artists") {
@@ -473,23 +477,27 @@ fun MainApp(main: Main) {
 			}
 			composable("menu_artist/{id}/{trackId}") {
 				val artistId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
+				val artist = Library.artists.firstOrNull { artist ->  artist.id == artistId }
+				if (artist == null) {
+					navController.popBackStack()
+					main.toast(R.string.oops)
+					return@composable
+				}
 				MenuArtist(
-					id = artistId,
-					onRandomiseClick = {
-						if(artistId >= 0) {
-							Library.artists.firstOrNull { a -> a.id == artistId }?.tracks?.shuffle()
-							navController.popBackStack()
-							navController.navigate("menu_artist/$artistId/0")
-						}
-					},
+					artist,
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
+					onMenuAlbumClick = { id -> navController.navigate("menu_album/$id/0") },
 					openTracks = { type, id, index ->
 						main.openTracks(type, id, index)
 						navController.popBackStack("home", inclusive = false)
 					},
-					onMenuAlbumClick = { id -> navController.navigate("menu_album/$id/0") },
-					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
-					loopEnabled = main.loopEnabled,
-					onLoopClick = main::toggleLoop
+					onShuffleClick = {
+						artist.tracks.shuffle()
+						artist.shuffleCounter++
+					},
+					shuffleCounter = artist.shuffleCounter,
+					onLoopClick = main::toggleLoop,
+					loopEnabled = main.loopEnabled
 				)
 			}
 			composable("menu_playlists") {
@@ -497,22 +505,26 @@ fun MainApp(main: Main) {
 			}
 			composable("menu_playlist/{id}/{trackId}") {
 				val playlistId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
+				val playlist = Playlists.all.firstOrNull { playlist ->  playlist.id == playlistId }
+				if (playlist == null) {
+					navController.popBackStack()
+					main.toast(R.string.oops)
+					return@composable
+				}
 				MenuPlaylist(
-					id = playlistId,
-					onRandomiseClick = {
-						if(playlistId >= 0) {
-							Playlists.all.firstOrNull { p -> p.id == playlistId }?.tracks?.shuffle()
-							navController.popBackStack()
-							navController.navigate("menu_playlist/$playlistId/0")
-						}
-					},
+					playlist,
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
 					openTracks = { type, id, index ->
 						main.openTracks(type, id, index)
 						navController.popBackStack("home", inclusive = false)
 					},
-					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
-					loopEnabled = main.loopEnabled,
-					onLoopClick = main::toggleLoop
+					onShuffleClick = {
+						playlist.tracks.shuffle()
+						playlist.shuffleCounter.intValue++
+					},
+					shuffleCounter = playlist.shuffleCounter.intValue,
+					onLoopClick = main::toggleLoop,
+					loopEnabled = main.loopEnabled
 				)
 			}
 			composable("menu_dirs") {
@@ -520,22 +532,26 @@ fun MainApp(main: Main) {
 			}
 			composable("menu_dir/{id}/{trackId}") {
 				val dirId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
+				val dir = Library.dirs.firstOrNull { dir ->  dir.id == dirId }
+				if (dir == null) {
+					navController.popBackStack()
+					main.toast(R.string.oops)
+					return@composable
+				}
 				MenuDir(
-					id = dirId,
-					onRandomiseClick = {
-						if(dirId >= 0) {
-							Library.dirs.firstOrNull { d -> d.id == dirId }?.tracks?.shuffle()
-							navController.popBackStack()
-							navController.navigate("menu_dir/$dirId/0")
-						}
-					},
+					dir,
+					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
 					openTracks = { type, id, index ->
 						main.openTracks(type, id, index)
 						navController.popBackStack("home", inclusive = false)
 					},
-					trackId = it.arguments?.getString("trackId")?.toIntOrNull() ?: -1,
-					loopEnabled = main.loopEnabled,
-					onLoopClick = main::toggleLoop
+					onShuffleClick = {
+						dir.tracks.shuffle()
+						dir.shuffleCounter++
+					},
+					shuffleCounter = dir.shuffleCounter,
+					onLoopClick = main::toggleLoop,
+					loopEnabled = main.loopEnabled
 				)
 			}
 		}

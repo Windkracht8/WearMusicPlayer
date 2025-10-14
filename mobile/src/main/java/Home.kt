@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
@@ -152,7 +154,12 @@ fun Home(
 			modifier = Modifier.fillMaxWidth(),
 			horizontalArrangement = Arrangement.End
 		) {
-			OutlinedButton(onClick = onOpenFolderClick) { Text(R.string.open_folder) }
+			OutlinedButton(onClick = onOpenFolderClick) {
+				Text(
+					text = stringResource(R.string.open_folder),
+					color = colorScheme.onBackground
+				)
+			}
 		}
 		if(showLoading) {
 			Text(
@@ -168,11 +175,11 @@ fun Home(
 			LazyColumn(Modifier
 				.fillMaxWidth()
 				.weight(1f)) {
-				Library.rootLibDir.libDirs.forEachIndexed { i, it ->
-					item { Item(it, i > 0, onItemIconClick, showPlaylists) }
+				itemsIndexed(Library.rootLibDir.libDirs) { i, it ->
+					Item(it, i > 0, onItemIconClick, showPlaylists)
 				}
-				Library.rootLibDir.libTracks.forEachIndexed { i, it ->
-					item { Item(it, i == 0, onItemIconClick, showPlaylists) }
+				itemsIndexed(Library.rootLibDir.libTracks) { i, it ->
+					Item(it, i == 0, onItemIconClick, showPlaylists)
 				}
 			}
 			HorizontalDivider(
@@ -200,7 +207,7 @@ fun Home(
 					.fillMaxWidth()
 					.heightIn(max = maxSectionHeight)) {
 					item { PlaylistsCreateRow() }
-					Playlists.all.forEach { item { PlaylistRow(it) } }
+					items(Playlists.all) { PlaylistRow(it) }
 				}
 			}
 			if(Library.watchLibDir.status == LibItem.Status.NOT) {
@@ -228,13 +235,11 @@ fun Home(
 					LazyColumn(Modifier
 						.fillMaxWidth()
 						.heightIn(max = maxSectionHeight)) {
-						Library.watchLibDir.libDirs.forEachIndexed { i, it ->
-							if(it.status != LibItem.Status.NOT) return@forEachIndexed
-							item { Item(it, i > 0, onItemIconClick, showPlaylists) }
+						itemsIndexed(Library.watchLibDir.libDirs.filter { it.status == LibItem.Status.NOT }) { i, it ->
+							Item(it, i > 0, onItemIconClick, showPlaylists)
 						}
-						Library.watchLibDir.libTracks.forEachIndexed { i, it ->
-							if(it.status == LibItem.Status.NOT) return@forEachIndexed
-							item { Item(it, i == 0, onItemIconClick, showPlaylists) }
+						itemsIndexed(Library.watchLibDir.libTracks.filter { it.status == LibItem.Status.NOT }) { i, it ->
+							Item(it, i == 0, onItemIconClick, showPlaylists)
 						}
 					}
 				}
@@ -372,7 +377,12 @@ fun PlaylistsCreateRow() {
         )
         OutlinedButton(
 			onClick = { if(newName.isNotBlank()) { Playlists.create(newName.trim()); newName = "" } }
-		) { Text(R.string.create) }
+		) {
+			Text(
+				text = stringResource(R.string.create),
+				color = colorScheme.onBackground
+			)
+		}
     }
 }
 
@@ -454,7 +464,6 @@ fun PlaylistRow(pl: Playlist) {
                     pl.trackPaths.forEach { path ->
                         Row(
 							Modifier.fillMaxWidth(),
-							horizontalArrangement = Arrangement.SpaceBetween,
 							verticalAlignment = Alignment.CenterVertically
 						) {
                              Text(
@@ -498,15 +507,6 @@ fun PreviewHome() {
 	Library.rootLibDir.libTracks.add(track1)
 	val track2 = LibTrack("track2")
 	track2.status = LibItem.Status.FULL
-	Library.rootLibDir.libTracks.add(track2)
-	Library.rootLibDir.libTracks.add(track2)
-	Library.rootLibDir.libTracks.add(track2)
-	Library.rootLibDir.libTracks.add(track2)
-	Library.rootLibDir.libTracks.add(track2)
-	Library.rootLibDir.libTracks.add(track2)
-	Library.rootLibDir.libTracks.add(track2)
-	Library.rootLibDir.libTracks.add(track2)
-	Library.rootLibDir.libTracks.add(track2)
 	Library.rootLibDir.libTracks.add(track2)
 
 	Library.watchLibDir.status = LibItem.Status.NOT

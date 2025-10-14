@@ -23,6 +23,7 @@ fun logD(message: () -> String) { if(BuildConfig.DEBUG) { Log.d(LOG_TAG, message
 
 fun Context.toast(message: Int) =
 	Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+fun Context.toastFromBG(message: Int) = CoroutineScope(Dispatchers.Main).launch { toast(message) }
 
 fun Context.hasPermission(permission: String): Boolean =
 	ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED

@@ -10,6 +10,7 @@ package com.windkracht8.wearmusicplayer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -29,19 +30,17 @@ fun MenuArtists(onMenuArtistClick: (id: Int) -> Unit) {
 					label = stringResource(R.string.artists),
 				)
 			}
-			Library.artists.forEach {
-				item {
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = it.name,
-						subLabel =
-							if (it.albums.isEmpty()) trackOrTracks(it.tracks.size)
-							else (albumOrAlbums(it.albums.size) + " " +
-									trackOrTracks(it.tracks.size)
-							),
-						onClick = { onMenuArtistClick(it.id) }
-					)
-				}
+			items(Library.artists) {
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = it.name,
+					subLabel =
+						if (it.albums.isEmpty()) trackOrTracks(it.tracks.size)
+						else (albumOrAlbums(it.albums.size) + " " +
+								trackOrTracks(it.tracks.size)
+						),
+					onClick = { onMenuArtistClick(it.id) }
+				)
 			}
 		}
 	}
