@@ -18,6 +18,8 @@ import android.os.Looper
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -40,7 +42,13 @@ class W8Player : MediaSessionService() {
 		logD{"W8player.onCreate"}
 		super.onCreate()
 
-		val exoPlayer = ExoPlayer.Builder(this).build()
+		val audioAttributes = AudioAttributes.Builder()
+			.setUsage(C.USAGE_MEDIA)
+			.setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+			.build()
+		val exoPlayer = ExoPlayer.Builder(this)
+			.setAudioAttributes(audioAttributes, true)
+			.build()
 		mediaSession = MediaSession.Builder(this, exoPlayer).build()
 		notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
