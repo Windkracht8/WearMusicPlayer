@@ -48,7 +48,7 @@ object CommsBT {
 	var bluetoothSocket: BluetoothSocket? = null
 	var commsBTConnect: CommsBTConnect? = null
 	var commsBTConnected: CommsBTConnected? = null
-	val knownDevices: MutableList<BluetoothDevice> = mutableListOf()
+	val knownDevices: MutableSet<BluetoothDevice> = mutableSetOf()
 	var knownAddresses: MutableSet<String> = mutableSetOf()
 
 	enum class Status { STARTING, DISCONNECTED, CONNECTING, CONNECTED, ERROR }
@@ -320,8 +320,9 @@ object CommsBT {
 				inputStream = bluetoothSocket!!.inputStream
 				outputStream = bluetoothSocket!!.outputStream
 				status.value = Status.CONNECTED
-				knownDevices.add(bluetoothSocket!!.remoteDevice)
-				if(knownAddresses.add(bluetoothSocket!!.remoteDevice.address)) {
+				if(knownDevices.add(bluetoothSocket!!.remoteDevice) &&
+					knownAddresses.add(bluetoothSocket!!.remoteDevice.address)
+				) {
 					storeKnownAddresses()
 				}
 			} catch(e: Exception) {

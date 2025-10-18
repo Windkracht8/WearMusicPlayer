@@ -82,17 +82,14 @@ fun Home(
 
     Column(Modifier.fillMaxSize().safeDrawingPadding().onSizeChanged { columnSize = it }) {
 		val maxSectionHeight = with(LocalDensity.current) { (columnSize.height / 4).toDp() }
-		Row(Modifier
-			.fillMaxWidth()
-			.height(70.dp)) {
+		Row(Modifier.fillMaxWidth().height(70.dp)) {
 			Box(
 				Modifier.size(70.dp),
 				contentAlignment = Alignment.Center
 			) {
 				if(commsBTStatus in listOf(CommsBT.Status.CONNECTING, CommsBT.Status.STARTING)) {
 					Image(
-						modifier = Modifier
-							.size(70.dp)
+						modifier = Modifier.size(70.dp)
 							.clickable { onIconClick() },
 						painter = rememberAnimatedVectorPainter(
 							iconWatchConnecting,
@@ -103,8 +100,7 @@ fun Home(
 					iconWatchConnectingAtEnd = true
 				} else {
 					Icon(
-						modifier = Modifier
-							.size(70.dp)
+						modifier = Modifier.size(70.dp)
 							.clickable { onIconClick() },
 						imageVector = ImageVector.vectorResource(R.drawable.icon_watch),
 						tint = when(commsBTStatus) {
@@ -154,12 +150,7 @@ fun Home(
 			modifier = Modifier.fillMaxWidth(),
 			horizontalArrangement = Arrangement.End
 		) {
-			OutlinedButton(onClick = onOpenFolderClick) {
-				Text(
-					text = stringResource(R.string.open_folder),
-					color = colorScheme.onBackground
-				)
-			}
+			OutlinedButton(onClick = onOpenFolderClick) { Text(R.string.open_folder) }
 		}
 		if(showLoading) {
 			Text(
@@ -172,9 +163,7 @@ fun Home(
 				textAlign = TextAlign.Center
 			)
 		} else {
-			LazyColumn(Modifier
-				.fillMaxWidth()
-				.weight(1f)) {
+			LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
 				itemsIndexed(Library.rootLibDir.libDirs) { i, it ->
 					Item(it, i > 0, onItemIconClick, showPlaylists)
 				}
@@ -183,9 +172,7 @@ fun Home(
 				}
 			}
 			HorizontalDivider(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(top = 5.dp),
+				modifier = Modifier.fillMaxWidth().padding(top = 5.dp),
 				color = colorScheme.onBackground
 			)
 			TextButton(
@@ -197,24 +184,18 @@ fun Home(
 				color = colorScheme.onBackground
 			) }
 			HorizontalDivider(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(bottom = 5.dp),
+				modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp),
 				color = colorScheme.onBackground
 			)
 			if(showPlaylists) {
-				LazyColumn(Modifier
-					.fillMaxWidth()
-					.heightIn(max = maxSectionHeight)) {
+				LazyColumn(Modifier.fillMaxWidth().heightIn(max = maxSectionHeight)) {
 					item { PlaylistsCreateRow() }
 					items(Playlists.all) { PlaylistRow(it) }
 				}
 			}
 			if(Library.watchLibDir.status == LibItem.Status.NOT) {
 				HorizontalDivider(
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(top = 5.dp),
+					modifier = Modifier.fillMaxWidth().padding(top = 5.dp),
 					color = colorScheme.onBackground
 				)
 				TextButton(
@@ -226,15 +207,11 @@ fun Home(
 					color = colorScheme.onBackground
 				) }
 				HorizontalDivider(
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(bottom = 5.dp),
+					modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp),
 					color = colorScheme.onBackground
 				)
 				if(showWatchTracks) {
-					LazyColumn(Modifier
-						.fillMaxWidth()
-						.heightIn(max = maxSectionHeight)) {
+					LazyColumn(Modifier.fillMaxWidth().heightIn(max = maxSectionHeight)) {
 						itemsIndexed(Library.watchLibDir.libDirs.filter { it.status == LibItem.Status.NOT }) { i, it ->
 							Item(it, i > 0, onItemIconClick, showPlaylists)
 						}
@@ -257,15 +234,11 @@ fun Item(
 	var showSubItems by remember { mutableStateOf(false) }
 	if(showDivider) {
 		HorizontalDivider(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(start = (libItem.depth * 7 + 48).dp),
+			modifier = Modifier.fillMaxWidth().padding(start = (libItem.depth * 7 + 48).dp),
 			thickness = 1.dp
 		)
 	}
-	Row(Modifier
-		.fillMaxWidth()
-		.padding(start = (libItem.depth * 7).dp)) {
+	Row(Modifier.fillMaxWidth().padding(start = (libItem.depth * 7).dp)) {
 		Box(
 			Modifier.size(48.dp),
 			contentAlignment = Alignment.Center
@@ -301,8 +274,7 @@ fun Item(
 										LibItem.Status.NOT -> ImageVector.vectorResource(R.drawable.icon_upload)
 										else -> ImageVector.vectorResource(R.drawable.icon_empty)
 									}
-								}
-							,
+								},
 							contentDescription = "Item icon and action button"
 						)
 					}
@@ -377,12 +349,7 @@ fun PlaylistsCreateRow() {
         )
         OutlinedButton(
 			onClick = { if(newName.isNotBlank()) { Playlists.create(newName.trim()); newName = "" } }
-		) {
-			Text(
-				text = stringResource(R.string.create),
-				color = colorScheme.onBackground
-			)
-		}
+		) { Text(R.string.create) }
     }
 }
 

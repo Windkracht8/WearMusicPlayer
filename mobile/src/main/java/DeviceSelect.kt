@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -74,8 +74,8 @@ class DeviceSelect : ComponentActivity() {
 			W8Theme {
 				Surface {
 					DeviceSelectScreen(
-						onDeviceClick = this::onDeviceClick,
-						onNewDeviceClick = this::onNewDeviceClick,
+						onDeviceClick = ::onDeviceClick,
+						onNewDeviceClick = ::onNewDeviceClick,
 						showNewDevices = showNewDevices,
 						bondedDevices = bondedDevices
 					)
@@ -108,7 +108,7 @@ fun DeviceSelectScreen(
 	val longPressTimeoutMillis = LocalViewConfiguration.current.longPressTimeoutMillis
 	var confirmDelDevice by remember { mutableStateOf("") }
 	var showNewWatch by remember { mutableStateOf(true) }
-	LazyColumn(Modifier.fillMaxSize().safeContentPadding()) {
+	LazyColumn(Modifier.fillMaxSize().safeDrawingPadding()) {
 		item {
 			Text(
 				modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
@@ -117,7 +117,7 @@ fun DeviceSelectScreen(
 				textAlign = TextAlign.Center
 			)
 		}
-		items(CommsBT.knownDevices) { device ->
+		items(CommsBT.knownDevices.toList()) { device ->
 			var isShort = true
 			val interactionSource = remember { MutableInteractionSource() }
 			LaunchedEffect(interactionSource) {
@@ -155,7 +155,7 @@ fun DeviceSelectScreen(
 				item { Text(R.string.device_select_none) }
 			}
 			items(bondedDevices.toList()) { device ->
-				Button(
+				OutlinedButton(
 					modifier = Modifier.fillMaxWidth().height(60.dp).padding(10.dp),
 					onClick = { onDeviceClick(device) }
 				) { Text(device.name ?: "<no name>") }

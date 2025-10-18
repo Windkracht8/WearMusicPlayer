@@ -99,7 +99,7 @@ class W8Player : MediaSessionService() {
 		} else if (ongoingActivity is OngoingActivity) { //not playing and ongoingActivity has been created
 			val status: Status = Status.Builder().addTemplate(getString(R.string.paused_track)).build()
 			ongoingActivity?.update(this, status)
-			handler.postDelayed(this::stop, 180000) //cancel after 3 minutes
+			handler.postDelayed(::stop, 180000) //cancel after 3 minutes
 		}
 	}
 

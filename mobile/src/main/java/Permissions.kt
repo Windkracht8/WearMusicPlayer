@@ -24,7 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -70,8 +70,8 @@ class Permissions : ComponentActivity() {
 			W8Theme {
 				Surface {
 					PermissionsScreen(
-						this::onNearbyClick,
-						this::onReadClick
+						::onNearbyClick,
+						::onReadClick
 					)
 				}
 			}
@@ -104,7 +104,7 @@ fun Context.hasPermission(permission: String): Boolean =
 	checkSelfPermission(this, permission) == PERMISSION_GRANTED
 @Composable
 fun PermissionsScreen(onNearbyClick: () -> Unit, onReadClick: () -> Unit) {
-	Column(Modifier.fillMaxSize().safeContentPadding()) {
+	Column(Modifier.fillMaxSize().safeDrawingPadding()) {
 		Text(
 			modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
 			text = stringResource(R.string.permission_title),
