@@ -165,7 +165,4 @@ fun PreviewPermissions() {
 }
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, apiLevel = 35)
 @Composable
-fun PreviewPermissionsDay() {
-	//hasBTPermission = true
-	W8Theme { Surface { PermissionsScreen({}, {}) } }
-}
+fun PreviewPermissionsDay() { PreviewPermissions() }

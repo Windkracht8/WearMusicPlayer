@@ -215,7 +215,7 @@ fun Home(
 						itemsIndexed(Library.watchLibDir.libDirs.filter { it.status == LibItem.Status.NOT }) { i, it ->
 							Item(it, i > 0, onItemIconClick, showPlaylists)
 						}
-						itemsIndexed(Library.watchLibDir.libTracks.filter { it.status == LibItem.Status.NOT }) { i, it ->
+						itemsIndexed(Library.watchLibDir.libTracks.filter { it.status != LibItem.Status.NOT }) { i, it ->
 							Item(it, i == 0, onItemIconClick, showPlaylists)
 						}
 					}
@@ -503,16 +503,4 @@ fun PreviewHome() {
 }
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, apiLevel = 35)
 @Composable
-fun PreviewHomeDay() {
-	W8Theme {
-		Surface {
-			Home(
-				commsBTStatus = CommsBT.Status.CONNECTING,
-				showLoading = false,
-				onIconClick = {},
-				onOpenFolderClick = {},
-				onItemIconClick = {}
-			)
-		}
-	}
-}
+fun PreviewHomeDay() { PreviewHome() }

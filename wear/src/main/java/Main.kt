@@ -27,13 +27,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
@@ -47,8 +50,10 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import androidx.core.content.edit
 
 var hasReadPermission = false
 var hasBTPermission = false
@@ -69,10 +74,19 @@ class Main : ComponentActivity() {
 	var hasNext by mutableStateOf(false)
 	var isPlaying by mutableStateOf(false)
 	var loopEnabled by mutableStateOf(false)
+	var currentPosition by mutableLongStateOf(0L)
+	var currentDuration by mutableLongStateOf(0L)
+	var playbackSpeed by mutableFloatStateOf(1.0f)
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		installSplashScreen()
 		super.onCreate(savedInstanceState)
+
+		val sharedPref = getPreferences(MODE_PRIVATE)
+		currentTracksType = TrackListType.valueOf(sharedPref.getString("currentTracksType", TrackListType.ALL.name) ?: TrackListType.ALL.name)
+		currentTracksId = sharedPref.getInt("currentTracksId", -1)
+		currentTrackId = sharedPref.getInt("currentTrackId", -1)
+		currentPosition = sharedPref.getLong("currentPosition", 0L)
 
 		setTheme(android.R.style.Theme_DeviceDefault)
 		setContent { W8Theme { MainApp(this) } }
@@ -90,6 +104,14 @@ class Main : ComponentActivity() {
 				mediaController?.addListener(playerListener)
 				loopEnabled = mediaController?.repeatMode == Player.REPEAT_MODE_ALL
 				loadTracks()
+				lifecycleScope.launch {
+					while (true) {
+						if (isPlaying) {
+							currentPosition = mediaController?.currentPosition ?: 0L
+						}
+						delay(1000-(currentPosition%1000))
+					}
+				}
 			} catch (e: Exception) {
 				logE("Main.MediaController: ${e.message}")
 			}
@@ -103,15 +125,26 @@ class Main : ComponentActivity() {
 						currentTrackArtist = getString(R.string.loading)
 					}
 					Library.Status.READY -> {
-						if (currentTrackId == -1 || currentTrackTitle == getString(R.string.loading)) {
+						currentTracks = when (currentTracksType) {
+							TrackListType.ALL -> Library.tracks
+							TrackListType.ARTIST -> Library.artists.firstOrNull { it.id == currentTracksId }?.tracks ?: emptyList()
+							TrackListType.ALBUM -> Library.albums.firstOrNull { it.id == currentTracksId }?.tracks ?: emptyList()
+							TrackListType.PLAYLIST -> Playlists.all.firstOrNull { it.id == currentTracksId }?.tracks ?: emptyList()
+							TrackListType.DIR -> Library.dirs.firstOrNull { it.id == currentTracksId }?.tracks ?: emptyList()
+						}
+						if (currentTracks.isEmpty()) {
 							currentTracksType = TrackListType.ALL
 							currentTracks = Library.tracks
-							if (currentTracks.isEmpty()) {
-								currentTrackTitle = getString(R.string.no_tracks)
-								currentTrackArtist = getString(R.string.upload)
-							} else {
-								loadTracks()
-							}
+							currentTracksId = -1
+							currentTrackId = -1
+							currentPosition = 0
+						}
+
+						if (currentTracks.isEmpty()) {
+							currentTrackTitle = getString(R.string.no_tracks)
+							currentTrackArtist = getString(R.string.upload)
+						} else {
+							loadTracks()
 						}
 						if (CommsBT.commsBTConnected != null) CommsBT.sendSyncResponse()
 					}
@@ -183,6 +216,12 @@ class Main : ComponentActivity() {
 	override fun onDestroy() {
 		//logD{"MainActivity.onDestroy"}
 		super.onDestroy()
+		getPreferences(MODE_PRIVATE).edit {
+			putString("currentTracksType", currentTracksType.name)
+			putInt("currentTracksId", currentTracksId)
+			putInt("currentTrackId", currentTrackId)
+			putLong("currentPosition", currentPosition)
+		}
 		tryIgnore { MediaController.releaseFuture(mediaControllerFuture) }
 		tryIgnore { unregisterReceiver(btBroadcastReceiver) }
 		tryIgnore { CommsBT.stop() }
@@ -196,6 +235,7 @@ class Main : ComponentActivity() {
 			hasPrevious = currentTrackId > 0
 		}
 		mediaController?.seekToPreviousMediaItem()
+		currentPosition = 0
 	}
 
 	fun next() {
@@ -206,6 +246,12 @@ class Main : ComponentActivity() {
 			hasNext = currentTrackId < currentTracks.lastIndex
 		}
 		mediaController?.seekToNext()
+		currentPosition = 0
+	}
+
+	fun seek(move: Long) {
+		mediaController?.seekTo((currentPosition + move).coerceIn(0, currentDuration))
+		currentPosition = currentPosition + move
 	}
 
 	fun playPause() {
@@ -213,6 +259,9 @@ class Main : ComponentActivity() {
 		if (isPlaying) { mediaController?.play() }
 		else { mediaController?.pause() }
 	}
+
+	fun newPlaybackSpeed(speed: Float) =
+		mediaController?.setPlaybackSpeed(speed)
 
 	fun toggleLoop() {
 		if (mediaController?.repeatMode == Player.REPEAT_MODE_ALL) {
@@ -234,7 +283,7 @@ class Main : ComponentActivity() {
 			if(currentTracks.isNotEmpty()) {
 				mediaController?.addMediaItems(mediaItems)
 				mediaController?.prepare()
-				mediaController?.seekTo(if (currentTrackId == -1) 0 else currentTrackId, 0)
+				mediaController?.seekTo(if (currentTrackId == -1) 0 else currentTrackId, currentPosition)
 			}
 		}
 	}
@@ -274,6 +323,7 @@ class Main : ComponentActivity() {
 			currentTrackId = mediaController?.currentMediaItemIndex ?: currentTrackId
 			hasPrevious = currentTrackId > 0
 			hasNext = currentTrackId < currentTracks.lastIndex
+			currentDuration = mediaController?.duration ?: 0L
 		}
 		override fun onPlayerError(error: PlaybackException) {
 			logE("Player.Listener.onPlayerError: $error")
@@ -282,6 +332,11 @@ class Main : ComponentActivity() {
 		override fun onRepeatModeChanged(repeatMode: Int) {
 			super.onRepeatModeChanged(repeatMode)
 			loopEnabled = repeatMode == Player.REPEAT_MODE_ALL
+		}
+
+		override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
+			super.onPlaybackParametersChanged(playbackParameters)
+			playbackSpeed = playbackParameters.speed
 		}
 	}
 
@@ -413,7 +468,12 @@ fun MainApp(main: Main) {
 					isPlaying = main.isPlaying,
 					currentTrackTitle = main.currentTrackTitle,
 					currentTrackArtist = main.currentTrackArtist,
-					audioManager = navController.context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+					currentPosition = main.currentPosition,
+					currentDuration = main.currentDuration,
+					seek = main::seek,
+					audioManager = navController.context.getSystemService(Context.AUDIO_SERVICE) as AudioManager,
+					playbackSpeed = main.playbackSpeed,
+					setPlaybackSpeed = main::newPlaybackSpeed
 				)
 			}
 			composable("menu") {

@@ -28,16 +28,16 @@ const val KB: Long = 1024
 fun bytesToHuman(bytes: Long): String {
 	if(bytes > GB * 10) {
 		val gbs = bytes.toDouble() / GB
-		return String.format(Locale.getDefault(), "%.0f GB", gbs)
+		return String.format(Locale.ROOT, "%.0f GB", gbs)
 	} else if(bytes > GB * 5) {
 		val gbs = bytes.toDouble() / GB
-		return String.format(Locale.getDefault(), "%.3f GB", gbs)
+		return String.format(Locale.ROOT, "%.3f GB", gbs)
 	} else if(bytes > MB) {
 		val mbs = bytes.toDouble() / MB
-		return String.format(Locale.getDefault(), "%.0f MB", mbs)
+		return String.format(Locale.ROOT, "%.0f MB", mbs)
 	} else if(bytes > KB) {
 		val kbs = bytes.toDouble() / KB
-		return String.format(Locale.getDefault(), "%.0f KB", kbs)
+		return String.format(Locale.ROOT, "%.0f KB", kbs)
 	}
 	return "$bytes B"
 }

@@ -198,12 +198,4 @@ fun PreviewDeviceSelect() {
 }
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, apiLevel = 35)
 @Composable
-fun PreviewDeviceSelectDay() {
-	W8Theme {
-		Surface {
-			DeviceSelectScreen(
-				{}, {}, false, null
-			)
-		}
-	}
-}
+fun PreviewDeviceSelectDay() { PreviewDeviceSelect() }

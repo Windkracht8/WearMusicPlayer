@@ -19,8 +19,8 @@ android {
 		applicationId = "com.windkracht8.wearmusicplayer"
 		minSdk = 30
 		targetSdk = 36
-		versionCode = 262
-		versionName = "w2.5"
+		versionCode = 265
+		versionName = "w2.6"
 	}
 	buildFeatures {
 		buildConfig = true
@@ -59,12 +59,12 @@ dependencies {
 	implementation("androidx.media3:media3-exoplayer:1.8.0")
 	implementation("androidx.media3:media3-session:1.8.0")
 	implementation("androidx.navigation:navigation-runtime-android:2.9.5")
-	implementation("androidx.wear.compose:compose-foundation:1.5.3")
-	implementation("androidx.wear.compose:compose-material3:1.5.3")
-	implementation("androidx.wear.compose:compose-navigation:1.5.3")
+	implementation("androidx.wear.compose:compose-foundation:1.5.4")
+	implementation("androidx.wear.compose:compose-material3:1.5.4")
+	implementation("androidx.wear.compose:compose-navigation:1.5.4")
 	implementation("androidx.wear:wear-ongoing:1.1.0")
 
 	//actually only for debug, but release won't compile without it
-	implementation("androidx.compose.ui:ui-tooling-preview:1.9.3")
+	implementation("androidx.compose.ui:ui-tooling-preview:1.9.4")
 	implementation("androidx.wear:wear-tooling-preview:1.0.0")
 }

@@ -90,6 +90,4 @@ fun PreviewDeviceConnect() {
 }
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, apiLevel = 35)
 @Composable
-fun PreviewDeviceConnectDay() {
-	W8Theme { Surface { DeviceConnectScreen() } }
-}
+fun PreviewDeviceConnectDay() { PreviewDeviceConnect() }

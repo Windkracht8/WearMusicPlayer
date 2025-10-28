@@ -8,6 +8,9 @@
 package com.windkracht8.wearmusicplayer
 
 import android.media.AudioManager
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,9 +20,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -27,10 +39,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.wear.compose.foundation.edgeSwipeToDismiss
+import androidx.wear.compose.foundation.rememberSwipeToDismissBoxState
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.IconButton
+import androidx.wear.compose.material3.LinearProgressIndicator
+import androidx.wear.compose.material3.SwipeToDismissBox
+import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.TextButton
 import androidx.wear.tooling.preview.devices.WearDevices
+import java.util.Locale
+import kotlinx.coroutines.delay
 
 @Composable
 fun Home(
@@ -44,9 +63,24 @@ fun Home(
 	isPlaying: Boolean,
 	currentTrackTitle: String,
 	currentTrackArtist: String,
-	audioManager: AudioManager?
+	currentPosition: Long,
+	currentDuration: Long,
+	seek: (Long) -> Unit,
+	audioManager: AudioManager?,
+	playbackSpeed: Float,
+	setPlaybackSpeed: (Float) -> Unit
 ) {
-	Column(Modifier.fillMaxSize().padding(10.dp, 10.dp, 10.dp, 0.dp)) {
+	var showProgress by remember { mutableStateOf(false) }
+	var buttonPressCounter by remember { mutableIntStateOf(0) }
+	var currentProgress by remember { mutableFloatStateOf(0f) }
+	var currentPositionString by remember { mutableStateOf("") }
+	LaunchedEffect(currentPosition, currentDuration) {
+		currentProgress = if (currentDuration <= 0) 0f
+			else currentPosition.toFloat() / currentDuration.toFloat()
+		currentPositionString = "${currentPosition / 60000}:${(currentPosition / 1000 % 60).toString().padStart(2, '0')}"
+	}
+	Column(Modifier.fillMaxSize()
+		.padding(10.dp, 10.dp, 10.dp, 0.dp)) {
 		Row(Modifier.fillMaxWidth().weight(1F)) {
 			Spacer(Modifier.weight(2F))
 			IconButton(
@@ -90,19 +124,11 @@ fun Home(
 					contentDescription = "previous song"
 				)
 			}
-			IconButton(
+			PlayButton(
 				modifier = Modifier.weight(1F),
-				onClick = onPlayPauseClick
-			) {
-				Icon(
-					imageVector = ImageVector.vectorResource(
-						if (isPlaying) R.drawable.icon_pause
-						else R.drawable.icon_play
-					),
-					tint = Color.Unspecified,
-					contentDescription = "play or pause"
-				)
-			}
+				onPlayPauseClick = onPlayPauseClick,
+				isPlaying
+			)
 			IconButton(
 				modifier = Modifier.weight(1F),
 				onClick = onNextClick
@@ -114,20 +140,44 @@ fun Home(
 				)
 			}
 		}
+		Column(
+			Modifier.fillMaxWidth().weight(1F)
+				.clickable(onClick = { showProgress = true }),
+			horizontalAlignment = Alignment.CenterHorizontally
+		) {
+			LinearProgressIndicator(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(5.dp)
+					.weight(1F),
+				progress = { currentProgress }
+			)
+			BasicText(
+				modifier = Modifier.weight(0.8F),
+				text = currentPositionString,
+				color = { ColorWhite },
+				autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 20.sp)
+			)
+		}
 		TextButton(
-			modifier = Modifier.fillMaxWidth().weight(1F),
+			modifier = Modifier
+				.fillMaxWidth()
+				.weight(0.6F),
 			onClick = onTrackClick
 		) {
 			BasicText(
 				text = currentTrackTitle,
 				color = { ColorW8Blue },
-				maxLines = 2,
-				autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 20.sp),
-				style = TextStyle.Default.copy(textAlign = TextAlign.Center)
+				maxLines = 1,
+				overflow = TextOverflow.Ellipsis,
+				autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 20.sp)
 			)
 		}
 		TextButton(
-			modifier = Modifier.fillMaxWidth().weight(1F).padding(horizontal = 5.dp),
+			modifier = Modifier
+				.fillMaxWidth()
+				.weight(0.6F)
+				.padding(horizontal = 15.dp),
 			onClick = onTrackClick
 		) {
 			BasicText(
@@ -135,11 +185,13 @@ fun Home(
 				color = { ColorWhite },
 				maxLines = 1,
 				overflow = TextOverflow.Ellipsis,
-				autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 20.sp)
+				autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 20.sp)
 			)
 		}
 		IconButton(
-			modifier = Modifier.fillMaxWidth().weight(1F),
+			modifier = Modifier
+				.fillMaxWidth()
+				.weight(1F),
 			onClick = onLibraryClick
 		) {
 			Icon(
@@ -148,9 +200,165 @@ fun Home(
 			)
 		}
 	}
+	if(showProgress){
+		val swipeToDismissBoxState = rememberSwipeToDismissBoxState()
+		SwipeToDismissBox(
+			state = swipeToDismissBoxState,
+			onDismissed = { showProgress = false },
+			modifier = Modifier.edgeSwipeToDismiss(swipeToDismissBoxState)
+		) {
+			LaunchedEffect(buttonPressCounter) {
+				delay(10000)
+				showProgress = false
+			}
+			Column(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+			) {
+				Row(
+					Modifier.fillMaxWidth().weight(1F),
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					Box(
+						modifier = Modifier.weight(1F)
+							.clickable {
+								buttonPressCounter++
+								if(playbackSpeed > 1.0) setPlaybackSpeed(playbackSpeed - 0.25f)
+								else if(playbackSpeed > 0.2) setPlaybackSpeed(playbackSpeed - 0.1f)
+							},
+						contentAlignment = Alignment.CenterEnd
+					){ Text(text = if(playbackSpeed > 1.0) "- .25" else "- .1") }
+					Text(
+						modifier = Modifier.padding(horizontal = 10.dp),
+						text = String.format(Locale.ROOT, "%.2fx", playbackSpeed),
+						color = ColorW8Blue
+					)
+					Box(
+						modifier = Modifier.weight(1F)
+							.clickable {
+								buttonPressCounter++
+								if(playbackSpeed >= 1.0) setPlaybackSpeed(playbackSpeed + 0.25f)
+								else setPlaybackSpeed(playbackSpeed + 0.1f)
+							},
+						contentAlignment = Alignment.CenterStart
+					){ Text(text = if(playbackSpeed >= 1.0) "+ .25" else "+ .1") }
+				}
+				LinearProgressIndicator(
+					modifier = Modifier.fillMaxWidth().padding(5.dp).weight(1F)
+						.pointerInput(currentDuration, currentPosition) {
+							detectTapGestures { offset ->
+									if (currentDuration > 0) {
+										val newProgress = (offset.x / size.width).coerceIn(0f, 1f)
+										val newPosition = (newProgress * currentDuration).toLong()
+										seek(newPosition - currentPosition)
+										buttonPressCounter++
+									}
+								}
+						},
+					progress = { currentProgress }
+				)
+				BasicText(
+					modifier = Modifier.fillMaxWidth().weight(0.5F),
+					text = currentPositionString,
+					style = TextStyle(textAlign = TextAlign.Center),
+					color = { ColorWhite },
+					autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 20.sp)
+				)
+				Row(
+					Modifier.fillMaxWidth().weight(1F),
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					IconButton(
+						modifier = Modifier.weight(1F),
+						onClick = {
+							seek(-120000)
+							buttonPressCounter++
+						}
+					) {
+						Icon(
+							imageVector = ImageVector.vectorResource(R.drawable.icon_backer),
+							contentDescription = "back 2 minutes",
+						)
+					}
+					Text(
+						text = "2 min",
+						color = ColorW8Blue
+					)
+					IconButton(
+						modifier = Modifier.weight(1F),
+						onClick = {
+							seek(120000)
+							buttonPressCounter++
+						}
+					) {
+						Icon(
+							imageVector = ImageVector.vectorResource(R.drawable.icon_forwarder),
+							contentDescription = "forward 2 minutes",
+						)
+					}
+				}
+				Row(
+					Modifier.fillMaxWidth().weight(1F),
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					Box(
+						modifier = Modifier.weight(1F)
+							.clickable {
+								seek(-30000)
+								buttonPressCounter++
+							},
+						contentAlignment = Alignment.CenterEnd
+					) {
+						Icon(
+							imageVector = ImageVector.vectorResource(R.drawable.icon_back),
+							contentDescription = "back 30 seconds",
+						)
+					}
+					Text(
+						text = "30 sec",
+						color = ColorW8Blue
+					)
+					Box(
+						modifier = Modifier.weight(1F)
+							.clickable {
+								seek(30000)
+								buttonPressCounter++
+							},
+						contentAlignment = Alignment.CenterStart
+					) {
+						Icon(
+							imageVector = ImageVector.vectorResource(R.drawable.icon_forward),
+							contentDescription = "forward 30 seconds",
+						)
+					}
+				}
+			}
+		}
+	}
 }
 
-@Preview(device = WearDevices.LARGE_ROUND)
+@Composable
+fun PlayButton(
+	modifier: Modifier,
+	onPlayPauseClick: () -> Unit,
+	isPlaying: Boolean
+){
+	IconButton(
+		onClick = onPlayPauseClick,
+		modifier
+	) {
+		Icon(
+			imageVector = ImageVector.vectorResource(
+				if (isPlaying) R.drawable.icon_pause
+				else R.drawable.icon_play
+			),
+			tint = Color.Unspecified,
+			contentDescription = "play or pause"
+		)
+	}
+}
+
+@Preview(device = WearDevices.SMALL_ROUND)
 @Composable
 fun PreviewHome() {
 	W8Theme {
@@ -159,9 +367,17 @@ fun PreviewHome() {
 			hasPrevious = false,
 			hasNext = true,
 			isPlaying = false,
-			currentTrackTitle = "Track name",
-			currentTrackArtist = "Artist name",
-			audioManager = null
+			currentTrackTitle = "Ding Dong Song",
+			currentTrackArtist = "Gunther",
+			currentPosition = 90000,
+			currentDuration = 200000,
+			seek = {},
+			audioManager = null,
+			playbackSpeed = 1.0f,
+			setPlaybackSpeed = {}
 		)
 	}
 }
+@Preview(device = WearDevices.LARGE_ROUND)
+@Composable
+fun PreviewHomeLarge() { PreviewHome() }

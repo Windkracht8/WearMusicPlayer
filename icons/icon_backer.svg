@@ -15,10 +15,11 @@
    viewBox="0 0 200 200"
    version="1.1"
    id="svg1"
-   sodipodi:docname="icon_previous.svg"
+   sodipodi:docname="icon_backer.svg"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
+   inkscape:export-filename="C:\Users\bvulling\Downloads\icon_previous.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -51,19 +52,17 @@
     <path
        id="rect1"
        style="fill:none;stroke:#000000;stroke-width:10.9399;stroke-dasharray:none;stroke-opacity:1"
-       d="M 155.53004,70.606931 96.855703,99.990961 155.53004,129.37499 Z"
+       d="m 177.67604,70.606931 -58.67434,29.38403 58.67434,29.384029 z"
        sodipodi:nodetypes="cccc" />
     <path
        id="rect1-8"
        style="fill:none;stroke:#000000;stroke-width:10.9342;stroke-dasharray:none;stroke-opacity:1"
-       d="M 110.49123,70.607711 51.887961,99.996401 110.49123,129.3851 Z"
+       d="M 132.63723,70.607711 74.033961,99.996401 132.63723,129.3851 Z"
        sodipodi:nodetypes="cccc" />
-    <rect
-       style="fill:#000000;stroke-width:0;stroke-linecap:square;stroke-dasharray:none"
-       id="rect2"
-       width="12.903845"
-       height="76.249992"
-       x="39"
-       y="61.750031" />
+    <path
+       id="rect1-8-8"
+       style="fill:none;stroke:#000000;stroke-width:10.9342;stroke-dasharray:none;stroke-opacity:1"
+       d="M 87.653114,70.607712 29.049845,99.996402 87.653114,129.3851 Z"
+       sodipodi:nodetypes="cccc" />
   </g>
 </svg>

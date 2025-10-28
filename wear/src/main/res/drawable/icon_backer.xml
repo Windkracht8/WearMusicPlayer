@@ -12,14 +12,15 @@
     android:viewportWidth="200"
     android:viewportHeight="200">
   <path
-      android:pathData="M155.53,70.61 L96.86,99.99 155.53,129.37Z"
+      android:pathData="m177.68,70.61 l-58.67,29.38 58.67,29.38z"
       android:strokeWidth="10.9399"
       android:strokeColor="#fff"/>
   <path
-      android:pathData="M110.49,70.61 L51.89,100 110.49,129.39Z"
+      android:pathData="M132.64,70.61 L74.03,100 132.64,129.39Z"
       android:strokeWidth="10.9342"
       android:strokeColor="#fff"/>
   <path
-      android:pathData="M39,61.75h12.9v76.25h-12.9z"
-      android:fillColor="#fff"/>
+      android:pathData="M87.65,70.61 L29.05,100 87.65,129.39Z"
+      android:strokeWidth="10.9342"
+      android:strokeColor="#fff"/>
 </vector>
