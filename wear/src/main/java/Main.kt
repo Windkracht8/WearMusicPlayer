@@ -87,6 +87,7 @@ class Main : ComponentActivity() {
 		currentTracksId = sharedPref.getInt("currentTracksId", -1)
 		currentTrackId = sharedPref.getInt("currentTrackId", -1)
 		currentPosition = sharedPref.getLong("currentPosition", 0L)
+		if(currentPosition < 300000L) currentPosition = 0L
 
 		setTheme(android.R.style.Theme_DeviceDefault)
 		setContent { W8Theme { MainApp(this) } }
@@ -250,8 +251,13 @@ class Main : ComponentActivity() {
 	}
 
 	fun seek(move: Long) {
-		mediaController?.seekTo((currentPosition + move).coerceIn(0, currentDuration))
-		currentPosition = currentPosition + move
+		if(currentDuration < 1){
+			toast(R.string.fail_cant_seek)
+			return
+		}
+		val newPos = (currentPosition + move).coerceIn(0, currentDuration)
+		mediaController?.seekTo(newPos)
+		currentPosition = newPos
 	}
 
 	fun playPause() {

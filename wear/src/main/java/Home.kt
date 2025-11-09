@@ -212,8 +212,8 @@ fun Home(
 				showProgress = false
 			}
 			Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+				modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 20.dp),
+				horizontalAlignment = Alignment.CenterHorizontally
 			) {
 				Row(
 					Modifier.fillMaxWidth().weight(1F),

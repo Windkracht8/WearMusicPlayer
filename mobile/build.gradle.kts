@@ -19,8 +19,8 @@ android {
 		applicationId = "com.windkracht8.wearmusicplayer"
 		minSdk = 26
 		targetSdk = 36
-		versionCode = 156
-		versionName = "m2.7"
+		versionCode = 157
+		versionName = "m2.8"
 	}
 	buildFeatures {
 		buildConfig = true
@@ -51,7 +51,7 @@ android {
 
 dependencies {
 	implementation("androidx.activity:activity-compose:1.11.0")
-	implementation("androidx.core:core-splashscreen:1.0.1")
+	implementation("androidx.core:core-splashscreen:1.2.0")
 	implementation("androidx.compose.animation:animation-graphics-android:1.9.4")
 	implementation("androidx.compose.material:material-icons-extended:1.7.8")
 	implementation("androidx.compose.material3:material3-android:1.4.0")

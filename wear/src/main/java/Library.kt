@@ -66,7 +66,7 @@ object Library {
 			context,
 			arrayOf(exStorageDir),
 			null
-		) { p: String, u: Uri? -> runInBackground{ scanMediaStore(context) } }
+		) { _: String, _: Uri? -> runInBackground{ scanMediaStore(context) } }
 	}
 	fun scanFile(context: Context, path: String) {
 		logD{"Library.scanFile: $path"}
@@ -74,7 +74,7 @@ object Library {
 			context,
 			arrayOf("$musicDir$path"),
 			null
-		) { p: String, uri: Uri? ->
+		) { _: String, uri: Uri? ->
 			if (uri == null) {
 				logD{"Library.scanFile path does not exists"}
 				removeTrack(path)

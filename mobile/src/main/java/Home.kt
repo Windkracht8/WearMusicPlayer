@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -46,6 +47,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,8 +81,33 @@ fun Home(
 	var showPlaylists by remember { mutableStateOf(false) }
 	var showWatchTracks by remember { mutableStateOf(false) }
 	var columnSize by remember { mutableStateOf(IntSize.Zero) }
+	val itemExistsAskToDelete by CommsBT.itemExistsAskToDelete.collectAsState()
 
-    Column(Modifier.fillMaxSize().safeDrawingPadding().onSizeChanged { columnSize = it }) {
+	itemExistsAskToDelete?.let { libItem ->
+		AlertDialog(
+			onDismissRequest = {
+				libItem.status = LibItem.Status.NOT
+				CommsBT.itemExistsAskToDelete.value = null
+			},
+			title = { Text("File exists") },
+			text = { Text(stringResource(R.string.file_send_delete, libItem.name)) },
+			confirmButton = {
+				TextButton(onClick = { CommsBT.confirmDeleteFile(libItem) }) {
+					Text("Yes")
+				}
+			},
+			dismissButton = {
+				TextButton(onClick = {
+					libItem.status = LibItem.Status.NOT
+					CommsBT.itemExistsAskToDelete.value = null
+				}) {
+					Text("No")
+				}
+			}
+		)
+	}
+
+	Column(Modifier.fillMaxSize().safeDrawingPadding().onSizeChanged { columnSize = it }) {
 		val maxSectionHeight = with(LocalDensity.current) { (columnSize.height / 4).toDp() }
 		Row(Modifier.fillMaxWidth().height(70.dp)) {
 			Box(
@@ -337,60 +364,60 @@ fun Item(
 
 @Composable
 fun PlaylistsCreateRow() {
-    var newName by remember { mutableStateOf("") }
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(
-            modifier = Modifier
+	var newName by remember { mutableStateOf("") }
+	Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+		OutlinedTextField(
+			modifier = Modifier
 				.weight(1f)
 				.padding(end = 5.dp),
-            value = newName,
-            onValueChange = { newName = it },
-            label = { Text(R.string.playlists_new) }
-        )
-        OutlinedButton(
+			value = newName,
+			onValueChange = { newName = it },
+			label = { Text(R.string.playlists_new) }
+		)
+		OutlinedButton(
 			onClick = { if(newName.isNotBlank()) { Playlists.create(newName.trim()); newName = "" } }
 		) { Text(R.string.create) }
-    }
+	}
 }
 
 @Composable
 fun PlaylistRow(pl: Playlist) {
-    var rename by remember(pl) { mutableStateOf(false) }
-    var editName by remember(pl.name) { mutableStateOf(pl.name) }
-    var showTracks by remember(pl) { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth()) {
-        Row(
+	var rename by remember(pl) { mutableStateOf(false) }
+	var editName by remember(pl.name) { mutableStateOf(pl.name) }
+	var showTracks by remember(pl) { mutableStateOf(false) }
+	Column(Modifier.fillMaxWidth()) {
+		Row(
 			Modifier.fillMaxWidth(),
 			horizontalArrangement = Arrangement.SpaceBetween,
 			verticalAlignment = Alignment.CenterVertically
 		) {
-            if(rename) {
-                Row(
+			if(rename) {
+				Row(
 					Modifier.weight(1f),
 					horizontalArrangement = Arrangement.spacedBy(8.dp),
 					verticalAlignment = Alignment.CenterVertically
 				) {
-                    OutlinedTextField(
-                        modifier = Modifier.weight(1f),
-                        value = editName,
-                        onValueChange = { editName = it },
-                        label = { Text(stringResource(R.string.playlists_rename)) }
-                    )
-                    IconButton(
-                        modifier = Modifier.size(48.dp),
-                        onClick = {
-                            rename = false
-                            Playlists.rename(pl.id, editName.trim())
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = stringResource(R.string.save)
-                        )
-                    }
-                }
-            } else {
-                TextButton(
+					OutlinedTextField(
+						modifier = Modifier.weight(1f),
+						value = editName,
+						onValueChange = { editName = it },
+						label = { Text(stringResource(R.string.playlists_rename)) }
+					)
+					IconButton(
+						modifier = Modifier.size(48.dp),
+						onClick = {
+							rename = false
+							Playlists.rename(pl.id, editName.trim())
+						}
+					) {
+						Icon(
+							imageVector = Icons.Default.Check,
+							contentDescription = stringResource(R.string.save)
+						)
+					}
+				}
+			} else {
+				TextButton(
 					modifier = Modifier.weight(1f),
 					onClick = { showTracks = !showTracks }
 				){
@@ -401,39 +428,39 @@ fun PlaylistRow(pl: Playlist) {
 						color = colorScheme.onBackground
 					)
 				}
-                IconButton(
-                    modifier = Modifier.size(48.dp),
-                    onClick = { rename = true }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.rename)
-                    )
-                }
-            }
-            IconButton(
-                modifier = Modifier.size(48.dp),
-                onClick = { Playlists.delete(pl.id) }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.delete)
-                )
-            }
-        }
-        if(showTracks) {
-            Column(Modifier
+				IconButton(
+					modifier = Modifier.size(48.dp),
+					onClick = { rename = true }
+				) {
+					Icon(
+						imageVector = Icons.Default.Edit,
+						contentDescription = stringResource(R.string.rename)
+					)
+				}
+			}
+			IconButton(
+				modifier = Modifier.size(48.dp),
+				onClick = { Playlists.delete(pl.id) }
+			) {
+				Icon(
+					imageVector = Icons.Default.Delete,
+					contentDescription = stringResource(R.string.delete)
+				)
+			}
+		}
+		if(showTracks) {
+			Column(Modifier
 				.fillMaxWidth()
 				.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)) {
-                if(pl.trackPaths.isEmpty()) {
-                    Text(stringResource(R.string.no_playlists))
-                } else {
-                    pl.trackPaths.forEach { path ->
-                        Row(
+				if(pl.trackPaths.isEmpty()) {
+					Text(stringResource(R.string.no_playlists))
+				} else {
+					pl.trackPaths.forEach { path ->
+						Row(
 							Modifier.fillMaxWidth(),
 							verticalAlignment = Alignment.CenterVertically
 						) {
-                             Text(
+							 Text(
 								modifier = Modifier
 									.weight(1f)
 									.padding(vertical = 2.dp),
@@ -441,21 +468,21 @@ fun PlaylistRow(pl: Playlist) {
 								maxLines = 1,
 								overflow = TextOverflow.StartEllipsis
 							)
-                            IconButton(
-                                modifier = Modifier.size(48.dp),
-                                onClick = { Playlists.removeTrack(pl.id, path) }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = stringResource(R.string.delete)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+							IconButton(
+								modifier = Modifier.size(48.dp),
+								onClick = { Playlists.removeTrack(pl.id, path) }
+							) {
+								Icon(
+									imageVector = Icons.Default.Delete,
+									contentDescription = stringResource(R.string.delete)
+								)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 @Composable
 fun Text(text: Int) = Text(stringResource(text))

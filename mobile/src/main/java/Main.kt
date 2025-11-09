@@ -86,8 +86,7 @@ class Main : ComponentActivity() {
 
 	override fun onResume() {
 		super.onResume()
-		if(Permissions.hasRead && Library.status.value == null)
-			runInBackground { Library.scanFiles() }
+		if(Permissions.hasRead && Library.status.value == null) Library.scanFiles()
 		if(Permissions.hasBT) {
 			registerReceiver(
 				btBroadcastReceiver,
@@ -139,7 +138,7 @@ class Main : ComponentActivity() {
 			} else {
 				val path = fullPath.removePrefix("/tree/primary:")
 				showLoading = true
-				runInBackground { Library.scanFiles(path) }
+				Library.scanFiles(path)
 			}
 		}
 

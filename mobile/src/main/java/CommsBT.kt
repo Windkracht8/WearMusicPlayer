@@ -37,10 +37,10 @@ object CommsBT {
 	const val CODE_PENDING = 1
 	const val CODE_OK = 0
 	//const val CODE_FAIL = -1
-	//const val CODE_UNKNOWN_REQUEST_TYPE = -2 TODO give more feedback to user
+	const val CODE_UNKNOWN_REQUEST_TYPE = -2
 	//const val CODE_FAIL_CREATE_DIRECTORY = -3
 	//const val CODE_FAIL_CREATE_FILE = -4
-	//const val CODE_FILE_EXISTS = -5
+	const val CODE_FILE_EXISTS = -5
 	//const val CODE_FAIL_DEL_FILE = -6
 	const val CODE_DECLINED = -6
 	var sharedPreferences: SharedPreferences? = null
@@ -62,6 +62,7 @@ object CommsBT {
 	var disconnect = false
 	val requestQueue: MutableSet<Request> = mutableSetOf()
 	var lastRequest: Request? = null
+	val itemExistsAskToDelete = MutableStateFlow<LibItem?>(null)
 	fun start(context: Context) {
 		if(!Permissions.hasBT) return onError(R.string.fail_BT_denied)
 		status.value = Status.STARTING
@@ -165,6 +166,10 @@ object CommsBT {
 			)
 		)
 	}
+	fun confirmDeleteFile(libItem: LibItem) {
+		itemExistsAskToDelete.value = null
+		sendRequestDeleteFile(libItem)
+	}
 	fun sendRequestPutPlaylist(playlistId: Int) =
 		requestQueue.add(Request(Request.Type.PUT_PLAYLIST, playlistId = playlistId))
 	fun sendRequestDelPlaylist(playlistId: Int) =
@@ -210,16 +215,23 @@ object CommsBT {
 				}
 				"fileDetails" -> {
 					//{"requestType":"fileDetails","responseData":1}
-					//CODE_PENDING
-					//CODE_FAIL
-					//CODE_UNKNOWN_REQUEST_TYPE
-					//CODE_FAIL_CREATE_DIRECTORY
-					//CODE_FAIL_CREATE_FILE
-					//CODE_FILE_EXISTS
+					//CODE_PENDING = 1
 					if(responseData is Int && responseData < 1) {
 						CommsWifi.stop()
 						logE("CommsBT.gotResponse fileDetails responseData: $responseData")
-						messageStatus = R.string.fail_send_file
+						when(responseData){
+							//CODE_FAIL -> R.string.fail_send_file
+							CODE_UNKNOWN_REQUEST_TYPE -> messageStatus = R.string.fail_app_outdated
+							//CODE_FAIL_CREATE_DIRECTORY -> R.string.fail_send_file
+							//CODE_FAIL_CREATE_FILE -> R.string.fail_send_file
+							CODE_FILE_EXISTS -> {
+								messageStatus = R.string.fail_file_exists
+								lastRequest?.libItem?.let { libItem ->
+									itemExistsAskToDelete.value = libItem
+								}
+							}
+							else -> messageStatus = R.string.fail_send_file
+						}
 					}
 					lastRequest = null
 				}
@@ -435,7 +447,7 @@ object CommsBT {
 			request.put("version", 2)
 			when(type) {
 				Type.SYNC -> {
-					//{"requestType":"sync","requestData":{}]}
+					//{"requestType":"sync","requestData":{}}
 					request.put("requestType", "sync")
 					messageStatus = R.string.sync
 				}

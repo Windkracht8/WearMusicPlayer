@@ -17,108 +17,108 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 data class Playlist(
-    var id: Int,
-    var name: String,
-    val trackPaths: SnapshotStateList<String> = mutableStateListOf()
+	var id: Int,
+	var name: String,
+	val trackPaths: SnapshotStateList<String> = mutableStateListOf()
 ){
-    fun toJson(): JSONObject {
-        val obj = JSONObject()
-            .put("id", id)
-            .put("name", name)
-        val tracks = JSONArray()
-        trackPaths.forEach { tracks.put(it) }
-        obj.put("tracks", tracks)
-        return obj
-    }
+	fun toJson(): JSONObject {
+		val obj = JSONObject()
+			.put("id", id)
+			.put("name", name)
+		val tracks = JSONArray()
+		trackPaths.forEach { tracks.put(it) }
+		obj.put("tracks", tracks)
+		return obj
+	}
 }
 
 object Playlists {
-    lateinit var sharedPreferences: SharedPreferences
-    val all: SnapshotStateList<Playlist> = mutableStateListOf()
-    var maxId: Int = 0
-    fun getNewId(): Int {
-        maxId++
-        sharedPreferences.edit { putInt("maxId", maxId) }
-        return maxId
-    }
+	lateinit var sharedPreferences: SharedPreferences
+	val all: SnapshotStateList<Playlist> = mutableStateListOf()
+	var maxId: Int = 0
+	fun getNewId(): Int {
+		maxId++
+		sharedPreferences.edit { putInt("maxId", maxId) }
+		return maxId
+	}
 
-    fun init(context: Context, onError: () -> Unit) {
-        sharedPreferences = context.getSharedPreferences("Playlists", MODE_PRIVATE)
-        all.clear()
-        tryIgnore{ sharedPreferences.all.forEach { (key, value) ->
-            try {
-                if(key == "maxId"){
-                    maxId = value as Int
-                    return@forEach
-                }
-                val obj = JSONObject(value as String)
-                val playlist = Playlist(
-                    id = obj.getInt("id"),
-                    name = obj.getString("name")
-                )
-                val tracks = obj.getJSONArray("tracks")
-                for(index in 0 until tracks.length()) {
-                    playlist.trackPaths.add(tracks.getString(index))
-                }
-                all.add(playlist)
-            } catch(e: Exception) {
-                logE("Playlists.init : ${e.message}")
-                onError()
-            }
-        } }
-    }
+	fun init(context: Context, onError: () -> Unit) {
+		sharedPreferences = context.getSharedPreferences("Playlists", MODE_PRIVATE)
+		all.clear()
+		tryIgnore{ sharedPreferences.all.forEach { (key, value) ->
+			try {
+				if(key == "maxId"){
+					maxId = value as Int
+					return@forEach
+				}
+				val obj = JSONObject(value as String)
+				val playlist = Playlist(
+					id = obj.getInt("id"),
+					name = obj.getString("name")
+				)
+				val tracks = obj.getJSONArray("tracks")
+				for(index in 0 until tracks.length()) {
+					playlist.trackPaths.add(tracks.getString(index))
+				}
+				all.add(playlist)
+			} catch(e: Exception) {
+				logE("Playlists.init : ${e.message}")
+				onError()
+			}
+		} }
+	}
 
-    fun create(name: String): Playlist {
-        val playlist = Playlist(getNewId(), name)
-        all.add(playlist)
-        sharedPreferences.edit { putString(playlist.id.toString(), playlist.toJson().toString()) }
-        return playlist
-    }
+	fun create(name: String): Playlist {
+		val playlist = Playlist(getNewId(), name)
+		all.add(playlist)
+		sharedPreferences.edit { putString(playlist.id.toString(), playlist.toJson().toString()) }
+		return playlist
+	}
 
-    fun rename(id: Int, newName: String) {
-        val playlist = all.firstOrNull { it.id == id } ?: return
-        playlist.name = newName
-        playlist.id = getNewId()
-        sharedPreferences.edit {
-            remove(id.toString())
-            putString(playlist.id.toString(), playlist.toJson().toString())
-        }
-        if(CommsBT.status.value == CommsBT.Status.CONNECTED){
-            if(all.isNotEmpty()) CommsBT.sendRequestPutPlaylist(playlist.id)
-            CommsBT.sendRequestDelPlaylist(id)
-        }
-    }
-    fun delete(id: Int) {
-        all.removeIf { it.id == id }
-        sharedPreferences.edit { remove(id.toString()) }
-        if(CommsBT.status.value == CommsBT.Status.CONNECTED) CommsBT.sendRequestDelPlaylist(id)
-    }
-    fun addTrack(id: Int, path: String) {
-        val playlist = all.firstOrNull { it.id == id } ?: return
-        if(playlist.trackPaths.add(path)) {
-            playlist.id = getNewId()
-            sharedPreferences.edit {
-                remove(id.toString())
-                putString(playlist.id.toString(), playlist.toJson().toString())
-            }
-            if(CommsBT.status.value == CommsBT.Status.CONNECTED) {
-                CommsBT.sendRequestPutPlaylist(playlist.id)
-                CommsBT.sendRequestDelPlaylist(id)
-            }
-        }
-    }
+	fun rename(id: Int, newName: String) {
+		val playlist = all.firstOrNull { it.id == id } ?: return
+		playlist.name = newName
+		playlist.id = getNewId()
+		sharedPreferences.edit {
+			remove(id.toString())
+			putString(playlist.id.toString(), playlist.toJson().toString())
+		}
+		if(CommsBT.status.value == CommsBT.Status.CONNECTED){
+			if(all.isNotEmpty()) CommsBT.sendRequestPutPlaylist(playlist.id)
+			CommsBT.sendRequestDelPlaylist(id)
+		}
+	}
+	fun delete(id: Int) {
+		all.removeIf { it.id == id }
+		sharedPreferences.edit { remove(id.toString()) }
+		if(CommsBT.status.value == CommsBT.Status.CONNECTED) CommsBT.sendRequestDelPlaylist(id)
+	}
+	fun addTrack(id: Int, path: String) {
+		val playlist = all.firstOrNull { it.id == id } ?: return
+		if(playlist.trackPaths.add(path)) {
+			playlist.id = getNewId()
+			sharedPreferences.edit {
+				remove(id.toString())
+				putString(playlist.id.toString(), playlist.toJson().toString())
+			}
+			if(CommsBT.status.value == CommsBT.Status.CONNECTED) {
+				CommsBT.sendRequestPutPlaylist(playlist.id)
+				CommsBT.sendRequestDelPlaylist(id)
+			}
+		}
+	}
 	fun removeTrack(id: Int, path: String) {
 		val playlist = all.firstOrNull { it.id == id } ?: return
 		if(playlist.trackPaths.remove(path)){
-            playlist.id = getNewId()
-            sharedPreferences.edit {
-                remove(id.toString())
-                putString(playlist.id.toString(), playlist.toJson().toString())
-            }
-            if(CommsBT.status.value == CommsBT.Status.CONNECTED){
-                if(all.isNotEmpty()) CommsBT.sendRequestPutPlaylist(playlist.id)
-                CommsBT.sendRequestDelPlaylist(id)
-            }
-        }
+			playlist.id = getNewId()
+			sharedPreferences.edit {
+				remove(id.toString())
+				putString(playlist.id.toString(), playlist.toJson().toString())
+			}
+			if(CommsBT.status.value == CommsBT.Status.CONNECTED){
+				if(all.isNotEmpty()) CommsBT.sendRequestPutPlaylist(playlist.id)
+				CommsBT.sendRequestDelPlaylist(id)
+			}
+		}
 	}
 }

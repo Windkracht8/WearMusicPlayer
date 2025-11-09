@@ -14,9 +14,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.windkracht8.wearmusicplayer.Library.rootLibDir
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.io.File
@@ -32,9 +34,11 @@ object Library {
 	fun scanFiles(dir: String = "Music") {
 		if(!Permissions.hasRead) return
 		status.value = Status.SCAN
-		rootLibDir = LibDir(Environment.getExternalStorageDirectory().toString() + "/$dir")
-		scanFilesDir(rootLibDir)
-		status.value = Status.READY
+		CoroutineScope(Dispatchers.IO).launch {
+			rootLibDir = LibDir(Environment.getExternalStorageDirectory().toString() + "/$dir")
+			scanFilesDir(rootLibDir)
+			status.value = Status.READY
+		}
 	}
 
 	fun scanFilesDir(libDir: LibDir) {
@@ -106,7 +110,8 @@ object Library {
 		if(somethingNotOnPhone) watchLibDir.status = LibItem.Status.NOT
 	}
 
-	fun String.isTrack(): Boolean = endsWith(".mp3") || endsWith(".m4a")
+	fun String.isTrack(): Boolean = endsWith(".mp3") || endsWith(".m4a") || endsWith(".aac") ||
+				endsWith(".amr") || endsWith(".flac") || endsWith(".ogg") || endsWith(".wav")
 	fun checkStatuses(libDir: LibDir) {
 		libDir.libDirs.forEach { checkStatuses(it) }
 		if(libDir.libTracks.all { it.status == LibItem.Status.FULL } &&

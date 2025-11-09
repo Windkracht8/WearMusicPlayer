@@ -50,5 +50,6 @@
 	<string name="fail_delete_file">Failed to delete file</string>
 	<string name="fail_scan_media">Problem with finding tracks</string>
 	<string name="fail_read_playlist">Error reading playlist</string>
+	<string name="fail_cant_seek">Can\'t seek, duration not known</string>
 
 </resources>

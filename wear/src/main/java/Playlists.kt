@@ -20,63 +20,63 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 data class Playlist(
-    var id: Int,
-    var name: String,
-    val trackPaths: MutableList<String> = mutableListOf(),
-    var tracks: MutableList<Track> = mutableListOf(),
-    var shuffleCounter: MutableIntState = mutableIntStateOf(0)
+	var id: Int,
+	var name: String,
+	val trackPaths: MutableList<String> = mutableListOf(),
+	var tracks: MutableList<Track> = mutableListOf(),
+	var shuffleCounter: MutableIntState = mutableIntStateOf(0)
 ){
-    fun toJson(): JSONObject {
-        val obj = JSONObject()
-            .put("id", id)
-            .put("name", name)
-        val tracks = JSONArray()
-        trackPaths.forEach { tracks.put(it) }
-        obj.put("tracks", tracks)
-        return obj
-    }
+	fun toJson(): JSONObject {
+		val obj = JSONObject()
+			.put("id", id)
+			.put("name", name)
+		val tracks = JSONArray()
+		trackPaths.forEach { tracks.put(it) }
+		obj.put("tracks", tracks)
+		return obj
+	}
 }
 
 object Playlists {
-    lateinit var sharedPreferences: SharedPreferences
-    val all: SnapshotStateList<Playlist> = mutableStateListOf()
-    fun init(context: Context) {
-        sharedPreferences = context.getSharedPreferences("Playlists", MODE_PRIVATE)
-        all.clear()
-        sharedPreferences.all.forEach { (_, value) ->
-            try { create(value as String) ?: throw Exception("create failed") }
-            catch(e: Exception) {
-                logE("Playlists.init : ${e.message}")
-                context.toastFromBG(R.string.fail_read_playlist)
-            }
-        }
-    }
-    fun create(json: String): Playlist? {
-        try { return create(JSONObject(json)) }
-        catch(e: Exception) { logE("Playlists.create : ${e.message}") }
-        return null
-    }
-    fun create(obj: JSONObject): Playlist? {
-        try {
-            val playlist = Playlist(
-                id = obj.getInt("id"),
-                name = obj.getString("name")
-            )
-            val tracks = obj.getJSONArray("tracks")
-            for(index in 0 until tracks.length()) {
-                playlist.trackPaths.add(tracks.getString(index))
-                Library.tracks.firstOrNull { it.path == tracks.getString(index) }?.let {
-                    playlist.tracks.add(it)
-                }
-            }
-            all.add(playlist)
-            sharedPreferences.edit { putString(playlist.id.toString(), playlist.toJson().toString()) }
-            return playlist
-        } catch(e: Exception) { logE("Playlists.create : ${e.message}") }
-        return null
-    }
-    fun delete(id: Int) {
-        all.removeIf { it.id == id }
-        sharedPreferences.edit { remove(id.toString()) }
-    }
+	lateinit var sharedPreferences: SharedPreferences
+	val all: SnapshotStateList<Playlist> = mutableStateListOf()
+	fun init(context: Context) {
+		sharedPreferences = context.getSharedPreferences("Playlists", MODE_PRIVATE)
+		all.clear()
+		sharedPreferences.all.forEach { (_, value) ->
+			try { create(value as String) ?: throw Exception("create failed") }
+			catch(e: Exception) {
+				logE("Playlists.init : ${e.message}")
+				context.toastFromBG(R.string.fail_read_playlist)
+			}
+		}
+	}
+	fun create(json: String): Playlist? {
+		try { return create(JSONObject(json)) }
+		catch(e: Exception) { logE("Playlists.create : ${e.message}") }
+		return null
+	}
+	fun create(obj: JSONObject): Playlist? {
+		try {
+			val playlist = Playlist(
+				id = obj.getInt("id"),
+				name = obj.getString("name")
+			)
+			val tracks = obj.getJSONArray("tracks")
+			for(index in 0 until tracks.length()) {
+				playlist.trackPaths.add(tracks.getString(index))
+				Library.tracks.firstOrNull { it.path == tracks.getString(index) }?.let {
+					playlist.tracks.add(it)
+				}
+			}
+			all.add(playlist)
+			sharedPreferences.edit { putString(playlist.id.toString(), playlist.toJson().toString()) }
+			return playlist
+		} catch(e: Exception) { logE("Playlists.create : ${e.message}") }
+		return null
+	}
+	fun delete(id: Int) {
+		all.removeIf { it.id == id }
+		sharedPreferences.edit { remove(id.toString()) }
+	}
 }

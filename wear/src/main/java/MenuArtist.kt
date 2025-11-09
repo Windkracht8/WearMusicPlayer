@@ -32,8 +32,9 @@ fun MenuArtist(
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
-	LaunchedEffect(Unit) {
-		if (trackId > 0) columnState.scrollToItem(trackId + 2 + (artist?.albums?.size ?: 0))
+	LaunchedEffect(artist.tracks) {
+		if(trackId > 0 && artist.tracks.size >= trackId)
+			columnState.scrollToItem(trackId + 2 + artist.albums.size)
 	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
