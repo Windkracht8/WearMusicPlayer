@@ -239,10 +239,16 @@ fun Home(
 				)
 				if(showWatchTracks) {
 					LazyColumn(Modifier.fillMaxWidth().heightIn(max = maxSectionHeight)) {
-						itemsIndexed(Library.watchLibDir.libDirs.filter { it.status == LibItem.Status.NOT }) { i, it ->
+						itemsIndexed(
+							items = Library.watchLibDir.libDirs.filter { it.status == LibItem.Status.NOT },
+							key = { _, it -> it.fullPath }
+						) { i, it ->
 							Item(it, i > 0, onItemIconClick, showPlaylists)
 						}
-						itemsIndexed(Library.watchLibDir.libTracks.filter { it.status != LibItem.Status.NOT }) { i, it ->
+						itemsIndexed(
+							items = Library.watchLibDir.libTracks.filter { it.status != LibItem.Status.NOT },
+							key = { _, it -> it.fullPath }
+						) { i, it ->
 							Item(it, i == 0, onItemIconClick, showPlaylists)
 						}
 					}
@@ -320,7 +326,7 @@ fun Item(
 				textAlign = TextAlign.Start
 			)
 		}
-		if(libItem is LibTrack && libItem.status == LibItem.Status.FULL && showPlaylists) {
+		if(showPlaylists && libItem is LibTrack && libItem.status == LibItem.Status.FULL) {
 			var menuOpen by remember { mutableStateOf(false) }
 			Box {
 				IconButton(

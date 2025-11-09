@@ -110,8 +110,14 @@ object Library {
 		if(somethingNotOnPhone) watchLibDir.status = LibItem.Status.NOT
 	}
 
-	fun String.isTrack(): Boolean = endsWith(".mp3") || endsWith(".m4a") || endsWith(".aac") ||
-				endsWith(".amr") || endsWith(".flac") || endsWith(".ogg") || endsWith(".wav")
+	fun String.isTrack(): Boolean = endsWith(".mp3") ||
+		endsWith(".m4a") ||
+		endsWith(".aac") ||
+		endsWith(".amr") ||
+		endsWith(".flac") ||
+		endsWith(".ogg") ||
+		endsWith(".opus") ||
+		endsWith(".wav")
 	fun checkStatuses(libDir: LibDir) {
 		libDir.libDirs.forEach { checkStatuses(it) }
 		if(libDir.libTracks.all { it.status == LibItem.Status.FULL } &&
