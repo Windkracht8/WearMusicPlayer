@@ -30,8 +30,11 @@ fun MenuDir(
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
-	LaunchedEffect(Unit) {
-		if (trackId > 0) columnState.scrollToItem(trackId + 2)
+	LaunchedEffect(trackId) {
+		try {
+			if (trackId > 0) columnState.scrollToItem(trackId + 2)
+			else columnState.scrollToItem(0)
+		} catch (_: Exception) {}
 	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
@@ -50,13 +53,15 @@ fun MenuDir(
 					loopEnabled
 				)
 			}
-			itemsIndexed(dir.tracks) { index, track ->
-				MenuItem(
-					transformation = SurfaceTransformation(transformationSpec),
-					label = track.title,
-					subLabel = track.artist.name,
-					onClick = { openTracks(Main.TrackListType.DIR, dir.id, index) }
-				)
+			if(dir.tracks.isNotEmpty()) {
+				itemsIndexed(dir.tracks) { index, track ->
+					MenuItem(
+						transformation = SurfaceTransformation(transformationSpec),
+						label = track.title,
+						subLabel = track.artist.name,
+						onClick = { openTracks(Main.TrackListType.DIR, dir.id, index) }
+					)
+				}
 			}
 		}
 	}

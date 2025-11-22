@@ -19,8 +19,8 @@ android {
 		applicationId = "com.windkracht8.wearmusicplayer"
 		minSdk = 30
 		targetSdk = 36
-		versionCode = 266
-		versionName = "w2.7"
+		versionCode = 268
+		versionName = "w2.8"
 	}
 	buildFeatures {
 		buildConfig = true
@@ -52,7 +52,7 @@ android {
 
 dependencies {
 	implementation("com.google.android.horologist:horologist-compose-layout:0.7.15")
-	implementation("androidx.activity:activity-compose:1.11.0")
+	implementation("androidx.activity:activity-compose:1.12.0")
 	implementation("androidx.compose.material:material-icons-extended:1.7.8")
 	implementation("androidx.core:core-splashscreen:1.2.0")
 	implementation("androidx.fragment:fragment-ktx:1.8.9")
@@ -65,6 +65,6 @@ dependencies {
 	implementation("androidx.wear:wear-ongoing:1.1.0")
 
 	//actually only for debug, but release won't compile without it
-	implementation("androidx.compose.ui:ui-tooling-preview:1.9.4")
+	implementation("androidx.compose.ui:ui-tooling-preview:1.9.5")
 	implementation("androidx.wear:wear-tooling-preview:1.0.0")
 }

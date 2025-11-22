@@ -30,9 +30,11 @@ fun MenuAll(
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
-	LaunchedEffect(Library.tracks) {
-		if(trackId > 0 && Library.tracks.size >= trackId)
-			columnState.scrollToItem(trackId + 2)
+	LaunchedEffect(trackId) {
+		try {
+			if (trackId > 0) columnState.scrollToItem(trackId + 2)
+			else columnState.scrollToItem(0)
+		} catch (_: Exception) {}
 	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
@@ -51,13 +53,15 @@ fun MenuAll(
 					loopEnabled
 				)
 			}
-			itemsIndexed(Library.tracks) { index, track ->
-				MenuItem(
-					transformation = SurfaceTransformation(transformationSpec),
-					label = track.artist.name,
-					subLabel = track.title,
-					onClick = { openTracks(Main.TrackListType.ALL, 0, index) }
-				)
+			if(Library.tracks.isNotEmpty()) {//removing this causes an IndexOutOfBoundsException on Xiaomi watches
+				itemsIndexed(Library.tracks) { index, track ->
+					MenuItem(
+						transformation = SurfaceTransformation(transformationSpec),
+						label = track.artist.name,
+						subLabel = track.title,
+						onClick = { openTracks(Main.TrackListType.ALL, 0, index) }
+					)
+				}
 			}
 		}
 	}

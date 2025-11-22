@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.itemsIndexed
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ScreenScaffold
@@ -32,9 +33,11 @@ fun MenuArtist(
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
-	LaunchedEffect(artist.tracks) {
-		if(trackId > 0 && artist.tracks.size >= trackId)
-			columnState.scrollToItem(trackId + 2 + artist.albums.size)
+	LaunchedEffect(trackId) {
+		try {
+			if (trackId > 0) columnState.scrollToItem(trackId + 2 + artist.albums.size)
+			else columnState.scrollToItem(0)
+		} catch (_: Exception) {}
 	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
@@ -44,14 +47,16 @@ fun MenuArtist(
 					label = artist.name,
 				)
 			}
-			itemsIndexed(artist.albums) { index, album ->
-				MenuItem(
-					transformation = SurfaceTransformation(transformationSpec),
-					label = album.name,
-					subLabel = stringResource(R.string.album) + ": " +
-							trackOrTracks(album.tracks.size),
-					onClick = { onMenuAlbumClick(album.id) }
-				)
+			if(artist.albums.isNotEmpty()) {
+				items(artist.albums) { album ->
+					MenuItem(
+						transformation = SurfaceTransformation(transformationSpec),
+						label = album.name,
+						subLabel = stringResource(R.string.album) + ": " +
+								trackOrTracks(album.tracks.size),
+						onClick = { onMenuAlbumClick(album.id) }
+					)
+				}
 			}
 			item {
 				MenuButtonRow(
@@ -62,12 +67,14 @@ fun MenuArtist(
 					loopEnabled
 				)
 			}
-			itemsIndexed(artist.tracks) { index, track ->
-				MenuItem(
-					transformation = SurfaceTransformation(transformationSpec),
-					label = track.title,
-					onClick = { openTracks(Main.TrackListType.ARTIST, artist.id, index) }
-				)
+			if(artist.tracks.isNotEmpty()) {
+				itemsIndexed(artist.tracks) { index, track ->
+					MenuItem(
+						transformation = SurfaceTransformation(transformationSpec),
+						label = track.title,
+						onClick = { openTracks(Main.TrackListType.ARTIST, artist.id, index) }
+					)
+				}
 			}
 		}
 	}

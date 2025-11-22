@@ -32,13 +32,11 @@
 		<meta-data
 			android:name="com.google.android.wearable.standalone"
 			android:value="true"/>
-
 		<activity
 			android:name=".Main"
 			android:exported="true"
 			android:launchMode="singleTop"
-			android:taskAffinity=".Main"
-			android:theme="@style/W8Theme.Starting">
+			android:taskAffinity=".Main">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
 				<category android:name="android.intent.category.LAUNCHER"/>
@@ -46,7 +44,7 @@
 		</activity>
 		<activity
 			android:name=".Progress"
-			android:taskAffinity=".MainActivity"
+			android:taskAffinity=".Main"
 			android:excludeFromRecents="true"
 			android:noHistory="true"/>
 		<service

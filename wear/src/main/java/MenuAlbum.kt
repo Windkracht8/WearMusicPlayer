@@ -30,9 +30,11 @@ fun MenuAlbum(
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
-	LaunchedEffect(album.tracks) {
-		if(trackId > 0 && album.tracks.size >= trackId)
-			columnState.scrollToItem(trackId + 2)
+	LaunchedEffect(trackId) {
+		try {
+			if (trackId > 0) columnState.scrollToItem(trackId + 2)
+			else columnState.scrollToItem(0)
+		} catch (_: Exception) {}
 	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
@@ -51,13 +53,15 @@ fun MenuAlbum(
 					loopEnabled
 				)
 			}
-			itemsIndexed(album.tracks) { index, track ->
-				MenuItem(
-					transformation = SurfaceTransformation(transformationSpec),
-					label = track.title,
-					subLabel = if (track.artist.name == album.artist) null else track.artist.name,
-					onClick = { openTracks(Main.TrackListType.ALBUM, album.id, index) }
-				)
+			if(album.tracks.isNotEmpty()) {
+				itemsIndexed(album.tracks) { index, track ->
+					MenuItem(
+						transformation = SurfaceTransformation(transformationSpec),
+						label = track.title,
+						subLabel = if (track.artist.name == album.artist) null else track.artist.name,
+						onClick = { openTracks(Main.TrackListType.ALBUM, album.id, index) }
+					)
+				}
 			}
 		}
 	}

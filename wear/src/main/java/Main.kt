@@ -231,8 +231,10 @@ class Main : ComponentActivity() {
 	fun previous() {
 		if (currentTrackId > 0) {
 			currentTrackId--
-			currentTrackTitle = currentTracks[currentTrackId].title
-			currentTrackArtist = currentTracks[currentTrackId].artist.name
+			currentTracks.getOrNull(currentTrackId)?.let{ currentTrack ->
+				currentTrackTitle = currentTrack.title
+				currentTrackArtist = currentTrack.artist.name
+			}
 			hasPrevious = currentTrackId > 0
 		}
 		mediaController?.seekToPreviousMediaItem()
