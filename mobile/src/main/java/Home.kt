@@ -522,7 +522,7 @@ fun PreviewHome() {
 	playlist1.trackPaths.addAll(listOf("dir1/hit.mp3", track2.path))
 	val playlist2 = Playlists.create("Chill")
 	playlist2.trackPaths.addAll(listOf(track1.path))
-	W8Theme {
+	W8Theme (null, null) {
 		Surface {
 			Home(
 				commsBTStatus = CommsBT.Status.CONNECTING,

@@ -284,7 +284,7 @@ class Main : ComponentActivity() {
 	fun loadTracks() {
 		if (mediaController == null) return
 		val mediaItems = mutableListOf<MediaItem>()
-		currentTracks.forEach { mediaItems.add(MediaItem.fromUri(it.uri)) }
+		currentTracks.forEach { mediaItems.add(trackToMediaItem(it)) }
 		CoroutineScope(Dispatchers.Main).launch {
 			logD{"Main.loadTracks loading ${mediaItems.size} items"}
 			mediaController?.clearMediaItems()
@@ -308,13 +308,23 @@ class Main : ComponentActivity() {
 			TrackListType.DIR -> Library.dirs.firstOrNull { it.id == id }?.tracks ?: emptyList()
 		}
 		val mediaItems = mutableListOf<MediaItem>()
-		currentTracks.forEach { mediaItems.add(MediaItem.fromUri(it.uri)) }
+		currentTracks.forEach { mediaItems.add(trackToMediaItem(it)) }
 		logD{"Main.openTracks loading ${mediaItems.size} items"}
 		mediaController?.clearMediaItems()
 		mediaController?.addMediaItems(mediaItems)
 		mediaController?.prepare()
 		mediaController?.seekTo(currentTrackId, 0)
 		mediaController?.play()
+	}
+	fun trackToMediaItem(track: Library.Track): MediaItem {
+		val metadata = MediaMetadata.Builder()
+			.setTitle(track.title)
+			.setArtist(track.artist.name)
+			.setAlbumTitle(track.album?.name)
+			.setAlbumArtist(track.album?.artist)
+			.setDiscNumber(track.discNo?.toIntOrNull())
+			.setTrackNumber(track.trackNo?.toIntOrNull())
+		return MediaItem.Builder().setUri(track.uri).setMediaMetadata(metadata.build()).build()
 	}
 
 	val playerListener: Player.Listener = object : Player.Listener {

@@ -250,24 +250,19 @@ object Library {
 			return ret
 		}
 		override fun compareTo(other: Track): Int {
-			var compare = (album?.name ?: "").compareTo(other.album?.name ?: "")
+			var compare = humanCompare(album?.name, other.album?.name)
 			if (compare != 0) return compare
-			compare = (discNo ?: "").compareTo(other.discNo ?: "")
+			compare = humanCompare(discNo, other.discNo)
 			if (compare != 0) return compare
-
-			compare = try {
-				trackNo!!.toInt().compareTo(other.trackNo!!.toInt())
-			} catch (_: Exception) {
-				(trackNo ?: "").compareTo(other.trackNo ?: "")
-			}
+			compare = humanCompare(trackNo, other.trackNo)
 			if (compare != 0) return compare
-			return title.compareTo(other.title)
+			return humanCompare(title, other.title)
 		}
 	}
 
 	class Artist(track: Track, artistName: String?) : Comparable<Artist> {
 		val id: Int = artists.size
-		val name: String = artistName ?: "<empty>"//TODO from strings.xml or empty string
+		val name: String = artistName ?: "<empty>"
 		val tracks = mutableListOf<Track>()
 		var shuffleCounter by mutableIntStateOf(0)
 		val albums = mutableListOf<Album>()
@@ -280,7 +275,7 @@ object Library {
 			if (albums.contains(album)) return
 			albums.add(album)
 		}
-		override fun compareTo(other: Artist): Int = name.compareTo(other.name)
+		override fun compareTo(other: Artist): Int = name.compareTo(other.name, ignoreCase = true)
 		fun sort() {
 			tracks.sort()
 			shuffleCounter = 0
@@ -300,7 +295,7 @@ object Library {
 		albumArtist: String?
 	) : Comparable<Album> {
 		val id: Int = albums.size
-		val name: String = albumName ?: "<empty>"//TODO from strings.xml or empty string
+		val name: String = albumName ?: "<empty>"
 		var artist: String = albumArtist ?: track.artist.name
 		val tracks = mutableListOf<Track>()
 		var shuffleCounter by mutableIntStateOf(0)
@@ -309,7 +304,7 @@ object Library {
 			tracks.add(track)
 			albums.add(this)
 		}
-		override fun compareTo(other: Album): Int = name.compareTo(other.name)
+		override fun compareTo(other: Album): Int = name.compareTo(other.name, ignoreCase = true)
 		fun sort() {
 			tracks.sort()
 			shuffleCounter = 0
@@ -334,9 +329,21 @@ object Library {
 		val id: Int = dirs.size
 		val tracks = mutableListOf<Track>()
 		var shuffleCounter by mutableIntStateOf(0)
-		override fun compareTo(other: Dir): Int = name.compareTo(other.name)
+		override fun compareTo(other: Dir): Int = name.compareTo(other.name, ignoreCase = true)
 	}
 
 	fun getUriForPath(path: String): Uri? = tracks.firstOrNull { it.path == path }?.uri
 	fun getFreeSpace() = File(exStorageDir).freeSpace
+
+	fun humanCompare(value: String?, other: String?): Int {
+		if (value == null && other == null) return 0
+		if (value == null) return -1
+		if (other == null) return 1
+		val valueInt = value.toIntOrNull()
+		val otherInt = other.toIntOrNull()
+		if (valueInt == null && otherInt != null) return -1
+		if (valueInt != null && otherInt == null) return 1
+		if(valueInt != null && otherInt != null) return valueInt.compareTo(otherInt)
+		return value.compareTo(other, ignoreCase = true)
+	}
 }

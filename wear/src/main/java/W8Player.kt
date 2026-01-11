@@ -8,6 +8,7 @@
 package com.windkracht8.wearmusicplayer
 
 import android.annotation.SuppressLint
+import android.app.ActivityOptions
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -21,6 +22,7 @@ import androidx.core.app.ServiceCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Player
+import androidx.media3.common.util.NotificationUtil
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
@@ -32,12 +34,14 @@ import androidx.wear.ongoing.Status
 const val NOTIFICATION_CHANNEL_ID = "WearMusicPlayer_Ongoing"
 const val NOTIFICATION_ID = 8
 
+@OptIn(UnstableApi::class)
 class W8Player : MediaSessionService() {
 	var handler: Handler = Handler(Looper.getMainLooper())
 	var mediaSession: MediaSession? = null
 	var notificationManager: NotificationManager? = null
 	var ongoingActivity: OngoingActivity? = null
 
+	@SuppressLint("MissingPermission")//handled by Permissions
 	override fun onCreate() {
 		logD{"W8player.onCreate"}
 		super.onCreate()
@@ -50,34 +54,25 @@ class W8Player : MediaSessionService() {
 			.setAudioAttributes(audioAttributes, true)
 			.build()
 		mediaSession = MediaSession.Builder(this, exoPlayer).build()
-		notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-		var exists = false
-		for (channel in notificationManager?.notificationChannels ?: emptyList()) {
-			val channelId: String = channel.id
-			if (channelId == NOTIFICATION_CHANNEL_ID) {
-				exists = true
-			} else {
-				notificationManager?.deleteNotificationChannel(channelId)
-			}
-		}
-		if (!exists) {
-			notificationManager?.createNotificationChannel(
-				NotificationChannel(
-					NOTIFICATION_CHANNEL_ID,
-					getString(R.string.playing_track),
-					NotificationManager.IMPORTANCE_HIGH
-				)
-			)
-		}
+		notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+		setChannelImportance(NotificationUtil.IMPORTANCE_LOW)
+		ServiceCompat.startForeground(
+			this, NOTIFICATION_ID, getNotificationBuilder().build(),
+			ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+		)
 	}
 
 	override fun onDestroy() {
 		logD{"W8player.onDestroy"}
-		super.onDestroy()
-		mediaSession?.player?.release()
-		mediaSession?.release()
+		stop()
+		mediaSession?.run {
+			player.release()
+			release()
+			mediaSession = null
+		}
 		notificationManager?.cancelAll()
+		super.onDestroy()
 	}
 
 	override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
@@ -87,72 +82,91 @@ class W8Player : MediaSessionService() {
 		session: MediaSession,
 		startInForegroundRequired: Boolean
 	) {
+		var notificationBuilder: NotificationCompat.Builder? = null
 		if (session.player.playbackState in listOf(Player.STATE_ENDED, Player.STATE_IDLE)) {
+			setChannelImportance(NotificationUtil.IMPORTANCE_LOW)
 			ongoingActivity?.let { stop() }
+			return
 		} else if (session.player.isPlaying) {
 			handler.removeCallbacksAndMessages(null)
-			val intent = PendingIntent.getActivity(
-				this, 0,
-				Intent(this, Main::class.java),
-				PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-			)
-			val notificationBuilder = getNotificationBuilder(intent)
+			setChannelImportance(NotificationUtil.IMPORTANCE_HIGH)
+			notificationBuilder = getNotificationBuilder()
 			val status: Status = Status.Builder().addTemplate(getString(R.string.playing_track)).build()
-			ongoingActivity?.update(this, status) ?: start(
-				notificationBuilder,
-				intent,
-				status
-			) //update if exists, else start
+			ongoingActivity?.update(this, status)
+				?: startOngoingActivity(notificationBuilder, getIntent(), status)
 			notificationManager?.notify(NOTIFICATION_ID, notificationBuilder.build())
 		} else if (ongoingActivity is OngoingActivity) { //not playing and ongoingActivity has been created
+			setChannelImportance(NotificationUtil.IMPORTANCE_LOW)
 			val status: Status = Status.Builder().addTemplate(getString(R.string.paused_track)).build()
 			ongoingActivity?.update(this, status)
-			handler.postDelayed(::stop, 180000) //cancel after 3 minutes
+			notificationBuilder = getNotificationBuilder()
+			notificationManager?.notify(NOTIFICATION_ID, notificationBuilder.build())
+			handler.postDelayed(::stop, 180000) //stop after 3 minutes
+		}
+		if(startInForegroundRequired) {
+			ServiceCompat.startForeground(
+				this, NOTIFICATION_ID,
+				notificationBuilder?.build() ?: getNotificationBuilder().build(),
+				ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+			)
 		}
 	}
-
-	fun start(
-		notificationBuilder: NotificationCompat.Builder,
-		intent: PendingIntent,
-		status: Status
-	) {
-		//logD{"W8Player.start"}
+	fun startOngoingActivity(notificationBuilder: NotificationCompat.Builder, intent: PendingIntent, status: Status) {
 		ongoingActivity = OngoingActivity.Builder(this, NOTIFICATION_ID, notificationBuilder)
 			.setStaticIcon(R.drawable.icon_vector)
 			.setTouchIntent(intent)
 			.setStatus(status)
 			.build()
 		ongoingActivity?.apply(this)
-		ServiceCompat.startForeground(
-			this, NOTIFICATION_ID, notificationBuilder.build(),
-			ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+	}
+	fun getIntent(): PendingIntent {
+		val intent = Intent(this, Main::class.java)
+		val activityOptions = ActivityOptions.makeBasic()
+		if (android.os.Build.VERSION.SDK_INT >= 36) {
+			activityOptions.setPendingIntentCreatorBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_IF_VISIBLE)
+		} else if(android.os.Build.VERSION.SDK_INT >= 34) {
+			activityOptions.setPendingIntentCreatorBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+		}
+		return PendingIntent.getActivity(
+			this, 0, intent,
+			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+			activityOptions.toBundle()
 		)
 	}
 
 	fun stop() {
 		logD{"W8Player.stop"}
-		notificationManager?.cancel(NOTIFICATION_ID)
 		ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
 		ongoingActivity = null
 	}
 
+	fun setChannelImportance(importance: Int){
+		notificationManager?.createNotificationChannel(
+			NotificationChannel(
+				NOTIFICATION_CHANNEL_ID,
+				getString(R.string.playing_track),
+				importance
+			)
+		)
+	}
 	@OptIn(UnstableApi::class)
-	fun getNotificationBuilder(intent: PendingIntent?): NotificationCompat.Builder {
+	fun getNotificationBuilder(): NotificationCompat.Builder {
 		try {
 			return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
 				.setSmallIcon(R.drawable.icon_vector)
 				.setStyle(MediaStyleNotificationHelper.MediaStyle(mediaSession!!))
 				.setOnlyAlertOnce(true)
-				.setContentIntent(intent)
+				.setContentIntent(getIntent())
 				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 				.setOngoing(true)
-		} catch (_: Exception) {
-			return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-				.setSmallIcon(R.drawable.icon_vector)
-				.setOnlyAlertOnce(true)
-				.setContentIntent(intent)
-				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-				.setOngoing(true)
+		} catch (e: Exception) {
+			logD{"W8Player.getNotificationBuilder: $e"}
 		}
+		return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+			.setSmallIcon(R.drawable.icon_vector)
+			.setOnlyAlertOnce(true)
+			.setContentIntent(getIntent())
+			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+			.setOngoing(true)
 	}
 }

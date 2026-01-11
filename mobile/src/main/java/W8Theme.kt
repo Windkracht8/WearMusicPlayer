@@ -7,12 +7,16 @@
  */
 package com.windkracht8.wearmusicplayer
 
+import android.content.res.Resources
+import android.view.Window
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 val LightColorScheme = lightColorScheme(
 	background = Color(0xFFFFFFFF),
@@ -33,7 +37,14 @@ val DarkColorScheme = darkColorScheme(
 	error = Color(0xFFFF0000),
 )
 @Composable
-fun W8Theme(content: @Composable () -> Unit) {
+fun W8Theme(window: Window?, resources: Resources?, content: @Composable () -> Unit) {
+	if (window != null) {
+		WindowCompat.setDecorFitsSystemWindows(window, true)
+		if (android.os.Build.VERSION.SDK_INT >= 35 && resources != null) {
+			WindowInsetsControllerCompat(window, window.decorView)
+				.isAppearanceLightStatusBars = !isSystemInDarkTheme()
+		}
+	}
 	MaterialTheme(
 		colorScheme = if(isSystemInDarkTheme()) DarkColorScheme else LightColorScheme,
 		content = content
