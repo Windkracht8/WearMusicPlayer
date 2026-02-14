@@ -283,12 +283,11 @@ class Main : ComponentActivity() {
 
 	fun loadTracks() {
 		if (mediaController == null) return
-		val mediaItems = mutableListOf<MediaItem>()
-		currentTracks.forEach { mediaItems.add(trackToMediaItem(it)) }
+		val mediaItems = currentTracks.map { trackToMediaItem(it) }
 		CoroutineScope(Dispatchers.Main).launch {
 			logD{"Main.loadTracks loading ${mediaItems.size} items"}
 			mediaController?.clearMediaItems()
-			if(currentTracks.isNotEmpty()) {
+			if(mediaItems.isNotEmpty()) {
 				mediaController?.addMediaItems(mediaItems)
 				mediaController?.prepare()
 				mediaController?.seekTo(if (currentTrackId == -1) 0 else currentTrackId, currentPosition)

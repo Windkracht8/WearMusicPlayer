@@ -8,7 +8,6 @@
 
 plugins {
 	id("com.android.application")
-	id("org.jetbrains.kotlin.android")
 	id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -24,6 +23,7 @@ android {
 	}
 	buildFeatures {
 		buildConfig = true
+		resValues = true
 	}
 	buildTypes {
 		debug {
@@ -44,20 +44,17 @@ android {
 		sourceCompatibility = JavaVersion.VERSION_21
 		targetCompatibility = JavaVersion.VERSION_21
 	}
-	kotlin {
-		jvmToolchain(21)
-	}
 }
 
 dependencies {
-	implementation("androidx.activity:activity-compose:1.12.2")
+	implementation("androidx.activity:activity-compose:1.12.3")
 	implementation("androidx.core:core-splashscreen:1.2.0")
-	implementation("androidx.compose.animation:animation-graphics-android:1.10.0")
+	implementation("androidx.compose.animation:animation-graphics-android:1.10.2")
 	implementation("androidx.compose.material:material-icons-extended:1.7.8")
 	implementation("androidx.compose.material3:material3-android:1.4.0")
-	implementation("androidx.compose.runtime:runtime-android:1.10.0")
+	implementation("androidx.compose.runtime:runtime-android:1.10.2")
 
 	//actually only for debug, but release won't compile without it
-	implementation("androidx.compose.ui:ui-tooling-preview:1.10.0")
-	debugImplementation("androidx.compose.ui:ui-tooling:1.10.0")
+	implementation("androidx.compose.ui:ui-tooling-preview:1.10.2")
+	debugImplementation("androidx.compose.ui:ui-tooling:1.10.2")
 }
