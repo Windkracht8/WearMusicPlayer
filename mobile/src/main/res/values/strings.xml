@@ -32,8 +32,8 @@
         to allow the permission in your phone\'s settings manually.</string>
 
 	<!-- device select/connect -->
-	<string name="device_select_title">To connect, open the app on the watch, don\'t start a match,
-        and select your watch from the list below</string>
+	<string name="device_select_title">To connect, open the app on the watch, and select your watch
+		from the list below</string>
 	<string name="device_select_new">New watch</string>
 	<string name="device_select_none">No Bluetooth device found, first pair your watch</string>
 	<string name="delete_device">Delete device?</string>
