@@ -17,13 +17,13 @@
 			<path
 				android:pathData="M100.25,100m-62.5,0a62.5,62.5 0,1 1,125 0a62.5,62.5 0,1 1,-125 0"
 				android:strokeWidth="12.5"
-				android:strokeColor="@color/onBackground"/>
+				android:strokeColor="#fff"/>
 			<path
 				android:pathData="m50.25,62.5c20.22,-30.22 76.21,-39.72 100,0L137.75,0H62.75Z"
-				android:fillColor="@color/onBackground"/>
+				android:fillColor="#fff"/>
 			<path
 				android:pathData="m50.25,137.5c20.22,30.22 76.21,39.72 100,0L137.75,200H62.75Z"
-				android:fillColor="@color/onBackground"/>
+				android:fillColor="#fff"/>
 			<group
 				android:name="rotationGroup"
 				android:pivotX="100"

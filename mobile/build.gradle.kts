@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Bart Vullings <dev@windkracht8.com>
+ * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
@@ -47,14 +47,14 @@ android {
 }
 
 dependencies {
-	implementation("androidx.activity:activity-compose:1.12.3")
+	implementation("androidx.activity:activity-compose:1.12.4")
 	implementation("androidx.core:core-splashscreen:1.2.0")
-	implementation("androidx.compose.animation:animation-graphics-android:1.10.2")
+	implementation("androidx.compose.animation:animation-graphics-android:1.10.3")
 	implementation("androidx.compose.material:material-icons-extended:1.7.8")
 	implementation("androidx.compose.material3:material3-android:1.4.0")
-	implementation("androidx.compose.runtime:runtime-android:1.10.2")
+	implementation("androidx.compose.runtime:runtime-android:1.10.3")
 
 	//actually only for debug, but release won't compile without it
-	implementation("androidx.compose.ui:ui-tooling-preview:1.10.2")
-	debugImplementation("androidx.compose.ui:ui-tooling:1.10.2")
+	implementation("androidx.compose.ui:ui-tooling-preview:1.10.3")
+	debugImplementation("androidx.compose.ui:ui-tooling:1.10.3")
 }

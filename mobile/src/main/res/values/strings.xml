@@ -56,7 +56,7 @@
 	<string name="fail_file_exists">Can\'t send file, it already exists</string>
     <string name="fail_send_file">Sending of file has failed</string>
     <string name="file_send_delete">The file \'%s\' already exists on the watch. Do you want to delete
-        it? (you can send it again afterwards)</string>
+        it? (you can send it again afterward)</string>
 	<string name="delete_file">Deleting file</string>
 	<string name="delete_file_confirm">Deleting file, confirm on watch</string>
 	<string name="delete_file_declined">Delete declined on watch</string>
@@ -64,7 +64,7 @@
 	<string name="fail_delete_file">Failed to delete the file on the watch</string>
 	<string name="fail_sync_playlists">Failed to sync playlists</string>
 
-	<string name="fail_no_wifi">To send a file, first connect to a Wifi network</string>
+	<string name="fail_no_wifi">To send a file, first connect to a Wi-Fi network</string>
 	<string name="fail_send_message">Failed to send message to watch</string>
 	<string name="fail_response">Problem with response from watch</string>
 	<string name="fail_app_outdated">It seems your phone or your watch app is out of date, please

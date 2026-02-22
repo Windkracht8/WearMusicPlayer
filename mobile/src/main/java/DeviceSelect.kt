@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -182,7 +183,7 @@ fun DeviceSelectScreen(
 		}
 	}
 }
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, apiLevel = 35)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_8)
 @Composable
 fun PreviewDeviceSelect() {
 	CommsBT
@@ -194,6 +195,6 @@ fun PreviewDeviceSelect() {
 		}
 	}
 }
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, apiLevel = 35)
+@Preview(device = Devices.PIXEL_8)
 @Composable
 fun PreviewDeviceSelectDay() { PreviewDeviceSelect() }

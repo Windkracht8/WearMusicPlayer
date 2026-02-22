@@ -19,6 +19,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.automirrored.filled.VolumeDown
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.FastForward
+import androidx.compose.material.icons.filled.FastRewind
+import androidx.compose.material.icons.filled.KeyboardDoubleArrowLeft
+import androidx.compose.material.icons.filled.KeyboardDoubleArrowRight
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,10 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -93,7 +102,7 @@ fun Home(
 				}
 			) {
 				Icon(
-					imageVector = ImageVector.vectorResource(R.drawable.icon_volume_low),
+					imageVector = Icons.AutoMirrored.Default.VolumeDown,
 					contentDescription = "volume down"
 				)
 			}
@@ -107,7 +116,7 @@ fun Home(
 				}
 			) {
 				Icon(
-					imageVector = ImageVector.vectorResource(R.drawable.icon_volume),
+					imageVector = Icons.AutoMirrored.Default.VolumeUp,
 					contentDescription = "volume up"
 				)
 			}
@@ -119,7 +128,8 @@ fun Home(
 				onClick = onPreviousClick
 			) {
 				Icon(
-					imageVector = ImageVector.vectorResource(R.drawable.icon_previous),
+					modifier = Modifier.fillMaxSize(),
+					imageVector = Icons.Default.SkipPrevious,
 					tint = if (hasPrevious) ColorWhite else ColorDisabled,
 					contentDescription = "previous song"
 				)
@@ -134,7 +144,8 @@ fun Home(
 				onClick = onNextClick
 			) {
 				Icon(
-					imageVector = ImageVector.vectorResource(R.drawable.icon_next),
+					modifier = Modifier.fillMaxSize(),
+					imageVector = Icons.Default.SkipNext,
 					tint = if (hasNext) ColorWhite else ColorDisabled,
 					contentDescription = "next song"
 				)
@@ -189,13 +200,12 @@ fun Home(
 			)
 		}
 		IconButton(
-			modifier = Modifier
-				.fillMaxWidth()
-				.weight(1F),
+			modifier = Modifier.fillMaxWidth().weight(1F),
 			onClick = onLibraryClick
 		) {
 			Icon(
-				imageVector = ImageVector.vectorResource(R.drawable.icon_library),
+				modifier = Modifier.fillMaxSize(),
+				imageVector = Icons.AutoMirrored.Default.QueueMusic,
 				contentDescription = "open library",
 			)
 		}
@@ -275,8 +285,8 @@ fun Home(
 							buttonPressCounter++
 						}
 					) {
-						Icon(
-							imageVector = ImageVector.vectorResource(R.drawable.icon_backer),
+						Icon(modifier = Modifier.fillMaxSize(),
+							imageVector = Icons.Default.FastRewind,
 							contentDescription = "back 2 minutes",
 						)
 					}
@@ -291,8 +301,8 @@ fun Home(
 							buttonPressCounter++
 						}
 					) {
-						Icon(
-							imageVector = ImageVector.vectorResource(R.drawable.icon_forwarder),
+						Icon(modifier = Modifier.fillMaxSize(),
+							imageVector = Icons.Default.FastForward,
 							contentDescription = "forward 2 minutes",
 						)
 					}
@@ -310,7 +320,8 @@ fun Home(
 						contentAlignment = Alignment.CenterEnd
 					) {
 						Icon(
-							imageVector = ImageVector.vectorResource(R.drawable.icon_back),
+							modifier = Modifier.fillMaxSize(),
+							imageVector = Icons.Default.KeyboardDoubleArrowLeft,
 							contentDescription = "back 30 seconds",
 						)
 					}
@@ -327,7 +338,8 @@ fun Home(
 						contentAlignment = Alignment.CenterStart
 					) {
 						Icon(
-							imageVector = ImageVector.vectorResource(R.drawable.icon_forward),
+							modifier = Modifier.fillMaxSize(),
+							imageVector = Icons.Default.KeyboardDoubleArrowRight,
 							contentDescription = "forward 30 seconds",
 						)
 					}
@@ -348,11 +360,8 @@ fun PlayButton(
 		modifier
 	) {
 		Icon(
-			imageVector = ImageVector.vectorResource(
-				if (isPlaying) R.drawable.icon_pause
-				else R.drawable.icon_play
-			),
-			tint = Color.Unspecified,
+			modifier = Modifier.fillMaxSize(),
+			imageVector = if(isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
 			contentDescription = "play or pause"
 		)
 	}

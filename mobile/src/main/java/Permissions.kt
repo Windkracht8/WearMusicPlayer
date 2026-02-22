@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -155,12 +156,12 @@ fun PermissionsScreen(onNearbyClick: () -> Unit, onReadClick: () -> Unit) {
 		)
 	}
 }
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, apiLevel = 35)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_8)
 @Composable
 fun PreviewPermissions() {
 	//hasBTPermission = true
 	W8Theme (null, null) { Surface { PermissionsScreen({}, {}) } }
 }
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, apiLevel = 35)
+@Preview(device = Devices.PIXEL_8)
 @Composable
 fun PreviewPermissionsDay() { PreviewPermissions() }

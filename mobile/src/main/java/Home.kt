@@ -30,9 +30,12 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -62,6 +65,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -75,9 +79,8 @@ fun Home(
 	onOpenFolderClick: () -> Unit,
 	onItemIconClick: (LibItem) -> Unit
 ) {
-	val iconWatchConnecting =
-		AnimatedImageVector.animatedVectorResource(R.drawable.icon_watch_connecting)
-	var iconWatchConnectingAtEnd by remember { mutableStateOf(false) }
+	val iconAnimation = AnimatedImageVector.animatedVectorResource(R.drawable.watch_connecting)
+	var iconAnimationAtEnd by remember { mutableStateOf(false) }
 	var showPlaylists by remember { mutableStateOf(false) }
 	var showWatchTracks by remember { mutableStateOf(false) }
 	var columnSize by remember { mutableStateOf(IntSize.Zero) }
@@ -116,20 +119,19 @@ fun Home(
 			) {
 				if(commsBTStatus in listOf(CommsBT.Status.CONNECTING, CommsBT.Status.STARTING)) {
 					Image(
-						modifier = Modifier.size(70.dp)
-							.clickable { onIconClick() },
+						modifier = Modifier.size(70.dp).clickable { onIconClick() },
 						painter = rememberAnimatedVectorPainter(
-							iconWatchConnecting,
-							iconWatchConnectingAtEnd
+							iconAnimation,
+							iconAnimationAtEnd
 						),
 						contentDescription = "watch icon"
 					)
-					iconWatchConnectingAtEnd = true
+					iconAnimationAtEnd = true
 				} else {
 					Icon(
 						modifier = Modifier.size(70.dp)
 							.clickable { onIconClick() },
-						imageVector = ImageVector.vectorResource(R.drawable.icon_watch),
+						imageVector = ImageVector.vectorResource(R.drawable.watch),
 						tint = when(commsBTStatus) {
 							CommsBT.Status.DISCONNECTED, null -> colorScheme.onBackground.copy(alpha = 0.38f)
 							CommsBT.Status.ERROR -> colorScheme.error
@@ -289,27 +291,29 @@ fun Item(
 					)
 				}
 				else -> {
+					val imageVector = if(libItem is LibDir) {
+						when(libItem.status) {
+							LibItem.Status.FULL -> Icons.Default.DoneAll
+							LibItem.Status.PARTIAL -> Icons.Default.Check
+							else -> null
+						}
+					} else {
+						when(libItem.status) {
+							LibItem.Status.FULL -> Icons.Default.Delete
+							LibItem.Status.NOT -> Icons.Default.Upload
+							else -> null
+						}
+					}
 					IconButton(
 						modifier = Modifier.size(48.dp),
 						onClick = { onItemIconClick(libItem) }
 					) {
-						Icon(
-							imageVector =
-								if(libItem is LibDir) {
-									when(libItem.status) {
-										LibItem.Status.FULL -> ImageVector.vectorResource(R.drawable.icon_full)
-										LibItem.Status.PARTIAL -> ImageVector.vectorResource(R.drawable.icon_partial)
-										else -> ImageVector.vectorResource(R.drawable.icon_empty)
-									}
-								} else {
-									when(libItem.status) {
-										LibItem.Status.FULL -> Icons.Default.Delete
-										LibItem.Status.NOT -> ImageVector.vectorResource(R.drawable.icon_upload)
-										else -> ImageVector.vectorResource(R.drawable.icon_empty)
-									}
-								},
-							contentDescription = "Item icon and action button"
-						)
+						if(imageVector != null) {
+							Icon(
+								imageVector = imageVector,
+								contentDescription = "Item icon and action button"
+							)
+						}
 					}
 				}
 			}
@@ -334,7 +338,7 @@ fun Item(
 					onClick = { menuOpen = true }
 				) {
 					Icon(
-						imageVector = ImageVector.vectorResource(R.drawable.icon_add_to_playlist),
+						imageVector = Icons.AutoMirrored.Default.PlaylistAdd,
 						contentDescription = "Add to playlist"
 					)
 				}
@@ -373,9 +377,7 @@ fun PlaylistsCreateRow() {
 	var newName by remember { mutableStateOf("") }
 	Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
 		OutlinedTextField(
-			modifier = Modifier
-				.weight(1f)
-				.padding(end = 5.dp),
+			modifier = Modifier.weight(1f).padding(end = 5.dp),
 			value = newName,
 			onValueChange = { newName = it },
 			label = { Text(R.string.playlists_new) }
@@ -455,9 +457,7 @@ fun PlaylistRow(pl: Playlist) {
 			}
 		}
 		if(showTracks) {
-			Column(Modifier
-				.fillMaxWidth()
-				.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)) {
+			Column(Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp, bottom = 8.dp)) {
 				if(pl.trackPaths.isEmpty()) {
 					Text(stringResource(R.string.no_playlists))
 				} else {
@@ -467,9 +467,7 @@ fun PlaylistRow(pl: Playlist) {
 							verticalAlignment = Alignment.CenterVertically
 						) {
 							 Text(
-								modifier = Modifier
-									.weight(1f)
-									.padding(vertical = 2.dp),
+								modifier = Modifier.weight(1f).padding(vertical = 2.dp),
 								text = path,
 								maxLines = 1,
 								overflow = TextOverflow.StartEllipsis
@@ -492,25 +490,28 @@ fun PlaylistRow(pl: Playlist) {
 }
 @Composable
 fun Text(text: Int) = Text(stringResource(text))
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, apiLevel = 35)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_8)
 @Composable
 fun PreviewHome() {
-	val dir1 = LibDir("dir1")
-	dir1.status = LibItem.Status.PARTIAL
-	Library.rootLibDir.libDirs.add(dir1)
-	val dir2 = LibDir("dir2")
-	dir2.status = LibItem.Status.FULL
-	Library.rootLibDir.libDirs.add(dir2)
-	val track1 = LibTrack("track1")
-	track1.status = LibItem.Status.SENDING
-	track1.progress = 35
-	Library.rootLibDir.libTracks.add(track1)
-	val track2 = LibTrack("track2")
-	track2.status = LibItem.Status.FULL
-	Library.rootLibDir.libTracks.add(track2)
+	var dir = LibDir("dir1")
+	dir.status = LibItem.Status.PARTIAL
+	Library.rootLibDir.libDirs.add(dir)
+	dir = LibDir("dir2")
+	dir.status = LibItem.Status.FULL
+	Library.rootLibDir.libDirs.add(dir)
+	var track = LibTrack("track1")
+	track.status = LibItem.Status.SENDING
+	track.progress = 35
+	Library.rootLibDir.libTracks.add(track)
+	track = LibTrack("track2")
+	track.status = LibItem.Status.FULL
+	Library.rootLibDir.libTracks.add(track)
+	track = LibTrack("track3")
+	track.status = LibItem.Status.NOT
+	Library.rootLibDir.libTracks.add(track)
 
 	Library.watchLibDir.status = LibItem.Status.NOT
-	Library.watchLibDir.libTracks.add(track2)
+	Library.watchLibDir.libTracks.add(track)
 
 	CommsBT.deviceName = "Test watch"
 	CommsBT.freeSpace = " 10 GB"
@@ -519,9 +520,9 @@ fun PreviewHome() {
 	Playlists.init(LocalContext.current){}
 	Playlists.all.clear()
 	val playlist1 = Playlists.create("Favorites")
-	playlist1.trackPaths.addAll(listOf("dir1/hit.mp3", track2.path))
+	playlist1.trackPaths.addAll(listOf("dir1/hit.mp3", track.path))
 	val playlist2 = Playlists.create("Chill")
-	playlist2.trackPaths.addAll(listOf(track1.path))
+	playlist2.trackPaths.addAll(listOf(track.path))
 	W8Theme (null, null) {
 		Surface {
 			Home(
@@ -534,6 +535,6 @@ fun PreviewHome() {
 		}
 	}
 }
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, apiLevel = 35)
+@Preview(device = Devices.PIXEL_8)
 @Composable
 fun PreviewHomeDay() { PreviewHome() }
