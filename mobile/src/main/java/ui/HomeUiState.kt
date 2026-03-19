@@ -17,8 +17,8 @@ data class HomeUiState(
 
 	val showLoading: Boolean = true,
 	val freeSpace: String = "",
-	val rootLibDir: LibDir = LibDir("Music", null),
-	val watchLibDir: LibDir? = null,
+	val phoneRoot: LibDir = LibDir("Music", null),
+	val watchRoot: LibDir? = null,
 	val itemStates: Map<LibItem, LibItemState> = emptyMap(),
 	val playlists: List<Playlist> = emptyList(),
 	val itemExistsAskToDelete: LibItem? = null,

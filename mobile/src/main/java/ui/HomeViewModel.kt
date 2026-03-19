@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -36,29 +37,25 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 	init {
 		viewModelScope.launch {
 			CommsBT.status.collect { status ->
-				_uiState.update { it.copy(btStatus = status, btDeviceName = CommsBT.deviceName) }
+				_uiState.update { it.copy(btStatus = status) }
 				if(status == DISCONNECTED || status == ERROR) Library.clearStatuses()
 			}
 		}
 		viewModelScope.launch {
-			CommsBT.freeSpace.collect { freeSpace ->
-				_uiState.update { it.copy(freeSpace = freeSpace) }
-			}
-		}
-		viewModelScope.launch {
-			CommsBT.messageStatus.collect { messageStatus ->
-				_uiState.update { it.copy(btMessageStatus = messageStatus) }
-			}
-		}
-		viewModelScope.launch {
-			CommsBT.error.collect { error ->
-				_uiState.update { it.copy(btError = error) }
-			}
-		}
-		viewModelScope.launch {
-			CommsBT.itemExistsAskToDelete.collect { item ->
-				_uiState.update { it.copy(itemExistsAskToDelete = item) }
-			}
+			combine(
+				CommsBT.freeSpace,
+				CommsBT.itemExistsAskToDelete,
+				CommsBT.messageStatus,
+				CommsBT.error
+			) { freeSpace, itemExistsAskToDelete, messageStatus, error ->
+				_uiState.value.copy(
+					freeSpace = freeSpace,
+					itemExistsAskToDelete = itemExistsAskToDelete,
+					btDeviceName = CommsBT.deviceName,
+					btMessageStatus = messageStatus,
+					btError = error
+				)
+			}.collect { _uiState.value = it }
 		}
 
 		viewModelScope.launch {
@@ -68,19 +65,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 			}
 		}
 		viewModelScope.launch {
-			Library.phoneRoot.collect { rootLibDir ->
-				_uiState.update { it.copy(rootLibDir = rootLibDir) }
-			}
-		}
-		viewModelScope.launch {
-			Library.watchRoot.collect { watchLibDir ->
-				_uiState.update { it.copy(watchLibDir = watchLibDir) }
-			}
-		}
-		viewModelScope.launch {
-			Library.itemStates.collect { itemStates ->
-				_uiState.update { it.copy(itemStates = itemStates) }
-			}
+			combine(
+				Library.phoneRoot,
+				Library.watchRoot,
+				Library.itemStates
+			) { phoneRoot, watchRoot, itemStates ->
+				_uiState.value.copy(
+					phoneRoot = phoneRoot,
+					watchRoot = watchRoot,
+					itemStates = itemStates
+				)
+			}.collect { _uiState.value = it }
 		}
 
 		viewModelScope.launch {
@@ -100,18 +95,18 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 	fun onItemIconClick(libItem: LibItem) {
 		if(libItem is LibDir || !CommsBT.isConnected) return
 		if(_uiState.value.itemStates[libItem]?.status == LibItem.Status.FULL) {
-			viewModelScope.launch(Dispatchers.Default) {
+			viewModelScope.launch(Dispatchers.IO) {
 				CommsBT.sendRequestDeleteFile(libItem)
 			}
 		} else {
-			viewModelScope.launch(Dispatchers.Default) {
+			viewModelScope.launch(Dispatchers.IO) {
 				CommsWifi.getIpAddress(getApplication())
 				CommsBT.sendRequestSendFile(libItem)
 			}
 		}
 	}
 	fun confirmDeleteFile(libItem: LibItem) {
-		viewModelScope.launch(Dispatchers.Default) { CommsBT.confirmDeleteFile(libItem) }
+		viewModelScope.launch(Dispatchers.IO) { CommsBT.confirmDeleteFile(libItem) }
 	}
 	fun dismissDeleteDialog() { CommsBT.itemExistsAskToDelete.value = null }
 

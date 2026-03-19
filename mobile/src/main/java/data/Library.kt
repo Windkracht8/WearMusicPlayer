@@ -80,7 +80,7 @@ object Library {
 					watchDir.libTracks.add(watchTrack)
 					val phoneTrack = phoneDir?.libTracks?.find { it.path == watchTrack.path }
 					if(phoneTrack == null) {
-						newItemStates[watchTrack] = LibItemState(status = LibItem.Status.NOT)
+						newItemStates[watchTrack] = LibItemState(status = LibItem.Status.WATCH_ONLY)
 					} else {
 						newItemStates[phoneTrack] = LibItemState(status = LibItem.Status.FULL)
 					}
@@ -109,7 +109,7 @@ object Library {
 			if(libDir.libTracks.any { it in newItemStates } ||
 				libDir.libDirs.any { it in newItemStates }
 			) {
-				newItemStates[libDir] = LibItemState(status = LibItem.Status.NOT)
+				newItemStates[libDir] = LibItemState(status = LibItem.Status.WATCH_ONLY)
 			}
 		}
 		checkWatchStatuses(newWatchRoot)
@@ -173,7 +173,7 @@ data class LibItemState(
 	val progress: Float = -1F
 )
 open class LibItem(val fullPath: String, val parent: LibDir?) : Comparable<LibItem> {
-	enum class Status { UNKNOWN, FULL, PARTIAL, NOT, PENDING, SENDING }
+	enum class Status { UNKNOWN, FULL, PARTIAL, WATCH_ONLY, PENDING, SENDING }
 	val path: String =
 		try { this.fullPath.removePrefix(Library.phoneRoot.value.fullPath + "/").removePrefix("/") }
 		catch(_: Exception) { this.fullPath.removePrefix("/") }
