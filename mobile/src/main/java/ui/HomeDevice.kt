@@ -70,7 +70,7 @@ fun HomeDevice(
 						iconAnimation,
 						iconAnimationAtEnd
 					),
-					contentDescription = "watch icon"
+					contentDescription = stringResource(R.string.cd_watch_icon)
 				)
 				iconAnimationAtEnd = true
 			} else {
@@ -82,7 +82,7 @@ fun HomeDevice(
 						ERROR -> colorScheme.error
 						else -> colorScheme.onBackground
 					},
-					contentDescription = "watch icon"
+					contentDescription = stringResource(R.string.cd_watch_icon)
 				)
 			}
 			val colorOnBackground = colorScheme.onBackground

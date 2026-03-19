@@ -12,12 +12,15 @@
 	<string name="create">Create</string>
 	<string name="save">Save</string>
 	<string name="cancel">Cancel</string>
+	<string name="yes">Yes</string>
+	<string name="no">No</string>
 
 	<!-- home -->
 	<string name="no_permission">Tap icon to allow permission</string>
 	<string name="open_folder">Open other folder</string>
 	<string name="loading">loading file list</string>
 	<string name="watch_tracks">Tracks only on the watch</string>
+	<string name="file_exists">File exists</string>
 
 	<string name="fail_open_folder_request">Failed to launch folder select app</string>
 	<string name="fail_open_folder">Failed to open folder</string>
@@ -87,4 +90,10 @@
 	<string name="rename">Rename</string>
 	<string name="no_playlists">No playlists yet</string>
 	<string name="fail_read_playlist">Error reading playlist</string>
+
+	<!-- content descriptions -->
+	<string name="cd_item_icon_action">item icon and action</string>
+	<string name="cd_add_to_playlist">add to playlist</string>
+	<string name="cd_watch_icon">watch icon</string>
+	<string name="cd_delete">delete</string>
 </resources>

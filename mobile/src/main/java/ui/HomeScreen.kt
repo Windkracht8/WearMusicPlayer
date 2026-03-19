@@ -207,13 +207,13 @@ fun HomeScreen(
 	uiState.itemExistsAskToDelete?.let { libItem ->
 		AlertDialog(
 			onDismissRequest = { dismissDeleteDialog() },
-			title = { Text("File exists") },
+			title = { Text(R.string.file_exists) },
 			text = { Text(stringResource(R.string.file_send_delete, libItem.name)) },
 			confirmButton = {
-				TextButton(onClick = { confirmDeleteFile(libItem) }) { Text("Yes") }
+				TextButton(onClick = { confirmDeleteFile(libItem) }) { Text(R.string.yes) }
 			},
 			dismissButton = {
-				TextButton(onClick = { dismissDeleteDialog() }) { Text("No") }
+				TextButton(onClick = { dismissDeleteDialog() }) { Text(R.string.no) }
 			}
 		)
 	}
@@ -275,7 +275,7 @@ fun Item(
 							if(imageVector != null) {
 								Icon(
 									imageVector = imageVector,
-									contentDescription = "item icon and action"
+									contentDescription = stringResource(R.string.cd_item_icon_action)
 								)
 							}
 						}
@@ -304,7 +304,7 @@ fun Item(
 				) {
 					Icon(
 						imageVector = Icons.AutoMirrored.Default.PlaylistAdd,
-						contentDescription = "add to playlist"
+						contentDescription = stringResource(R.string.cd_add_to_playlist)
 					)
 				}
 				DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {

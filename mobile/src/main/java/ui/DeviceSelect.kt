@@ -61,7 +61,10 @@ fun DeviceSelect(
 					onClick = { actions.connectDevice(device) }
 				) { Text(device.name) }
 				IconButton(onClick = { confirmDelDevice = device.address }){
-					Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
+					Icon(
+						imageVector = Icons.Default.Delete,
+						contentDescription = stringResource(R.string.cd_delete)
+					)
 				}
 			}
 		}

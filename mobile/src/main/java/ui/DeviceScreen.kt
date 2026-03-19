@@ -56,7 +56,7 @@ fun DeviceScreen(uiState: DeviceUiState, actions: DeviceActions) {
 				IconButton(onClick = actions::onIconClick) {
 					Image(
 						painter = rememberAnimatedVectorPainter(iconAnimation, iconAnimationAtEnd),
-						contentDescription = "watch icon"
+						contentDescription = stringResource(R.string.cd_watch_icon)
 					)
 					iconAnimationAtEnd = true
 				}
@@ -72,7 +72,7 @@ fun DeviceScreen(uiState: DeviceUiState, actions: DeviceActions) {
 							ERROR -> colorScheme.error
 							else -> colorScheme.onBackground
 						},
-						contentDescription = "watch icon"
+						contentDescription = stringResource(R.string.cd_watch_icon)
 					)
 				}
 			}
