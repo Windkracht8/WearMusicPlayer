@@ -1,9 +1,11 @@
+#noinspection ShrinkerUnresolvedReference
 -assumenosideeffects class com.windkracht8.wearmusicplayer.UtilKt {
     public static final void logI(...);
     public static final void logD(...);
 }
 
 # remove runtime assertions, they are enforced in compile-time by Kotlin compiler
+#noinspection ShrinkerUnresolvedReference
 -assumenosideeffects class kotlin.jvm.internal.Intrinsics {
   public static void checkExpressionValueIsNotNull(java.lang.Object, java.lang.String);
   public static void checkFieldIsNotNull(java.lang.Object, java.lang.String);

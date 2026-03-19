@@ -2,10 +2,11 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.windkracht8.wearmusicplayer
+
+package com.windkracht8.wearmusicplayer.data
 
 import android.content.ContentUris
 import android.content.Context
@@ -16,70 +17,76 @@ import android.net.Uri
 import android.os.Environment
 import android.os.Process
 import android.provider.MediaStore
-import android.provider.MediaStore.MediaColumns
-import android.provider.MediaStore.Audio.Media
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
+import com.windkracht8.wearmusicplayer.CommsBT
+import com.windkracht8.wearmusicplayer.Main
+import com.windkracht8.wearmusicplayer.R
+import com.windkracht8.wearmusicplayer.error
+import com.windkracht8.wearmusicplayer.logD
+import com.windkracht8.wearmusicplayer.logE
+import com.windkracht8.wearmusicplayer.logI
+import com.windkracht8.wearmusicplayer.runInBackground
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import kotlin.collections.mutableListOf
 
 object Library {
-	val exStorageDir: String = Environment.getExternalStorageDirectory().toString()
+	private val exStorageDir: String = Environment.getExternalStorageDirectory().toString()
 	val musicDir: String = "$exStorageDir/Music/"
-	val tracks = mutableListOf<Track>()
+	val tracks = mutableStateListOf<Track>()
 	var shuffleCounter by mutableIntStateOf(0)
-	val artists = mutableListOf<Artist>()
-	val albums = mutableListOf<Album>()
-	val dirs = mutableListOf<Dir>()
+	val artists = mutableStateListOf<Artist>()
+	val albums = mutableStateListOf<Album>()
+	val dirs = mutableStateListOf<Dir>()
 	enum class Status { SCAN, READY, UPDATE }
 	val status = MutableSharedFlow<Status>()
-	val projection: Array<String> = arrayOf(
-		Media._ID,
-		MediaColumns.DATA,
-		Media.TITLE,
-		Media.ARTIST,
-		Media.ALBUM,
-		Media.ALBUM_ARTIST,
-		Media.CD_TRACK_NUMBER,
-		Media.DISC_NUMBER
+	private val projection: Array<String> = arrayOf(
+		MediaStore.Audio.Media._ID,
+		MediaStore.MediaColumns.DATA,
+		MediaStore.Audio.Media.TITLE,
+		MediaStore.Audio.Media.ARTIST,
+		MediaStore.Audio.Media.ALBUM,
+		MediaStore.Audio.Media.ALBUM_ARTIST,
+		MediaStore.Audio.Media.CD_TRACK_NUMBER,
+		MediaStore.Audio.Media.DISC_NUMBER
 	)
 
 	suspend fun scanMediaStore(context: Context) {
-		logD{"Library.scanMediaStore"}
+		logD { "Library.scanMediaStore" }
 		status.emit(Status.SCAN)
 		tracks.clear()
 		artists.clear()
 		albums.clear()
 		dirs.clear()
-		scanUri(context, Media.getContentUri(MediaStore.VOLUME_EXTERNAL))
+		scanUri(context, MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL))
 		status.emit(Status.READY)
 	}
 	suspend fun scanFiles(context: Context) {
-		logD{"Library.scanFiles"}
+		logD { "Library.scanFiles" }
 		status.emit(Status.SCAN)
 		MediaScannerConnection.scanFile(
 			context,
 			arrayOf(exStorageDir),
 			null
-		) { _: String, _: Uri? -> runInBackground{ scanMediaStore(context) } }
+		) { _: String, _: Uri? -> runInBackground { scanMediaStore(context) } }
 	}
 	fun scanFile(context: Context, path: String) {
-		logD{"Library.scanFile: $path"}
+		logD { "Library.scanFile: $path" }
 		MediaScannerConnection.scanFile(
 			context,
 			arrayOf("$musicDir$path"),
 			null
 		) { _: String, uri: Uri? ->
-			if (uri == null) {
-				logD{"Library.scanFile path does not exists"}
+			if(uri == null) {
+				logD { "Library.scanFile path does not exists" }
 				removeTrack(path)
 			} else {
-				logD{"Library.scanFile path exists"}
+				logD { "Library.scanFile path exists" }
 				runInBackground {
 					scanUri(context, uri)
 					status.emit(Status.UPDATE)
@@ -87,7 +94,7 @@ object Library {
 			}
 		}
 	}
-	suspend fun scanUri(context: Context, uri: Uri) {
+	private suspend fun scanUri(context: Context, uri: Uri) {
 		try {
 			context.contentResolver.query(
 				uri,
@@ -98,25 +105,25 @@ object Library {
 				null
 			).use { cursor ->
 				//logD{"Library.scanMediaStore query done"}
-				if (cursor == null) {
+				if(cursor == null) {
 					logE("Library.scanUri: Cursor is null")
 					error.emit(R.string.fail_scan_media)
 					return
 				}
-				val id = cursor.getColumnIndex(Media._ID)
-				val data = cursor.getColumnIndex(MediaColumns.DATA)
-				val title = cursor.getColumnIndex(Media.TITLE)
-				val artist = cursor.getColumnIndex(Media.ARTIST)
-				val album = cursor.getColumnIndex(Media.ALBUM)
-				val albumArtist = cursor.getColumnIndex(Media.ALBUM_ARTIST)
-				val cdTrackNumber = cursor.getColumnIndex(Media.CD_TRACK_NUMBER)
-				val discNumber = cursor.getColumnIndex(Media.DISC_NUMBER)
-				while (cursor.moveToNext()) {
+				val id = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
+				val data = cursor.getColumnIndex(MediaStore.MediaColumns.DATA)
+				val title = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
+				val artist = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
+				val album = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)
+				val albumArtist = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ARTIST)
+				val cdTrackNumber = cursor.getColumnIndex(MediaStore.Audio.Media.CD_TRACK_NUMBER)
+				val discNumber = cursor.getColumnIndex(MediaStore.Audio.Media.DISC_NUMBER)
+				while(cursor.moveToNext()) {
 					val uri = ContentUris.withAppendedId(
-						Media.EXTERNAL_CONTENT_URI,
+						MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
 						cursor.getLong(id)
 					)
-					if (tracks.any { it.uri == uri }) continue
+					if(tracks.any { it.uri == uri }) continue
 					Track(
 						context,
 						uri,
@@ -130,8 +137,8 @@ object Library {
 					)
 				}
 			}
-		} catch (e: Exception) {
-			logE("Library.scanUri cursor exception: " + e.message)
+		} catch(e: Exception) {
+			logE("Library.scanUri cursor: ${e.message}")
 			error.emit(R.string.fail_scan_media)
 		}
 		try {
@@ -145,27 +152,27 @@ object Library {
 			dirs.sort()
 			dirs.forEach { it.shuffleCounter = 0 }
 			Playlists.init(context)
-		} catch (e: Exception) {
-			logE("Library.scanUri sort exception: " + e.message)
+		} catch(e: Exception) {
+			logE("Library.scanUri sort: ${e.message}")
 			error.emit(R.string.fail_scan_media)
 		}
 	}
 	fun ensurePath(path: String): Int {
 		val file = File("$musicDir$path")
-		if (file.exists()) return CommsBT.CODE_FILE_EXISTS
+		if(file.exists()) return CommsBT.CODE_FILE_EXISTS
 		val parentFile: File = file.parentFile ?: return CommsBT.CODE_FAIL
-		if (!parentFile.exists() && !parentFile.mkdirs()) return CommsBT.CODE_FAIL_CREATE_DIRECTORY
-		if (!file.createNewFile()) return CommsBT.CODE_FAIL_CREATE_FILE
+		if(!parentFile.exists() && !parentFile.mkdirs()) return CommsBT.CODE_FAIL_CREATE_DIRECTORY
+		if(!file.createNewFile()) return CommsBT.CODE_FAIL_CREATE_FILE
 		return CommsBT.CODE_PENDING
 	}
 	fun deleteFile(main: Main, path: String): Int {
 		val file = File("$musicDir$path")
-		if (!file.exists()) {
-			logI{"Library.deleteFile: path does not exists"}
+		if(!file.exists()) {
+			logI { "Library.deleteFile: path does not exists" }
 			return CommsBT.CODE_OK
 		}
 		val uri = getUriForPath(path) ?: return CommsBT.CODE_FAIL
-		if (main.checkUriPermission(
+		if(main.checkUriPermission(
 				uri,
 				Process.myPid(),
 				Process.myUid(),
@@ -181,17 +188,17 @@ object Library {
 						).intentSender
 					).build()
 				)
-			} catch (e: Exception) {
-				logE("Library.deleteFile: startIntentSenderForResult: " + e.message)
+			} catch(e: Exception) {
+				logE("Library.deleteFile: startIntentSenderForResult: ${e.message}")
 				return CommsBT.CODE_FAIL
 			}
 			return CommsBT.CODE_PENDING
 		}
-		if (!file.delete()) return CommsBT.CODE_FAIL_DEL_FILE
+		if(!file.delete()) return CommsBT.CODE_FAIL_DEL_FILE
 		scanFile(main, "$musicDir$path")
 		return CommsBT.CODE_OK
 	}
-	fun removeTrack(path: String) {
+	private fun removeTrack(path: String) {
 		tracks.removeIf { it.path == path }
 		artists.forEach { artist ->
 			artist.tracks.removeIf { t -> t.path == path }
@@ -232,14 +239,14 @@ object Library {
 			this.trackNo = trackNo
 			this.discNo = discNo
 			artist = getArtistForNewTrack(this, artistName)
-			if (albumName != null && albumName != "Music") {
+			if(albumName != null && albumName != "Music") {
 				album = getAlbumForNewTrack(context, this, albumName, albumArtist)
 				artist.addAlbum(album as Album)
 			}
 			tracks.add(this)
 
 			val dir = this.path.substringBeforeLast("/", "")
-			if (dir.isNotEmpty()) {
+			if(dir.isNotEmpty()) {
 				if(dirs.none { it.name == dir }) dirs.add(Dir(dir))
 				dirs.first { it.name == dir }.tracks.add(this)
 			}
@@ -251,11 +258,11 @@ object Library {
 		}
 		override fun compareTo(other: Track): Int {
 			var compare = humanCompare(album?.name, other.album?.name)
-			if (compare != 0) return compare
+			if(compare != 0) return compare
 			compare = humanCompare(discNo, other.discNo)
-			if (compare != 0) return compare
+			if(compare != 0) return compare
 			compare = humanCompare(trackNo, other.trackNo)
-			if (compare != 0) return compare
+			if(compare != 0) return compare
 			return humanCompare(title, other.title)
 		}
 	}
@@ -272,7 +279,7 @@ object Library {
 			artists.add(this)
 		}
 		fun addAlbum(album: Album) {
-			if (albums.contains(album)) return
+			if(albums.contains(album)) return
 			albums.add(album)
 		}
 		override fun compareTo(other: Artist): Int = name.compareTo(other.name, ignoreCase = true)
@@ -284,7 +291,7 @@ object Library {
 	}
 
 	fun getArtistForNewTrack(track: Track, artistName: String?): Artist {
-		val artist = artists.firstOrNull { it.name == artistName }
+		val artist = artists.find { it.name == artistName }
 		artist?.tracks?.add(track)
 		return artist ?: Artist(track, artistName)
 	}
@@ -317,9 +324,9 @@ object Library {
 		albumName: String?,
 		albumArtist: String?
 	): Album {
-		return albums.firstOrNull { it.name == albumName }?.apply {
+		return albums.find { it.name == albumName }?.apply {
 			tracks.add(track)
-			if (albumArtist != null && artist != albumArtist) {
+			if(albumArtist != null && artist != albumArtist) {
 				artist = context.getString(R.string.various_artists)
 			}
 		} ?: Album(track, albumName, albumArtist)
@@ -332,18 +339,29 @@ object Library {
 		override fun compareTo(other: Dir): Int = name.compareTo(other.name, ignoreCase = true)
 	}
 
-	fun getUriForPath(path: String): Uri? = tracks.firstOrNull { it.path == path }?.uri
+	private fun getUriForPath(path: String): Uri? = tracks.find { it.path == path }?.uri
 	fun getFreeSpace() = File(exStorageDir).freeSpace
 
 	fun humanCompare(value: String?, other: String?): Int {
-		if (value == null && other == null) return 0
-		if (value == null) return -1
-		if (other == null) return 1
+		if(value == null && other == null) return 0
+		if(value == null) return -1
+		if(other == null) return 1
 		val valueInt = value.toIntOrNull()
 		val otherInt = other.toIntOrNull()
-		if (valueInt == null && otherInt != null) return -1
-		if (valueInt != null && otherInt == null) return 1
+		if(valueInt == null && otherInt != null) return -1
+		if(valueInt != null && otherInt == null) return 1
 		if(valueInt != null && otherInt != null) return valueInt.compareTo(otherInt)
-		return value.compareTo(other, ignoreCase = true)
+		val regex = Regex("(\\d+)|(\\D+)")
+		val parts1 = regex.findAll(value).map { it.value }.toList()
+		val parts2 = regex.findAll(other).map { it.value }.toList()
+		for(i in 0 until minOf(parts1.size, parts2.size)) {
+			val p1 = parts1[i]
+			val p2 = parts2[i]
+			val result =
+				if(p1[0].isDigit() && p2[0].isDigit()) p1.toInt().compareTo(p2.toInt())
+				else p1.compareTo(p2, ignoreCase = true)
+			if(result != 0) return result
+		}
+		return parts1.size - parts2.size
 	}
 }

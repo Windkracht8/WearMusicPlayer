@@ -2,8 +2,8 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.windkracht8.wearmusicplayer
 
@@ -32,12 +32,13 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.content.edit
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -48,19 +49,35 @@ import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavHostState
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import com.windkracht8.wearmusicplayer.data.Library
+import com.windkracht8.wearmusicplayer.data.Playlists
+import com.windkracht8.wearmusicplayer.ui.Home
+import com.windkracht8.wearmusicplayer.ui.Progress
+import com.windkracht8.wearmusicplayer.ui.W8Theme
+import com.windkracht8.wearmusicplayer.ui.menu.Menu
+import com.windkracht8.wearmusicplayer.ui.menu.MenuAlbum
+import com.windkracht8.wearmusicplayer.ui.menu.MenuAlbums
+import com.windkracht8.wearmusicplayer.ui.menu.MenuAll
+import com.windkracht8.wearmusicplayer.ui.menu.MenuArtist
+import com.windkracht8.wearmusicplayer.ui.menu.MenuArtists
+import com.windkracht8.wearmusicplayer.ui.menu.MenuBT
+import com.windkracht8.wearmusicplayer.ui.menu.MenuDir
+import com.windkracht8.wearmusicplayer.ui.menu.MenuDirs
+import com.windkracht8.wearmusicplayer.ui.menu.MenuPlaylist
+import com.windkracht8.wearmusicplayer.ui.menu.MenuPlaylists
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
-import androidx.core.content.edit
 
 var hasReadPermission = false
 var hasBTPermission = false
 val error = MutableSharedFlow<Int>()
 
 class Main : ComponentActivity() {
-	lateinit var mediaControllerFuture: ListenableFuture<MediaController>
+	var btEnabled = mutableStateOf<Boolean?>(null)
+	private lateinit var mediaControllerFuture: ListenableFuture<MediaController>
 	var mediaController: MediaController? = null
 	var currentTracks: List<Library.Track> by mutableStateOf(emptyList())
 
@@ -87,6 +104,7 @@ class Main : ComponentActivity() {
 		currentTracksId = sharedPref.getInt("currentTracksId", -1)
 		currentTrackId = sharedPref.getInt("currentTrackId", -1)
 		currentPosition = sharedPref.getLong("currentPosition", 0L)
+
 		if(currentPosition < 300000L) currentPosition = 0L
 
 		setTheme(android.R.style.Theme_DeviceDefault)
@@ -106,34 +124,34 @@ class Main : ComponentActivity() {
 				loopEnabled = mediaController?.repeatMode == Player.REPEAT_MODE_ALL
 				loadTracks()
 				lifecycleScope.launch {
-					while (true) {
-						if (isPlaying) {
+					while(true) {
+						if(isPlaying) {
 							currentPosition = mediaController?.currentPosition ?: 0L
 						}
 						delay(1000-(currentPosition%1000))
 					}
 				}
-			} catch (e: Exception) {
+			} catch(e: Exception) {
 				logE("Main.MediaController: ${e.message}")
 			}
 		}, MoreExecutors.directExecutor())
 		lifecycleScope.launch {
 			Library.status.collect { libraryStatus ->
 				logD{"Main: Library status change: $libraryStatus"}
-				when (libraryStatus) {
+				when(libraryStatus) {
 					Library.Status.SCAN -> {
 						currentTrackTitle = getString(R.string.loading)
 						currentTrackArtist = getString(R.string.loading)
 					}
 					Library.Status.READY -> {
-						currentTracks = when (currentTracksType) {
+						currentTracks = when(currentTracksType) {
 							TrackListType.ALL -> Library.tracks
-							TrackListType.ARTIST -> Library.artists.firstOrNull { it.id == currentTracksId }?.tracks ?: emptyList()
-							TrackListType.ALBUM -> Library.albums.firstOrNull { it.id == currentTracksId }?.tracks ?: emptyList()
-							TrackListType.PLAYLIST -> Playlists.all.firstOrNull { it.id == currentTracksId }?.tracks ?: emptyList()
-							TrackListType.DIR -> Library.dirs.firstOrNull { it.id == currentTracksId }?.tracks ?: emptyList()
+							TrackListType.ARTIST -> Library.artists.find { it.id == currentTracksId }?.tracks ?: emptyList()
+							TrackListType.ALBUM -> Library.albums.find { it.id == currentTracksId }?.tracks ?: emptyList()
+							TrackListType.PLAYLIST -> Playlists.all.find { it.id == currentTracksId }?.tracks ?: emptyList()
+							TrackListType.DIR -> Library.dirs.find { it.id == currentTracksId }?.tracks ?: emptyList()
 						}
-						if (currentTracks.isEmpty()) {
+						if(currentTracks.isEmpty()) {
 							currentTracksType = TrackListType.ALL
 							currentTracks = Library.tracks
 							currentTracksId = -1
@@ -141,21 +159,21 @@ class Main : ComponentActivity() {
 							currentPosition = 0
 						}
 
-						if (currentTracks.isEmpty()) {
+						if(currentTracks.isEmpty()) {
 							currentTrackTitle = getString(R.string.no_tracks)
 							currentTrackArtist = getString(R.string.upload)
 						} else {
 							loadTracks()
 						}
-						if (CommsBT.commsBTConnected != null) CommsBT.sendSyncResponse()
+						if(CommsBT.commsBTConnected != null) CommsBT.sendSyncResponse()
 					}
 					Library.Status.UPDATE -> {
-						if (currentTrackId > currentTracks.lastIndex) currentTrackId = -1
+						if(currentTrackId > currentTracks.lastIndex) currentTrackId = -1
 						if(currentTracks.isEmpty() && currentTracksType != TrackListType.ALL){
 							currentTracksType = TrackListType.ALL
 							currentTracks = Library.tracks
 						}
-						if (currentTracks.isEmpty()) {
+						if(currentTracks.isEmpty()) {
 							currentTrackTitle = getString(R.string.no_tracks)
 							currentTrackArtist = getString(R.string.upload)
 						}
@@ -167,7 +185,7 @@ class Main : ComponentActivity() {
 		lifecycleScope.launch { CommsBT.error.collect { toast(it) } }
 		lifecycleScope.launch {
 			CommsBT.deleteFilePath.collect {
-				if (it.isEmpty()) return@collect
+				if(it.isEmpty()) return@collect
 				val result: Int = Library.deleteFile(this@Main, it)
 				if(result < 0){
 					toast(R.string.fail_delete_file)
@@ -182,7 +200,7 @@ class Main : ComponentActivity() {
 		lifecycleScope.launch {
 			CommsWifi.status.collect { wifiStatus ->
 				logD{"Main: CommsWifi status change: $wifiStatus"}
-				when (wifiStatus) {
+				when(wifiStatus) {
 					CommsWifi.Status.PREPARING ->
 						startActivity(Intent(this@Main, Progress::class.java))
 					CommsWifi.Status.ERROR -> {
@@ -199,12 +217,10 @@ class Main : ComponentActivity() {
 		}
 		lifecycleScope.launch { error.collect { toast(it) } }
 		checkPermissions()
-		if (hasReadPermission) runInBackground { Library.scanMediaStore(this@Main) }
-		if (hasBTPermission) {
-			registerReceiver(
-				btBroadcastReceiver,
-				IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-			)
+		if(hasReadPermission) runInBackground { Library.scanMediaStore(this@Main) }
+		if(hasBTPermission) {
+			btEnabled.value = sharedPref.getBoolean("btEnabled", false)
+			registerReceiver(btBroadcastReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
 			runInBackground { CommsBT.start(this@Main) }
 		}
 		runInBackground { Playlists.init(this@Main) }
@@ -212,7 +228,7 @@ class Main : ComponentActivity() {
 	override fun onStop() {
 		//logD{"MainActivity.onStop"}
 		super.onStop()
-		if (!isPlaying) tryIgnore{ mediaController?.stop() } //stop notification when MainActivity is stopped
+		if(!isPlaying) tryIgnore{ mediaController?.stop() } //stop notification when MainActivity is stopped
 	}
 	override fun onDestroy() {
 		//logD{"MainActivity.onDestroy"}
@@ -229,7 +245,7 @@ class Main : ComponentActivity() {
 	}
 
 	fun previous() {
-		if (currentTrackId > 0) {
+		if(currentTrackId > 0) {
 			currentTrackId--
 			currentTracks.getOrNull(currentTrackId)?.let{ currentTrack ->
 				currentTrackTitle = currentTrack.title
@@ -242,7 +258,7 @@ class Main : ComponentActivity() {
 	}
 
 	fun next() {
-		if (currentTrackId < currentTracks.lastIndex) {
+		if(currentTrackId < currentTracks.lastIndex) {
 			currentTrackId++
 			currentTrackTitle = currentTracks[currentTrackId].title
 			currentTrackArtist = currentTracks[currentTrackId].artist.name
@@ -264,15 +280,14 @@ class Main : ComponentActivity() {
 
 	fun playPause() {
 		isPlaying = !isPlaying
-		if (isPlaying) { mediaController?.play() }
+		if(isPlaying) { mediaController?.play() }
 		else { mediaController?.pause() }
 	}
 
-	fun newPlaybackSpeed(speed: Float) =
-		mediaController?.setPlaybackSpeed(speed)
+	fun newPlaybackSpeed(speed: Float) = mediaController?.setPlaybackSpeed(speed)
 
 	fun toggleLoop() {
-		if (mediaController?.repeatMode == Player.REPEAT_MODE_ALL) {
+		if(mediaController?.repeatMode == Player.REPEAT_MODE_ALL) {
 			mediaController?.repeatMode = Player.REPEAT_MODE_OFF
 		} else {
 			mediaController?.repeatMode = Player.REPEAT_MODE_ALL
@@ -281,8 +296,8 @@ class Main : ComponentActivity() {
 
 	fun rescan() = runInBackground { Library.scanFiles(this@Main) }
 
-	fun loadTracks() {
-		if (mediaController == null) return
+	private fun loadTracks() {
+		if(mediaController == null) return
 		val mediaItems = currentTracks.map { trackToMediaItem(it) }
 		CoroutineScope(Dispatchers.Main).launch {
 			logD{"Main.loadTracks loading ${mediaItems.size} items"}
@@ -290,7 +305,7 @@ class Main : ComponentActivity() {
 			if(mediaItems.isNotEmpty()) {
 				mediaController?.addMediaItems(mediaItems)
 				mediaController?.prepare()
-				mediaController?.seekTo(if (currentTrackId == -1) 0 else currentTrackId, currentPosition)
+				mediaController?.seekTo(if(currentTrackId == -1) 0 else currentTrackId, currentPosition)
 			}
 		}
 	}
@@ -299,12 +314,12 @@ class Main : ComponentActivity() {
 		currentTracksType = type
 		currentTracksId = id
 		currentTrackId = index
-		currentTracks = when (type) {
+		currentTracks = when(type) {
 			TrackListType.ALL -> Library.tracks
-			TrackListType.ARTIST -> Library.artists.firstOrNull { it.id == id }?.tracks ?: emptyList()
-			TrackListType.ALBUM -> Library.albums.firstOrNull { it.id == id }?.tracks ?: emptyList()
-			TrackListType.PLAYLIST -> Playlists.all.firstOrNull { it.id == id }?.tracks ?: emptyList()
-			TrackListType.DIR -> Library.dirs.firstOrNull { it.id == id }?.tracks ?: emptyList()
+			TrackListType.ARTIST -> Library.artists.find { it.id == id }?.tracks ?: emptyList()
+			TrackListType.ALBUM -> Library.albums.find { it.id == id }?.tracks ?: emptyList()
+			TrackListType.PLAYLIST -> Playlists.all.find { it.id == id }?.tracks ?: emptyList()
+			TrackListType.DIR -> Library.dirs.find { it.id == id }?.tracks ?: emptyList()
 		}
 		val mediaItems = mutableListOf<MediaItem>()
 		currentTracks.forEach { mediaItems.add(trackToMediaItem(it)) }
@@ -315,7 +330,7 @@ class Main : ComponentActivity() {
 		mediaController?.seekTo(currentTrackId, 0)
 		mediaController?.play()
 	}
-	fun trackToMediaItem(track: Library.Track): MediaItem {
+	private fun trackToMediaItem(track: Library.Track): MediaItem {
 		val metadata = MediaMetadata.Builder()
 			.setTitle(track.title)
 			.setArtist(track.artist.name)
@@ -326,14 +341,14 @@ class Main : ComponentActivity() {
 		return MediaItem.Builder().setUri(track.uri).setMediaMetadata(metadata.build()).build()
 	}
 
-	val playerListener: Player.Listener = object : Player.Listener {
+	private val playerListener: Player.Listener = object : Player.Listener {
 		override fun onIsPlayingChanged(isPlayingMedia: Boolean) {
 			//logD{"Player.Listener.onIsPlayingChanged $isPlayingMedia"}
 			isPlaying = isPlayingMedia
 		}
 		override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
 			//logD{"Player.Listener.onMediaMetadataChanged ${mediaMetadata.title}"}
-			if (mediaMetadata.title != null) {
+			if(mediaMetadata.title != null) {
 				currentTrackTitle = mediaMetadata.title.toString()
 				currentTrackArtist = mediaMetadata.artist.toString()
 			}
@@ -357,64 +372,45 @@ class Main : ComponentActivity() {
 		}
 	}
 
-	fun checkPermissions() {
-		if (Build.VERSION.SDK_INT >= 33) {
+	private fun checkPermissions() {
+		if(Build.VERSION.SDK_INT >= 33) {
 			hasReadPermission = hasPermission(READ_MEDIA_AUDIO)
 			hasBTPermission = hasPermission(BLUETOOTH_CONNECT)
-			if (!hasReadPermission || !hasBTPermission || !hasPermission(POST_NOTIFICATIONS)) {
-				requestPermissions.launch(
-					arrayOf(
-						POST_NOTIFICATIONS,
-						READ_MEDIA_AUDIO,
-						BLUETOOTH_CONNECT
-					)
-				)
-			}
-		} else if (Build.VERSION.SDK_INT >= 31) {
+			if(!hasReadPermission || !hasPermission(POST_NOTIFICATIONS))
+				requestPermissions.launch(arrayOf(POST_NOTIFICATIONS, READ_MEDIA_AUDIO))
+		} else if(Build.VERSION.SDK_INT >= 31) {
 			hasReadPermission = hasPermission(MANAGE_EXTERNAL_STORAGE)
 			hasBTPermission = hasPermission(BLUETOOTH_CONNECT)
-			if (!hasReadPermission || !hasBTPermission) {
-				requestPermissions.launch(
-					arrayOf(
-						MANAGE_EXTERNAL_STORAGE,
-						BLUETOOTH_CONNECT
-					)
-				)
-			}
+			if(!hasReadPermission) requestPermissions.launch(arrayOf(MANAGE_EXTERNAL_STORAGE))
 		} else { //30
 			hasReadPermission = hasPermission(READ_EXTERNAL_STORAGE)
 			hasBTPermission = hasPermission(BLUETOOTH)
-			if (!hasReadPermission || !hasBTPermission) {
-				requestPermissions.launch(
-					arrayOf(
-						READ_EXTERNAL_STORAGE,
-						BLUETOOTH
-					)
-				)
-			}
+			if(!hasReadPermission) requestPermissions.launch(arrayOf(READ_EXTERNAL_STORAGE))
 		}
 	}
-
-	val requestPermissions =
+	private val requestPermissions =
 		registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
 			permissions.entries.forEach {
-				if (it.value && it.key == READ_MEDIA_AUDIO) {
+				if(it.value && it.key in setOf(READ_EXTERNAL_STORAGE, READ_MEDIA_AUDIO)) {
 					hasReadPermission = true
 					runInBackground { Library.scanMediaStore(this@Main) }
 				}
-				if (it.value && (it.key == BLUETOOTH_CONNECT || it.key == BLUETOOTH)) {
-					hasBTPermission = true
-					runInBackground { CommsBT.start(this@Main) }
-				}
 			}
 		}
-
+	private val requestPermissionBT =
+		registerForActivityResult(ActivityResultContracts.RequestPermission()) { if(it) {
+			hasBTPermission = true
+			registerReceiver(btBroadcastReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+			btEnabled.value = true
+			getPreferences(MODE_PRIVATE).edit { putBoolean("btEnabled", true) }
+			runInBackground { CommsBT.start(this@Main) }
+		} }
 	val deleteRequestResult =
 		registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-			if (result.resultCode == RESULT_OK) {
+			if(result.resultCode == RESULT_OK) {
 				CommsBT.sendResponse("deleteFile", CommsBT.CODE_OK)
 				logD{"Main: CommsBT.deleteFilePath.value: ${CommsBT.deleteFilePath.value}"}
-				if (CommsBT.deleteFilePath.value.isNotEmpty()) {
+				if(CommsBT.deleteFilePath.value.isNotEmpty()) {
 					val path = CommsBT.deleteFilePath.value
 					runInBackground { Library.scanFile(this@Main, path) }
 					CommsBT.deleteFilePath.value = ""
@@ -423,13 +419,28 @@ class Main : ComponentActivity() {
 				CommsBT.sendResponse("deleteFile", CommsBT.CODE_DECLINED)
 			}
 		}
-	val btBroadcastReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+	private val btBroadcastReceiver: BroadcastReceiver = object : BroadcastReceiver() {
 		override fun onReceive(context: Context?, intent: Intent) {
-			if (BluetoothAdapter.ACTION_STATE_CHANGED == intent.action) {
+			if(BluetoothAdapter.ACTION_STATE_CHANGED == intent.action) {
 				val btState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)
-				if (btState == BluetoothAdapter.STATE_TURNING_OFF) { CommsBT.stop() }
-				else if (btState == BluetoothAdapter.STATE_ON) { CommsBT.start(this@Main) }
+				if(btState == BluetoothAdapter.STATE_TURNING_OFF) { CommsBT.stop() }
+				else if(btState == BluetoothAdapter.STATE_ON) { CommsBT.start(this@Main) }
 			}
+		}
+	}
+	fun onBTEnableClick(){
+		if(!hasBTPermission){
+			if(Build.VERSION.SDK_INT >= 31) requestPermissionBT.launch(BLUETOOTH_CONNECT)
+			else requestPermissionBT.launch(BLUETOOTH)
+		}else if(btEnabled.value == true){
+			btEnabled.value = false
+			getPreferences(MODE_PRIVATE).edit { putBoolean("btEnabled", false) }
+			runInBackground { CommsBT.stop() }
+			CommsBT.pairing = false
+		}else{
+			btEnabled.value = true
+			getPreferences(MODE_PRIVATE).edit { putBoolean("btEnabled", true) }
+			runInBackground { CommsBT.start(this) }
 		}
 	}
 }
@@ -448,27 +459,31 @@ fun MainApp(main: Main) {
 				Home(
 					onLibraryClick = { navController.navigate("menu") },
 					onTrackClick = {
-						when (main.currentTracksType) {
+						when(main.currentTracksType) {
 							Main.TrackListType.ALL ->
 								navController.navigate("menu_all/" + main.currentTrackId)
+
 							Main.TrackListType.ARTIST ->
 								navController.navigate(
 									"menu_artist/" +
 											main.currentTracksId +
 											"/" + main.currentTrackId
 								)
+
 							Main.TrackListType.ALBUM ->
 								navController.navigate(
 									"menu_album/" +
 											main.currentTracksId +
 											"/" + main.currentTrackId
 								)
+
 							Main.TrackListType.PLAYLIST ->
 								navController.navigate(
 									"menu_playlist/" +
 											main.currentTracksId +
 											"/" + main.currentTrackId
 								)
+
 							Main.TrackListType.DIR ->
 								navController.navigate(
 									"menu_dir/" +
@@ -503,7 +518,9 @@ fun MainApp(main: Main) {
 					onRescanClick = {
 						main.rescan()
 						navController.popBackStack()
-					}
+					},
+					main.btEnabled.value,
+					onBTClick = { navController.navigate("menu_bt") }
 				)
 			}
 			composable("menu_all/{trackId}") {
@@ -527,8 +544,8 @@ fun MainApp(main: Main) {
 			}
 			composable("menu_album/{id}/{trackId}") {
 				val albumId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
-				val album = Library.albums.firstOrNull { album ->  album.id == albumId }
-				if (album == null) {
+				val album = Library.albums.find { album ->	album.id == albumId }
+				if(album == null) {
 					navController.popBackStack()
 					main.toast(R.string.oops)
 					return@composable
@@ -554,8 +571,8 @@ fun MainApp(main: Main) {
 			}
 			composable("menu_artist/{id}/{trackId}") {
 				val artistId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
-				val artist = Library.artists.firstOrNull { artist ->  artist.id == artistId }
-				if (artist == null) {
+				val artist = Library.artists.find { artist ->	artist.id == artistId }
+				if(artist == null) {
 					navController.popBackStack()
 					main.toast(R.string.oops)
 					return@composable
@@ -582,8 +599,8 @@ fun MainApp(main: Main) {
 			}
 			composable("menu_playlist/{id}/{trackId}") {
 				val playlistId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
-				val playlist = Playlists.all.firstOrNull { playlist ->  playlist.id == playlistId }
-				if (playlist == null) {
+				val playlist = Playlists.all.find { playlist ->	playlist.id == playlistId }
+				if(playlist == null) {
 					navController.popBackStack()
 					main.toast(R.string.oops)
 					return@composable
@@ -609,8 +626,8 @@ fun MainApp(main: Main) {
 			}
 			composable("menu_dir/{id}/{trackId}") {
 				val dirId = it.arguments?.getString("id")?.toIntOrNull() ?: -1
-				val dir = Library.dirs.firstOrNull { dir ->  dir.id == dirId }
-				if (dir == null) {
+				val dir = Library.dirs.find { dir ->	dir.id == dirId }
+				if(dir == null) {
 					navController.popBackStack()
 					main.toast(R.string.oops)
 					return@composable
@@ -629,6 +646,12 @@ fun MainApp(main: Main) {
 					shuffleCounter = dir.shuffleCounter,
 					onLoopClick = main::toggleLoop,
 					loopEnabled = main.loopEnabled
+				)
+			}
+			composable("menu_bt") {
+				MenuBT(
+					main.btEnabled.value,
+					main::onBTEnableClick
 				)
 			}
 		}

@@ -2,13 +2,15 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.windkracht8.wearmusicplayer
 
 import android.content.Context
 import android.net.ConnectivityManager
+import com.windkracht8.wearmusicplayer.data.LibItem
+import com.windkracht8.wearmusicplayer.data.Library
 import java.io.FileInputStream
 import java.net.Inet4Address
 import java.net.ServerSocket
@@ -16,13 +18,13 @@ import java.net.ServerSocket
 object CommsWifi {
 	const val PORT_NUMBER: Int = 9002
 	var ipAddress: String? = null
-	var serverSocket: ServerSocket? = null
+	private var serverSocket: ServerSocket? = null
 	var isSending = false
 	fun sendFile(libItem: LibItem) {
 		if(ipAddress == null) return CommsBT.onMessageError(R.string.fail_no_wifi)
 		logD{"CommsWifi.sendFile ${libItem.name}"}
 		isSending = true
-		libItem.status = LibItem.Status.SENDING
+		Library.setItemStatus(libItem, LibItem.Status.SENDING)
 		try {
 			ServerSocket(PORT_NUMBER).use { serverSocket ->
 				this.serverSocket = serverSocket
@@ -39,15 +41,14 @@ object CommsWifi {
 								}
 								outputStream.write(buffer, 0, numBytes)
 								bytesDone += numBytes.toLong()
-								libItem.progress = (bytesDone * 100 / libItem.length).toInt()
+								Library.setItemProgress(libItem, bytesDone / libItem.length)
 							}
 						}
 					}
 				}
 			}
 		} catch(e: Exception) {
-			logE("CommsWifi.sendFile exception: $e")
-			logE("CommsWifi.sendFile exception: " + e.message)
+			logE("CommsWifi.sendFile: ${e.message}\n$e")
 			CommsBT.onMessageError(R.string.fail_send_file)
 			return
 		} finally {

@@ -2,10 +2,9 @@
   ~ Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
   ~ This file is part of WearMusicPlayer
   ~ WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-  ~ WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-  ~ You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  ~ WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+  ~ You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
-
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -31,9 +30,10 @@
 		android:supportsRtl="false"
 		android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 		<activity
-			android:name=".Main"
+			android:name=".ui.Home"
 			android:exported="true"
 			android:launchMode="singleInstance"
+			android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
 			android:windowSoftInputMode="adjustResize">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
@@ -41,23 +41,18 @@
 			</intent-filter>
 		</activity>
 		<activity
-			android:name=".Permissions"
+			android:name=".ui.Permissions"
 			android:launchMode="singleInstance"
 			android:taskAffinity=".Main"
+			android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
 			android:windowSoftInputMode="adjustResize"
 			android:excludeFromRecents="true"
 			android:noHistory="true"/>
 		<activity
-			android:name=".DeviceSelect"
+			android:name=".ui.Device"
 			android:launchMode="singleInstance"
 			android:taskAffinity=".Main"
-			android:windowSoftInputMode="adjustResize"
-			android:excludeFromRecents="true"
-			android:noHistory="true"/>
-		<activity
-			android:name=".DeviceConnect"
-			android:launchMode="singleInstance"
-			android:taskAffinity=".Main"
+			android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
 			android:windowSoftInputMode="adjustResize"
 			android:excludeFromRecents="true"
 			android:noHistory="true"/>

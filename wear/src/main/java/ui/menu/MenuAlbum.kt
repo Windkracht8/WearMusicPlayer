@@ -2,10 +2,10 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.windkracht8.wearmusicplayer
+package com.windkracht8.wearmusicplayer.ui.menu
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,10 +16,12 @@ import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadding
+import com.windkracht8.wearmusicplayer.Main
+import com.windkracht8.wearmusicplayer.data.Library
 
 @Composable
-fun MenuPlaylist(
-	playlist: Playlist,
+fun MenuAlbum(
+	album: Library.Album,
 	trackId: Int,
 	openTracks: (type: Main.TrackListType, id: Int, index: Int) -> Unit,
 	onShuffleClick: () -> Unit,
@@ -32,36 +34,34 @@ fun MenuPlaylist(
 	val transformationSpec = rememberTransformationSpec()
 	LaunchedEffect(trackId) {
 		try {
-			if (trackId > 0) columnState.scrollToItem(trackId + 2)
+			if(trackId > 0) columnState.scrollToItem(trackId + 2)
 			else columnState.scrollToItem(0)
-		} catch (_: Exception) {}
+		} catch(_: Exception) {}
 	}
 	ScreenScaffold(scrollState = columnState, contentPadding = contentPadding) { contentPadding ->
 		TransformingLazyColumn(state = columnState, contentPadding = contentPadding) {
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = playlist.name,
+					label = album.name,
 				)
 			}
 			item {
 				MenuButtonRow(
-					onPlayClick = { openTracks(Main.TrackListType.PLAYLIST, playlist.id, 0) },
+					onPlayClick = { openTracks(Main.TrackListType.ALBUM, album.id, 0) },
 					onShuffleClick,
 					isShuffled = shuffleCounter > 0,
 					onLoopClick,
 					loopEnabled
 				)
 			}
-			if(playlist.tracks.isNotEmpty()) {
-				itemsIndexed(playlist.tracks) { index, track ->
-					MenuItem(
-						transformation = SurfaceTransformation(transformationSpec),
-						label = track.title,
-						subLabel = track.artist.name,
-						onClick = { openTracks(Main.TrackListType.PLAYLIST, playlist.id, index) }
-					)
-				}
+			itemsIndexed(album.tracks.toList()) { index, track ->
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = track.title,
+					subLabel = if(track.artist.name == album.artist) null else track.artist.name,
+					onClick = { openTracks(Main.TrackListType.ALBUM, album.id, index) }
+				)
 			}
 		}
 	}

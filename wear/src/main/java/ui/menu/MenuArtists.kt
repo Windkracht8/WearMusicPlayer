@@ -2,10 +2,10 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.windkracht8.wearmusicplayer
+package com.windkracht8.wearmusicplayer.ui.menu
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -16,9 +16,12 @@ import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadding
+import com.windkracht8.wearmusicplayer.R
+import com.windkracht8.wearmusicplayer.data.Library
+import com.windkracht8.wearmusicplayer.ui.plural
 
 @Composable
-fun MenuAlbums(onMenuAlbumClick: (id: Int) -> Unit) {
+fun MenuArtists(onMenuArtistClick: (id: Int) -> Unit) {
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
 	val transformationSpec = rememberTransformationSpec()
@@ -27,15 +30,19 @@ fun MenuAlbums(onMenuAlbumClick: (id: Int) -> Unit) {
 			item {
 				MenuHeaderItem(
 					transformation = SurfaceTransformation(transformationSpec),
-					label = stringResource(R.string.albums),
+					label = stringResource(R.string.artists),
 				)
 			}
-			items(Library.albums) {
+			items(Library.artists.toList()) {
 				MenuItem(
 					transformation = SurfaceTransformation(transformationSpec),
 					label = it.name,
-					subLabel = it.artist,
-					onClick = { onMenuAlbumClick(it.id) }
+					subLabel =
+						if(it.albums.isEmpty()) plural(R.plurals.track, it.tracks.size)
+						else (plural(R.plurals.album, it.albums.size) + " " +
+								plural(R.plurals.track, it.tracks.size)
+						),
+					onClick = { onMenuArtistClick(it.id) }
 				)
 			}
 		}

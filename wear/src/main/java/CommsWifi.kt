@@ -2,8 +2,8 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.windkracht8.wearmusicplayer
 
@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.windkracht8.wearmusicplayer.data.Library
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.io.FileOutputStream
@@ -28,7 +29,7 @@ object CommsWifi {
 	enum class Status { DONE, PREPARING, RECEIVING, ERROR }
 	val status = MutableSharedFlow<Status>()
 	enum class ConnectionType { REQUESTING, FAST, SLOW }
-	var connectionType by mutableStateOf(null as ConnectionType?)
+	var connectionType by mutableStateOf<ConnectionType?>(null)
 	var progress by mutableFloatStateOf(0F)
 	var error = 0
 
@@ -36,7 +37,7 @@ object CommsWifi {
 		connectivityManager = context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 	}
 
-	fun receiveFile(
+	fun receiveFile(//Thread: BG
 		path: String,
 		length: Long,
 		ip: String,
@@ -74,8 +75,8 @@ object CommsWifi {
 				},
 				5000
 			)
-		} catch (e: Exception) {
-			logE("CommsWifi " + e.message)
+		} catch(e: Exception) {
+			logE("CommsWifi: ${e.message}")
 			runInBackground {
 				connectionType = ConnectionType.SLOW
 				readFileFromStream(connectivityManager, path, length, ip, port)
@@ -83,7 +84,8 @@ object CommsWifi {
 		}
 	}
 
-	suspend fun readFileFromStream(
+	@Suppress("BlockingMethodInNonBlockingContext")//only called in background thread
+	suspend fun readFileFromStream(//Thread: BG
 		connectivityManager: ConnectivityManager,
 		path: String,
 		length: Long,
@@ -91,24 +93,24 @@ object CommsWifi {
 		port: Int
 	) {
 		logD{"CommsWifi.readFileFromStream"}
-		runInBackground { status.emit(Status.RECEIVING) }
+		status.emit(Status.RECEIVING)
 		var bytesDone: Long = 0
 		try {
 			Socket(ip, port).use { socket ->
 				socket.getInputStream().use { inputStream ->
 					FileOutputStream(Library.musicDir + path).use { fileOutputStream ->
 						var lastReadTime = System.currentTimeMillis()
-						while (System.currentTimeMillis() - lastReadTime < 3000) {
-							if (inputStream.available() == 0) {
+						while(System.currentTimeMillis() - lastReadTime < 3000) {
+							if(inputStream.available() == 0) {
 								delay(100)
 								continue
 							}
 							val buffer = ByteArray(2048)
 							val numBytes = inputStream.read(buffer)
-							if (numBytes < 0) {
+							if(numBytes < 0) {
 								logE("CommsWifi.receiveFile read error")
 								error = R.string.fail_read_wifi
-								runInBackground { status.emit(Status.ERROR) }
+								status.emit(Status.ERROR)
 								connectivityManager.bindProcessToNetwork(null)
 								return
 							}
@@ -116,27 +118,26 @@ object CommsWifi {
 							bytesDone += numBytes.toLong()
 							progress = bytesDone.toFloat() / length.toFloat()
 							//logD{"CommsWifi.read bytesDone: $bytesDone length: $length progress: $progress"}
-							if (bytesDone >= length) {
-								runInBackground { status.emit(Status.DONE) }
+							if(bytesDone >= length) {
+								status.emit(Status.DONE)
 								connectivityManager.bindProcessToNetwork(null)
 								return
 							}
 							lastReadTime = System.currentTimeMillis()
 						}
 						error = R.string.fail_read_wifi
-						runInBackground { status.emit(Status.ERROR) }
+						status.emit(Status.ERROR)
 					}
 				}
 			}
-		} catch (e: Exception) {
-			logE("CommsWifi.receiveFile exception: $e")
-			logE("CommsWifi.receiveFile exception: " + e.message)
+		} catch(e: Exception) {
+			logE("CommsWifi.receiveFile: ${e.message}\n$e")
 			error = R.string.fail_wifi
 			runInBackground { status.emit(Status.ERROR) }
 		}
 		//if we get here it failed
 		connectivityManager.bindProcessToNetwork(null)
 		error = R.string.fail_read_wifi
-		runInBackground { status.emit(Status.ERROR) }
+		status.emit(Status.ERROR)
 	}
 }

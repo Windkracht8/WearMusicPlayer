@@ -2,10 +2,10 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.windkracht8.wearmusicplayer
+package com.windkracht8.wearmusicplayer.ui
 
 import android.media.AudioManager
 import androidx.compose.foundation.clickable
@@ -84,12 +84,11 @@ fun Home(
 	var currentProgress by remember { mutableFloatStateOf(0f) }
 	var currentPositionString by remember { mutableStateOf("") }
 	LaunchedEffect(currentPosition, currentDuration) {
-		currentProgress = if (currentDuration <= 0) 0f
+		currentProgress = if(currentDuration <= 0) 0f
 			else currentPosition.toFloat() / currentDuration.toFloat()
 		currentPositionString = "${currentPosition / 60000}:${(currentPosition / 1000 % 60).toString().padStart(2, '0')}"
 	}
-	Column(Modifier.fillMaxSize()
-		.padding(10.dp, 10.dp, 10.dp, 0.dp)) {
+	Column(Modifier.fillMaxSize().padding(10.dp, 10.dp, 10.dp, 0.dp)) {
 		Row(Modifier.fillMaxWidth().weight(1F)) {
 			Spacer(Modifier.weight(2F))
 			IconButton(
@@ -130,7 +129,7 @@ fun Home(
 				Icon(
 					modifier = Modifier.fillMaxSize(),
 					imageVector = Icons.Default.SkipPrevious,
-					tint = if (hasPrevious) ColorWhite else ColorDisabled,
+					tint = if(hasPrevious) ColorWhite else ColorDisabled,
 					contentDescription = "previous song"
 				)
 			}
@@ -146,21 +145,17 @@ fun Home(
 				Icon(
 					modifier = Modifier.fillMaxSize(),
 					imageVector = Icons.Default.SkipNext,
-					tint = if (hasNext) ColorWhite else ColorDisabled,
+					tint = if(hasNext) ColorWhite else ColorDisabled,
 					contentDescription = "next song"
 				)
 			}
 		}
 		Column(
-			Modifier.fillMaxWidth().weight(1F)
-				.clickable(onClick = { showProgress = true }),
+			Modifier.fillMaxWidth().weight(1F).clickable(onClick = { showProgress = true }),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 			LinearProgressIndicator(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(5.dp)
-					.weight(1F),
+				modifier = Modifier.fillMaxWidth().padding(5.dp).weight(1F),
 				progress = { currentProgress }
 			)
 			BasicText(
@@ -171,14 +166,12 @@ fun Home(
 			)
 		}
 		TextButton(
-			modifier = Modifier
-				.fillMaxWidth()
-				.weight(0.6F),
+			modifier = Modifier.fillMaxWidth().weight(0.6F),
 			onClick = onTrackClick
 		) {
 			BasicText(
 				text = currentTrackTitle,
-				color = { ColorW8Blue },
+				color = { ColorW8 },
 				maxLines = 1,
 				overflow = TextOverflow.Ellipsis,
 				autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 20.sp)
@@ -237,11 +230,11 @@ fun Home(
 								else if(playbackSpeed > 0.2) setPlaybackSpeed(playbackSpeed - 0.1f)
 							},
 						contentAlignment = Alignment.CenterEnd
-					){ Text(text = if(playbackSpeed > 1.0) "- .25" else "- .1") }
+					){ Text(if(playbackSpeed > 1.0) "- .25" else "- .1") }
 					Text(
 						modifier = Modifier.padding(horizontal = 10.dp),
 						text = String.format(Locale.ROOT, "%.2fx", playbackSpeed),
-						color = ColorW8Blue
+						color = ColorW8
 					)
 					Box(
 						modifier = Modifier.weight(1F)
@@ -251,13 +244,13 @@ fun Home(
 								else setPlaybackSpeed(playbackSpeed + 0.1f)
 							},
 						contentAlignment = Alignment.CenterStart
-					){ Text(text = if(playbackSpeed >= 1.0) "+ .25" else "+ .1") }
+					){ Text(if(playbackSpeed >= 1.0) "+ .25" else "+ .1") }
 				}
 				LinearProgressIndicator(
 					modifier = Modifier.fillMaxWidth().padding(5.dp).weight(1F)
 						.pointerInput(currentDuration, currentPosition) {
 							detectTapGestures { offset ->
-									if (currentDuration > 0) {
+									if(currentDuration > 0) {
 										val newProgress = (offset.x / size.width).coerceIn(0f, 1f)
 										val newPosition = (newProgress * currentDuration).toLong()
 										seek(newPosition - currentPosition)
@@ -285,15 +278,13 @@ fun Home(
 							buttonPressCounter++
 						}
 					) {
-						Icon(modifier = Modifier.fillMaxSize(),
+						Icon(
+							modifier = Modifier.fillMaxSize(),
 							imageVector = Icons.Default.FastRewind,
 							contentDescription = "back 2 minutes",
 						)
 					}
-					Text(
-						text = "2 min",
-						color = ColorW8Blue
-					)
+					Text(text = "2 min", color = ColorW8)
 					IconButton(
 						modifier = Modifier.weight(1F),
 						onClick = {
@@ -301,7 +292,8 @@ fun Home(
 							buttonPressCounter++
 						}
 					) {
-						Icon(modifier = Modifier.fillMaxSize(),
+						Icon(
+							modifier = Modifier.fillMaxSize(),
 							imageVector = Icons.Default.FastForward,
 							contentDescription = "forward 2 minutes",
 						)
@@ -325,10 +317,7 @@ fun Home(
 							contentDescription = "back 30 seconds",
 						)
 					}
-					Text(
-						text = "30 sec",
-						color = ColorW8Blue
-					)
+					Text(text = "30 sec", color = ColorW8)
 					Box(
 						modifier = Modifier.weight(1F)
 							.clickable {

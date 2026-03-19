@@ -2,10 +2,10 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.windkracht8.wearmusicplayer
+package com.windkracht8.wearmusicplayer.ui
 
 import android.os.Bundle
 import android.view.WindowManager
@@ -32,6 +32,8 @@ import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.ProgressIndicatorDefaults
 import androidx.wear.tooling.preview.devices.WearDevices
+import com.windkracht8.wearmusicplayer.CommsWifi
+import com.windkracht8.wearmusicplayer.logD
 import kotlinx.coroutines.launch
 
 class Progress : ComponentActivity() {
@@ -42,8 +44,8 @@ class Progress : ComponentActivity() {
 
 		lifecycleScope.launch {
 			CommsWifi.status.collect { wifiStatus ->
-				logD{"ProgressActivity: CommsWifi status change: $wifiStatus"}
-				when (wifiStatus) {
+				logD { "ProgressActivity: CommsWifi status change: $wifiStatus" }
+				when(wifiStatus) {
 					CommsWifi.Status.ERROR, CommsWifi.Status.DONE -> finish()
 					else -> {}
 				}
@@ -58,7 +60,7 @@ fun ProgressScreen() {
 	CircularProgressIndicator(
 		modifier = Modifier.fillMaxSize(),
 		colors = ProgressIndicatorDefaults.colors(
-			indicatorColor = ColorW8Blue,
+			indicatorColor = ColorW8,
 			trackColor = ColorBlack
 		),
 		progress = { CommsWifi.progress }
@@ -69,10 +71,10 @@ fun ProgressScreen() {
 		verticalArrangement = Arrangement.Center
 	) {
 		BasicText(
-			text = stringResource( when (CommsWifi.connectionType) {
-				CommsWifi.ConnectionType.REQUESTING, null -> R.string.requesting
-				CommsWifi.ConnectionType.FAST -> R.string.fast
-				CommsWifi.ConnectionType.SLOW -> R.string.slow
+			text = stringResource( when(CommsWifi.connectionType) {
+				CommsWifi.ConnectionType.REQUESTING, null -> com.windkracht8.wearmusicplayer.R.string.requesting
+				CommsWifi.ConnectionType.FAST -> com.windkracht8.wearmusicplayer.R.string.fast
+				CommsWifi.ConnectionType.SLOW -> com.windkracht8.wearmusicplayer.R.string.slow
 			}),
 			color = { ColorWhite },
 			maxLines = 1,
@@ -81,7 +83,7 @@ fun ProgressScreen() {
 		BasicText(
 			modifier = Modifier.padding(horizontal = 10.dp),
 			text = stringResource(
-				R.string.receiving,
+				com.windkracht8.wearmusicplayer.R.string.receiving,
 				CommsWifi.path.substringAfterLast('/')
 			),
 			color = { ColorWhite },

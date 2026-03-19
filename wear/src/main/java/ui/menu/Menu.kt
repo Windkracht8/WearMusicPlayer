@@ -2,10 +2,10 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.windkracht8.wearmusicplayer
+package com.windkracht8.wearmusicplayer.ui.menu
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,6 +32,9 @@ import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import com.google.android.horologist.compose.layout.rememberResponsiveColumnPadding
+import com.windkracht8.wearmusicplayer.ui.ColorW8
+import com.windkracht8.wearmusicplayer.ui.ColorWhite
+import com.windkracht8.wearmusicplayer.R
 
 @Composable
 fun Menu(
@@ -40,7 +43,9 @@ fun Menu(
 	onMenuArtistsClick: () -> Unit,
 	onMenuPlaylistsClick: () -> Unit,
 	onMenuDirsClick: () -> Unit,
-	onRescanClick: () -> Unit
+	onRescanClick: () -> Unit,
+	btEnabled: Boolean?,
+	onBTClick: () -> Unit
 ) {
 	val columnState = rememberTransformingLazyColumnState()
 	val contentPadding = rememberResponsiveColumnPadding()
@@ -101,6 +106,16 @@ fun Menu(
 					onClick = onRescanClick
 				)
 			}
+			item {
+				MenuItem(
+					transformation = SurfaceTransformation(transformationSpec),
+					label = stringResource(R.string.BT),
+					subLabel =
+						if(btEnabled == true) stringResource(R.string.enabled)
+						else stringResource(R.string.disabled),
+					onClick = onBTClick
+				)
+			}
 		}
 	}
 }
@@ -122,21 +137,21 @@ fun MenuButtonRow(
 			Icon(
 				imageVector = Icons.Default.PlayArrow,
 				contentDescription = "play",
-				tint = ColorW8Blue
+				tint = ColorW8
 			)
 		}
 		IconButton(onClick = onShuffleClick) {
 			Icon(
 				imageVector = Icons.Default.Shuffle,
 				contentDescription = "shuffle",
-				tint = if(isShuffled) ColorW8Blue else colorScheme.onBackground
+				tint = if(isShuffled) ColorW8 else colorScheme.onBackground
 			)
 		}
 		IconButton(onClick = onLoopClick) {
 			Icon(
 				imageVector = Icons.Default.Repeat,
 				contentDescription = "loop",
-				tint = if(loopEnabled) ColorW8Blue else colorScheme.onBackground
+				tint = if(loopEnabled) ColorW8 else colorScheme.onBackground
 			)
 		}
 	}
@@ -158,14 +173,14 @@ fun MenuItem(
 			BasicText(
 				text = label,
 				color = { ColorWhite },
-				maxLines = if (subLabel == null) 2 else 1,
+				maxLines = if(subLabel == null) 2 else 1,
 				softWrap = subLabel == null,
 				autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 14.sp)
 			)
-			if (subLabel != null) {
+			if(subLabel != null) {
 				BasicText(
 					text = subLabel,
-					color = { ColorW8Blue },
+					color = { ColorW8 },
 					maxLines = 1,
 					softWrap = false,
 					autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 14.sp)
@@ -174,12 +189,3 @@ fun MenuItem(
 		}
 	}
 }
-
-@Composable
-fun trackOrTracks(count: Int): String =
-	if (count == 1) "$count " + stringResource(R.string.track)
-	else "$count " + stringResource(R.string.tracks)
-@Composable
-fun albumOrAlbums(count: Int): String =
-	if (count == 1) "$count " + stringResource(R.string.album)
-	else "$count " + stringResource(R.string.albums).lowercase()

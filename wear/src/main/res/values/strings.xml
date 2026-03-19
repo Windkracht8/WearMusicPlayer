@@ -2,8 +2,8 @@
   ~ Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
   ~ This file is part of WearMusicPlayer
   ~ WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-  ~ WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-  ~ You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  ~ WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+  ~ You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 <resources>
 	<string name="app_name">Music Player</string>
@@ -23,9 +23,29 @@
 	<string name="rescan">Rescan</string>
 	<string name="oops">oops</string>
 	<string name="album">album</string>
-	<string name="track">track</string>
-	<string name="tracks">tracks</string>
 	<string name="dirs">Directories</string>
+	<plurals name="track">
+		<item quantity="one">1 track</item>
+		<item quantity="other">%d tracks</item>
+	</plurals>
+	<plurals name="album">
+		<item quantity="one">1 album</item>
+		<item quantity="other">%d albums</item>
+	</plurals>
+
+	<!-- menuBT -->
+	<string name="BT">Bluetooth</string>
+	<string name="enabled">enabled</string>
+	<string name="disabled">disabled</string>
+	<string name="permission_denied">permission denied</string>
+	<string name="pair_phone">Pair phone</string>
+	<string name="accept_pair_code">Pair with phone that is showing code %s?</string>
+	<string name="paired_phones">Paired phones</string>
+	<string name="unlink_phone">Unlink phone?</string>
+	<string name="cancel">Cancel</string>
+	<string name="delete">Delete</string>
+	<string name="accept">Accept</string>
+	<string name="reject">Reject</string>
 
 	<!-- progress -->
 	<string name="requesting">requesting Wifi</string>
@@ -43,6 +63,7 @@
 	<!-- fail -->
 	<string name="fail_request">Problem with request from phone</string>
 	<string name="fail_respond">Failed to respond to phone</string>
+	<string name="fail_bt_pair">Failed to pair with phone</string>
 	<string name="fail_wifi">Wifi connection failed</string>
 	<string name="fail_file_exists">File already exists</string>
 	<string name="fail_create_file">Failed to create file</string>

@@ -2,12 +2,13 @@
  * Copyright 2024-2026 Bart Vullings <dev@windkracht8.com>
  * This file is part of WearMusicPlayer
  * WearMusicPlayer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * WearMusicPlayer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.windkracht8.wearmusicplayer
+package com.windkracht8.wearmusicplayer.ui
 
 import android.content.res.Resources
+import android.os.Build
 import android.view.Window
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -38,9 +39,9 @@ val DarkColorScheme = darkColorScheme(
 )
 @Composable
 fun W8Theme(window: Window?, resources: Resources?, content: @Composable () -> Unit) {
-	if (window != null) {
+	if(window != null) {
 		WindowCompat.setDecorFitsSystemWindows(window, true)
-		if (android.os.Build.VERSION.SDK_INT >= 35 && resources != null) {
+		if(Build.VERSION.SDK_INT >= 35 && resources != null) {
 			WindowInsetsControllerCompat(window, window.decorView)
 				.isAppearanceLightStatusBars = !isSystemInDarkTheme()
 		}
