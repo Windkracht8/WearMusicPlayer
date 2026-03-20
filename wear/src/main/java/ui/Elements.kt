@@ -32,7 +32,6 @@ import androidx.wear.compose.material3.TextButton
 fun Text(@StringRes text: Int) = Text(stringResource(text))
 @Composable
 fun Text(@StringRes text: Int, color: Color) = Text(text = stringResource(text), color = color)
-
 @Composable
 @ReadOnlyComposable
 fun plural(@PluralsRes id: Int, count: Int): String =

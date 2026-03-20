@@ -131,7 +131,7 @@ fun HomePlaylist(
 						modifier = Modifier.weight(1f),
 						value = editName,
 						onValueChange = { editName = it },
-						label = { Text(stringResource(R.string.playlists_rename)) }
+						label = { Text(R.string.playlists_rename) }
 					)
 					IconButton(
 						modifier = Modifier.size(48.dp),
@@ -181,7 +181,7 @@ fun HomePlaylist(
 		if(showTracks) {
 			Column(Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp, bottom = 8.dp)) {
 				if(pl.trackPaths.isEmpty()) {
-					Text(stringResource(R.string.no_playlists))
+					Text(R.string.no_playlists)
 				} else {
 					pl.trackPaths.forEach { path ->
 						Row(

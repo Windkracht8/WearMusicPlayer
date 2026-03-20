@@ -122,10 +122,7 @@ fun Home(
 			Spacer(Modifier.weight(2F))
 		}
 		Row(Modifier.fillMaxWidth().weight(1F)) {
-			IconButton(
-				modifier = Modifier.weight(1F),
-				onClick = onPreviousClick
-			) {
+			IconButton(onClick = onPreviousClick, Modifier.weight(1F)) {
 				Icon(
 					modifier = Modifier.fillMaxSize(),
 					imageVector = Icons.Default.SkipPrevious,
@@ -138,10 +135,7 @@ fun Home(
 				onPlayPauseClick = onPlayPauseClick,
 				isPlaying
 			)
-			IconButton(
-				modifier = Modifier.weight(1F),
-				onClick = onNextClick
-			) {
+			IconButton(onClick = onNextClick, Modifier.weight(1F)) {
 				Icon(
 					modifier = Modifier.fillMaxSize(),
 					imageVector = Icons.Default.SkipNext,
@@ -192,10 +186,7 @@ fun Home(
 				autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 20.sp)
 			)
 		}
-		IconButton(
-			modifier = Modifier.fillMaxWidth().weight(1F),
-			onClick = onLibraryClick
-		) {
+		IconButton(onClick = onLibraryClick, Modifier.fillMaxWidth().weight(1F)) {
 			Icon(
 				modifier = Modifier.fillMaxSize(),
 				imageVector = Icons.AutoMirrored.Default.QueueMusic,
@@ -344,10 +335,7 @@ fun PlayButton(
 	onPlayPauseClick: () -> Unit,
 	isPlaying: Boolean
 ){
-	IconButton(
-		onClick = onPlayPauseClick,
-		modifier
-	) {
+	IconButton(onClick = onPlayPauseClick, modifier) {
 		Icon(
 			modifier = Modifier.fillMaxSize(),
 			imageVector = if(isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,

@@ -9,6 +9,7 @@ import com.windkracht8.wearmusicplayer.CommsBT
 import com.windkracht8.wearmusicplayer.data.LibDir
 import com.windkracht8.wearmusicplayer.data.LibItem
 import com.windkracht8.wearmusicplayer.data.LibItemState
+import com.windkracht8.wearmusicplayer.data.LibTrack
 import com.windkracht8.wearmusicplayer.data.Playlist
 
 data class HomeUiState(
@@ -17,11 +18,11 @@ data class HomeUiState(
 
 	val showLoading: Boolean = true,
 	val freeSpace: String = "",
-	val phoneRoot: LibDir = LibDir("Music", null),
+	val phoneRoot: LibDir = LibDir("Music", null, ""),
 	val watchRoot: LibDir? = null,
 	val itemStates: Map<LibItem, LibItemState> = emptyMap(),
 	val playlists: List<Playlist> = emptyList(),
-	val itemExistsAskToDelete: LibItem? = null,
+	val itemExistsAskToDelete: LibTrack? = null,
 
 	val btStatus: CommsBT.Status? = null,
 	val btDeviceName: String = "",

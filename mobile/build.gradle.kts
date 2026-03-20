@@ -18,7 +18,7 @@ android {
 		applicationId = "com.windkracht8.wearmusicplayer"
 		minSdk = 26
 		targetSdk = 36
-		versionCode = 164
+		versionCode = 166
 		versionName = "m2.10"
 	}
 	buildFeatures {

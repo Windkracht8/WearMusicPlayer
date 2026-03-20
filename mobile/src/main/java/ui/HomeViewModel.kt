@@ -16,8 +16,8 @@ import com.windkracht8.wearmusicplayer.CommsBT.Status.DISCONNECTED
 import com.windkracht8.wearmusicplayer.CommsBT.Status.ERROR
 import com.windkracht8.wearmusicplayer.CommsWifi
 import com.windkracht8.wearmusicplayer.R
-import com.windkracht8.wearmusicplayer.data.LibDir
 import com.windkracht8.wearmusicplayer.data.LibItem
+import com.windkracht8.wearmusicplayer.data.LibTrack
 import com.windkracht8.wearmusicplayer.data.Library
 import com.windkracht8.wearmusicplayer.data.Playlists
 import com.windkracht8.wearmusicplayer.runInBackground
@@ -37,7 +37,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 	init {
 		viewModelScope.launch {
 			CommsBT.status.collect { status ->
-				_uiState.update { it.copy(btStatus = status) }
+				_uiState.update { it.copy(
+					btStatus = status,
+					btDeviceName = CommsBT.deviceName
+				) }
 				if(status == DISCONNECTED || status == ERROR) Library.clearStatuses()
 			}
 		}
@@ -51,7 +54,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 				_uiState.value.copy(
 					freeSpace = freeSpace,
 					itemExistsAskToDelete = itemExistsAskToDelete,
-					btDeviceName = CommsBT.deviceName,
 					btMessageStatus = messageStatus,
 					btError = error
 				)
@@ -93,7 +95,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 		Playlists.init(context) { context.toast(R.string.fail_read_playlist) }
 	}
 	fun onItemIconClick(libItem: LibItem) {
-		if(libItem is LibDir || !CommsBT.isConnected) return
+		if(libItem !is LibTrack || !CommsBT.isConnected) return
 		if(_uiState.value.itemStates[libItem]?.status == LibItem.Status.FULL) {
 			viewModelScope.launch(Dispatchers.IO) {
 				CommsBT.sendRequestDeleteFile(libItem)
@@ -105,8 +107,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 			}
 		}
 	}
-	fun confirmDeleteFile(libItem: LibItem) {
-		viewModelScope.launch(Dispatchers.IO) { CommsBT.confirmDeleteFile(libItem) }
+	fun confirmDeleteFile(libTrack: LibTrack) {
+		viewModelScope.launch(Dispatchers.IO) { CommsBT.confirmDeleteFile(libTrack) }
 	}
 	fun dismissDeleteDialog() { CommsBT.itemExistsAskToDelete.value = null }
 

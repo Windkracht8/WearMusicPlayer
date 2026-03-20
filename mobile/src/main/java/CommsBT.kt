@@ -15,10 +15,12 @@ import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.net.Uri
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import androidx.core.content.edit
 import com.windkracht8.wearmusicplayer.data.LibItem
+import com.windkracht8.wearmusicplayer.data.LibTrack
 import com.windkracht8.wearmusicplayer.data.Library
 import com.windkracht8.wearmusicplayer.data.Playlists
 import com.windkracht8.wearmusicplayer.ui.PermissionsUtil.hasBTPermission
@@ -48,8 +50,8 @@ import kotlin.io.encoding.Base64
 
 object CommsBT {
 	val WMP_UUID: UUID =
-		if(BuildConfig.DEBUG) UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6ed")
-		else UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6e1")
+		if(BuildConfig.DEBUG) UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6ed") else
+		UUID.fromString("6f34da3f-188a-4c8c-989c-2baacf8ea6e1")
 	var COMMS_VERSION = 2
 	private const val CODE_PENDING = 1
 	private const val CODE_OK = 0
@@ -83,7 +85,7 @@ object CommsBT {
 	var deviceName = ""
 	var pairCode = ""
 	var disconnect = false
-	val itemExistsAskToDelete = MutableStateFlow<LibItem?>(null)
+	val itemExistsAskToDelete = MutableStateFlow<LibTrack?>(null)
 
 	@SuppressLint("MissingPermission")
 	fun start(context: Context) {
@@ -110,7 +112,7 @@ object CommsBT {
 			}
 		} catch(e: Exception) { logE("CommsBT.start: ${e.message}") }
 		//Try to connect to first known device, having multiple watches is rare, user will have to select from DeviceSelect
-		if(knownDevices.isNotEmpty()) {//mar 2026, if a deviceKey is stored, use that 
+		if(knownDevices.isNotEmpty()) {//mar 2026, if a deviceKey is stored, use that
 			connectDevice(context, knownDevices.first())
 			return
 		}
@@ -126,13 +128,14 @@ object CommsBT {
 
 	fun addKnownDevice(publicKeyString: String, device: Device) {
 		knownDeviceKeys[device.address] = publicKeyString
-		storeKnownDevices()
+		storeKnownDevicesKeys()
 		knownDevices.add(device)
 	}
 	fun delKnownDevice(address: String) {
 		knownDeviceKeys.remove(address)
-		storeKnownDevices()
 		knownDevices.removeIf { it.address == address }
+		delKnownAddress(address)
+		storeKnownDevicesKeys()
 		try {
 			KeyStore.getInstance("AndroidKeyStore").apply {
 				load(null)
@@ -142,14 +145,14 @@ object CommsBT {
 			logE("CommsBT.delKnownDevice: ${e.message}")
 		}
 	}
-	private fun storeKnownDevices() {
+	private fun storeKnownDevicesKeys() {
 		try {
 			sharedPreferences?.edit()?.apply {
 				putString("knownDeviceKeys", JSONObject(knownDeviceKeys as Map<*, *>).toString())
 				apply()
 			}
 		} catch(e: JSONException) {
-			logE("CommsBT.storeKnownDevices: ${e.message}")
+			logE("CommsBT.storeKnownDevicesKeys: ${e.message}")
 			onError(R.string.fail_BT_pair)
 		}
 	}
@@ -219,25 +222,25 @@ object CommsBT {
 				requestQueue.add(CommsBTConnected.Request(CommsBTConnected.Request.Type.SYNC))
 		}
 	}
-	fun sendRequestSendFile(libItem: LibItem) {
-		logD{"CommsBT.sendRequestSendFile ${libItem.name}"}
-		Library.setItemStatus(libItem, LibItem.Status.PENDING)
+	fun sendRequestSendFile(libTrack: LibTrack) {
+		logD{"CommsBT.sendRequestSendFile ${libTrack.name}"}
+		Library.setTrackStatus(libTrack, LibItem.Status.PENDING)
 		commsBTConnected?.requestQueue?.add(CommsBTConnected.Request(
 			type = CommsBTConnected.Request.Type.SEND_FILE,
-			libItem = libItem
+			libTrack = libTrack
 		))
 	}
-	fun sendRequestDeleteFile(libItem: LibItem) {
-		logD{"CommsBT.sendRequestDeleteFile ${libItem.name}"}
-		Library.setItemStatus(libItem, LibItem.Status.PENDING)
+	fun sendRequestDeleteFile(libTrack: LibTrack) {
+		logD{"CommsBT.sendRequestDeleteFile ${libTrack.name}"}
+		Library.setTrackStatus(libTrack, LibItem.Status.PENDING)
 		commsBTConnected?.requestQueue?.add(CommsBTConnected.Request(
 			type = CommsBTConnected.Request.Type.DELETE_FILE,
-			libItem = libItem
+			libTrack = libTrack
 		))
 	}
-	fun confirmDeleteFile(libItem: LibItem) {
+	fun confirmDeleteFile(libTrack: LibTrack) {
 		itemExistsAskToDelete.value = null
-		sendRequestDeleteFile(libItem)
+		sendRequestDeleteFile(libTrack)
 	}
 	fun sendRequestPutPlaylist(playlistId: Int) =
 		commsBTConnected?.requestQueue?.add(CommsBTConnected.Request(
@@ -250,8 +253,8 @@ object CommsBT {
 			playlistId = playlistId
 		))
 	fun sendRequestUpdPlaylist(playlistId: Int, oldPlaylistId: Int) {
-		sendRequestPutPlaylist(playlistId)
 		if(COMMS_VERSION < 3) sendRequestDelPlaylist(oldPlaylistId)
+		sendRequestPutPlaylist(playlistId)
 	}
 
 	class CommsBTConnect(device: BluetoothDevice) : Thread() {
@@ -427,8 +430,7 @@ object CommsBT {
 				requestQueue.remove(request)
 				logD{"CommsBTConnected.sendNextRequest: $request"}
 				if(request!!.type == Request.Type.SEND_FILE) {
-					val libItem = request!!.libItem!!
-					runInBackground { CommsWifi.sendFile(libItem) }
+					runInBackground { CommsWifi.sendFile(request!!.libTrack!!) }
 				}
 				outputStream!!.write(request.toString().toByteArray())
 			} catch(e: Exception) {
@@ -527,10 +529,11 @@ object CommsBT {
 							if(COMMS_VERSION == 2) responseData as JSONObject
 							else JSONObject(decrypt(responseData as String))
 						freeSpace.value = bytesToHuman(response.getLong("freeSpace"))
+						val tracks = response.getJSONArray("tracks")
+						val trackPaths = (0 until tracks.length())
+							.map { Uri.decode(tracks.getJSONObject(it).getString("path")) }
 						runInBackground {
-							Library.updateLibWithFilesOnWatch(
-								response.getJSONArray("tracks")
-							)
+							Library.gotTracksFromWatch(trackPaths)
 							if(requestQueue.isEmpty()) messageStatus.value = R.string.sync_done
 						}
 						if(response.has("playlistIds")) {//COMMS_VERSION 2
@@ -574,9 +577,7 @@ object CommsBT {
 								//CODE_FAIL_CREATE_FILE -> R.string.fail_send_file
 								CODE_FILE_EXISTS -> {
 									messageStatus.value = R.string.fail_file_exists
-									request?.libItem?.let { libItem ->
-										itemExistsAskToDelete.value = libItem
-									}
+									request?.libTrack?.let { itemExistsAskToDelete.value = it }
 								}
 								else -> messageStatus.value = R.string.fail_send_file
 							}
@@ -591,8 +592,8 @@ object CommsBT {
 							if(COMMS_VERSION == 2) responseData as JSONObject
 							else JSONObject(decrypt(responseData as String))
 						freeSpace.value = bytesToHuman(response.getLong("freeSpace"))
-						request?.libItem?.let{ Library.setItemUploaded(it) }
-						logD{"CommsBT.gotResponse fileBinary lastRequest: ${request?.libItem?.path}"}
+						request?.libTrack?.let{ Library.setTrackUploaded(it) }
+						logD{"CommsBT.gotResponse fileBinary lastRequest: ${request?.libTrack?.path}"}
 						messageStatus.value = R.string.file_sent
 						request = null
 					}
@@ -607,12 +608,12 @@ object CommsBT {
 						when(responseCode) {
 							CODE_PENDING -> messageStatus.value = R.string.delete_file_confirm
 							CODE_OK -> {
-								request?.libItem?.let{ Library.setItemDeleted(it) }
+								request?.libTrack?.let{ Library.setTrackDeleted(it) }
 								messageStatus.value = R.string.file_deleted
 								request = null
 							}
 							CODE_DECLINED -> {
-								request?.libItem?.let{ Library.setItemUploaded(it) }
+								request?.libTrack?.let{ Library.setTrackUploaded(it) }
 								messageStatus.value = R.string.delete_file_declined
 								request = null
 							}
@@ -646,7 +647,7 @@ object CommsBT {
 		class Request(
 			val type: Type,
 			private val publicKey: String? = null,
-			val libItem: LibItem? = null,
+			val libTrack: LibTrack? = null,
 			val playlistId: Int? = null
 		) {
 			enum class Type { PAIR, SYNC, SEND_FILE, DELETE_FILE, PUT_PLAYLIST, DEL_PLAYLIST }
@@ -668,16 +669,16 @@ object CommsBT {
 							onMessageError(R.string.fail_no_wifi)
 							return ""
 						}
-						val libItem = libItem
-						if(libItem == null) {
+						val libTrack = libTrack
+						if(libTrack == null) {
 							onMessageError(R.string.fail_send_message)
 							return ""
 						}
-						val file = File(libItem.fullPath)
-						libItem.length = file.length().toFloat()
+						val file = File(libTrack.fullPath)
+						libTrack.length = file.length().toFloat()
 						val requestData = JSONObject().apply {
-							put("path", libItem.path)
-							put("length", libItem.length)
+							put("path", libTrack.path)
+							put("length", libTrack.length)
 							put("ip", CommsWifi.ipAddress)
 							put("port", CommsWifi.PORT_NUMBER)
 						}
@@ -690,7 +691,7 @@ object CommsBT {
 					Type.DELETE_FILE -> {
 						//{"requestType":"deleteFile","requestData":"track.mp3"}
 						put("requestType", "deleteFile")
-						val path = libItem?.path
+						val path = libTrack?.path
 						if(path == null) {
 							onMessageError(R.string.fail_send_message)
 							return ""
@@ -733,8 +734,8 @@ object CommsBT {
 
 	fun onMessageError(message: Int) {
 		messageStatus.value = message
-		commsBTConnected?.request?.libItem?.let{
-			Library.setItemStatus(it, LibItem.Status.UNKNOWN)
+		commsBTConnected?.request?.libTrack?.let{
+			Library.setTrackStatus(it, LibItem.Status.UNKNOWN)
 		}
 	}
 }

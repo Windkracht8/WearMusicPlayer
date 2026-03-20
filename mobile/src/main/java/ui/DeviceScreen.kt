@@ -53,7 +53,7 @@ fun DeviceScreen(uiState: DeviceUiState, actions: DeviceActions) {
 	Column(Modifier.fillMaxSize().safeDrawingPadding()) {
 		Row(Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
 			if(uiState.btStatus in listOf(CONNECTING, STARTING)) {
-				IconButton(onClick = actions::onIconClick) {
+				IconButton(actions::onIconClick, Modifier.size(70.dp)) {
 					Image(
 						painter = rememberAnimatedVectorPainter(iconAnimation, iconAnimationAtEnd),
 						contentDescription = stringResource(R.string.cd_watch_icon)
@@ -61,10 +61,7 @@ fun DeviceScreen(uiState: DeviceUiState, actions: DeviceActions) {
 					iconAnimationAtEnd = true
 				}
 			} else {
-				IconButton(
-					modifier = Modifier.size(70.dp),
-					onClick = actions::onIconClick
-				) {
+				IconButton(actions::onIconClick, Modifier.size(70.dp)) {
 					Icon(
 						imageVector = ImageVector.vectorResource(R.drawable.watch),
 						tint = when(uiState.btStatus) {

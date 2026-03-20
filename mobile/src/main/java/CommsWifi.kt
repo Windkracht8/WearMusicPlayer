@@ -10,6 +10,7 @@ package com.windkracht8.wearmusicplayer
 import android.content.Context
 import android.net.ConnectivityManager
 import com.windkracht8.wearmusicplayer.data.LibItem
+import com.windkracht8.wearmusicplayer.data.LibTrack
 import com.windkracht8.wearmusicplayer.data.Library
 import java.io.FileInputStream
 import java.net.Inet4Address
@@ -20,16 +21,16 @@ object CommsWifi {
 	var ipAddress: String? = null
 	private var serverSocket: ServerSocket? = null
 	var isSending = false
-	fun sendFile(libItem: LibItem) {
+	fun sendFile(libTrack: LibTrack) {
 		if(ipAddress == null) return CommsBT.onMessageError(R.string.fail_no_wifi)
-		logD{"CommsWifi.sendFile ${libItem.name}"}
+		logD{"CommsWifi.sendFile ${libTrack.name}"}
 		isSending = true
-		Library.setItemStatus(libItem, LibItem.Status.SENDING)
+		Library.setTrackStatus(libTrack, LibItem.Status.SENDING)
 		try {
 			ServerSocket(PORT_NUMBER).use { serverSocket ->
 				this.serverSocket = serverSocket
 				serverSocket.accept().use { socket ->
-					FileInputStream(libItem.fullPath).use { fileInputStream ->
+					FileInputStream(libTrack.fullPath).use { fileInputStream ->
 						var bytesDone: Long = 0
 						socket.outputStream.use { outputStream ->
 							while(fileInputStream.available() > 0) {
@@ -41,7 +42,7 @@ object CommsWifi {
 								}
 								outputStream.write(buffer, 0, numBytes)
 								bytesDone += numBytes.toLong()
-								Library.setItemProgress(libItem, bytesDone / libItem.length)
+								Library.setTrackProgress(libTrack, bytesDone / libTrack.length)
 							}
 						}
 					}

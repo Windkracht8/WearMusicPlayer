@@ -202,16 +202,14 @@ object Library {
 		tracks.removeIf { it.path == path }
 		artists.forEach { artist ->
 			artist.tracks.removeIf { t -> t.path == path }
-			artist.albums.forEach { album ->
-				album.tracks.removeIf { t -> t.path == path }
-			}
+			artist.albums.forEach { album -> album.tracks.removeIf { t -> t.path == path } }
 			artist.albums.removeIf { it.tracks.isEmpty() }
 		}
 		artists.removeIf { it.tracks.isEmpty() }
-		albums.forEach { album ->
-			album.tracks.removeIf { t -> t.path == path }
-		}
+		albums.forEach { album -> album.tracks.removeIf { t -> t.path == path } }
 		albums.removeIf { it.tracks.isEmpty() }
+		dirs.forEach { dir -> dir.tracks.removeIf { t -> t.path == path } }
+		dirs.removeIf { it.tracks.isEmpty() }
 		runInBackground { status.emit(Status.UPDATE) }
 	}
 

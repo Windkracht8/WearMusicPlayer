@@ -73,12 +73,7 @@ fun DeviceSelect(
 				OutlinedButton(
 					modifier = Modifier.fillMaxWidth().height(60.dp).padding(10.dp),
 					onClick = actions::getBondedDevices
-				) {
-					Text(
-						text = stringResource(R.string.device_select_new),
-						color = colorScheme.onBackground
-					)
-				}
+				) { Text(R.string.device_select_new, colorScheme.onBackground) }
 			}
 		}
 		bondedDevices?.let{ bondedDevices ->

@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -86,31 +87,31 @@ class DeviceViewModel(application: Application) : AndroidViewModel(application),
 			}
 		}
 		viewModelScope.launch {
-			CommsBT.messageStatus.collect { messageStatus ->
-				_uiState.update { it.copy(messageStatus = messageStatus) }
-			}
+			combine(
+				CommsBT.messageStatus,
+				CommsBT.error
+			) { messageStatus, error ->
+				_uiState.value.copy(
+					messageStatus = messageStatus,
+					error = error
+				)
+			}.collect { _uiState.value = it }
 		}
-		viewModelScope.launch {
-			CommsBT.error.collect { error ->
-				_uiState.update { it.copy(error = error) }
-			}
-		}
-		viewModelScope.launch(Dispatchers.Default) {
-			_uiState.update { it.copy(knownDevices = CommsBT.knownDevices) }
-		}
+		_uiState.update { it.copy(knownDevices = CommsBT.knownDevices) }
 	}
 	override fun onIconClick() {
-		if(_uiState.value.btStatus in listOf(CONNECTING, PAIRING, CONNECTED)) CommsBT.stop()
+		if(_uiState.value.btStatus in listOf(CONNECTING, PAIRING, CONNECTED))
+			viewModelScope.launch(Dispatchers.IO) { CommsBT.stop() }
 	}
 	override fun connectDevice(device: CommsBT.Device) {
-		viewModelScope.launch(Dispatchers.Default) {
+		viewModelScope.launch(Dispatchers.IO) {
 			CommsBT.connectDevice(getApplication(), device)
 		}
 	}
 	override fun delKnownDevice(address: String) {
 		viewModelScope.launch(Dispatchers.Default) {
 			CommsBT.delKnownDevice(address)
-			_uiState.update { it.copy(knownDevices = CommsBT.knownDevices) }
+			_uiState.update { it.copy(knownDevices = CommsBT.knownDevices.toSet()) }
 		}
 	}
 	override fun getBondedDevices() {

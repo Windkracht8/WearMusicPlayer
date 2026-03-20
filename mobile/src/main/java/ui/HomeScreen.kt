@@ -46,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -70,7 +71,7 @@ fun HomeScreen(
 	onOpenFolderClick: () -> Unit,
 	onItemIconClick: (LibItem) -> Unit,
 	dismissDeleteDialog: () -> Unit,
-	confirmDeleteFile: (LibItem) -> Unit,
+	confirmDeleteFile: (LibTrack) -> Unit,
 	playlistCreate: (String) -> Unit,
 	playlistRename: (Int, String) -> Unit,
 	playlistDelete: (Int) -> Unit,
@@ -117,6 +118,7 @@ fun HomeScreen(
 						isConnected = uiState.watchRoot != null,
 						uiState.playlists,
 						libItem,
+						isWatchOnly = false,
 						showDivider = i > 0,
 						onItemIconClick,
 						playlistAddTrack,
@@ -130,6 +132,7 @@ fun HomeScreen(
 						isConnected = uiState.watchRoot != null,
 						uiState.playlists,
 						libItem,
+						isWatchOnly = false,
 						showDivider = i == 0,
 						onItemIconClick,
 						playlistAddTrack,
@@ -165,34 +168,28 @@ fun HomeScreen(
 				)
 				if(showWatchTracks) {
 					LazyColumn(Modifier.fillMaxWidth().heightIn(max = maxSectionHeight)) {
-						itemsIndexed(
-							items = uiState.watchRoot.libDirs
-								.filter { uiState.itemStates[it]?.status == LibItem.Status.WATCH_ONLY },
-							key = { _, it -> it.fullPath }
-						) { i, libItem ->
+						itemsIndexed(uiState.watchRoot.libDirs) { i, libItem ->
 							Item(
 								uiState.itemStates[libItem],
 								uiState.itemStates,
 								isConnected = true,
 								uiState.playlists,
 								libItem,
+								isWatchOnly = true,
 								showDivider = i > 0,
 								onItemIconClick,
 								playlistAddTrack,
 								showPlaylists.value
 							)
 						}
-						itemsIndexed(
-							items = uiState.watchRoot.libTracks
-								.filter { uiState.itemStates[it]?.status == LibItem.Status.WATCH_ONLY },
-							key = { _, it -> it.fullPath }
-						) { i, libItem ->
+						itemsIndexed(uiState.watchRoot.libTracks) { i, libItem ->
 							Item(
 								uiState.itemStates[libItem],
 								uiState.itemStates,
 								isConnected = true,
 								uiState.playlists,
 								libItem,
+								isWatchOnly = true,
 								showDivider = i == 0,
 								onItemIconClick,
 								playlistAddTrack,
@@ -225,10 +222,11 @@ fun Item(
 	isConnected: Boolean,
 	playlists: List<Playlist>,
 	libItem: LibItem,
+	isWatchOnly: Boolean,
 	showDivider: Boolean,
 	onItemIconClick: (LibItem) -> Unit,
 	playlistAddTrack: (Int, String) -> Unit,
-	showPlaylists: Boolean = true
+	showPlaylists: Boolean
 ) {
 	var showSubItems by remember { mutableStateOf(false) }
 	if(showDivider) {
@@ -259,25 +257,22 @@ fun Item(
 						modifier = Modifier.size(48.dp),
 						onClick = { onItemIconClick(libItem) }
 					) {
-						if(isConnected) {
-							val imageVector = if(libItem is LibDir) {
-								when(itemState?.status) {
-									LibItem.Status.FULL -> Icons.Default.DoneAll
-									LibItem.Status.PARTIAL -> Icons.Default.Check
-									else -> null
-								}
-							} else {
-								when(itemState?.status) {
-									LibItem.Status.FULL, LibItem.Status.WATCH_ONLY -> Icons.Default.Delete
-									else -> Icons.Default.Upload
-								}
+						val imageVector = when{
+							!isConnected -> null
+							libItem is LibDir -> when (itemState?.status) {
+								LibItem.Status.FULL -> Icons.Default.DoneAll
+								LibItem.Status.PARTIAL -> Icons.Default.Check
+								else -> null
 							}
-							if(imageVector != null) {
-								Icon(
-									imageVector = imageVector,
-									contentDescription = stringResource(R.string.cd_item_icon_action)
-								)
-							}
+							isWatchOnly -> Icons.Default.Delete
+							itemState?.status == LibItem.Status.FULL -> Icons.Default.Delete
+							else -> Icons.Default.Upload
+						}
+						if(imageVector != null) {
+							Icon(
+								imageVector = imageVector,
+								contentDescription = stringResource(R.string.cd_item_icon_action)
+							)
 						}
 					}
 				}
@@ -310,7 +305,7 @@ fun Item(
 				DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
 					if(playlists.isEmpty()) {
 						DropdownMenuItem(
-							text = { Text(stringResource(R.string.no_playlists)) },
+							text = { Text(R.string.no_playlists) },
 							onClick = { menuOpen = false },
 							enabled = false
 						)
@@ -337,6 +332,7 @@ fun Item(
 				isConnected,
 				playlists,
 				it,
+				isWatchOnly,
 				true,
 				onItemIconClick,
 				playlistAddTrack,
@@ -348,6 +344,7 @@ fun Item(
 				isConnected,
 				playlists,
 				it,
+				isWatchOnly,
 				false,
 				onItemIconClick,
 				playlistAddTrack,
@@ -359,6 +356,8 @@ fun Item(
 
 @Composable
 fun Text(text: Int) = Text(stringResource(text))
+@Composable
+fun Text(text: Int, color: Color) = Text(stringResource(text), color = color)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_8)
 @Composable
 fun PreviewHomeScreen() {

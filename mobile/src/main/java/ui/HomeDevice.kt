@@ -12,10 +12,10 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +46,7 @@ import com.windkracht8.wearmusicplayer.CommsBT.Status.ERROR
 import com.windkracht8.wearmusicplayer.CommsBT.Status.PAIRING
 import com.windkracht8.wearmusicplayer.CommsBT.Status.STARTING
 import com.windkracht8.wearmusicplayer.R
+import kotlin.collections.contains
 
 @Composable
 fun HomeDevice(
@@ -64,26 +66,25 @@ fun HomeDevice(
 			contentAlignment = Alignment.Center
 		) {
 			if(btStatus in listOf(CONNECTING, STARTING)) {
-				Image(
-					modifier = Modifier.size(70.dp).clickable { onIconClick() },
-					painter = rememberAnimatedVectorPainter(
-						iconAnimation,
-						iconAnimationAtEnd
-					),
-					contentDescription = stringResource(R.string.cd_watch_icon)
-				)
-				iconAnimationAtEnd = true
+				IconButton(onIconClick, Modifier.fillMaxSize()) {
+					Image(
+						painter = rememberAnimatedVectorPainter(iconAnimation, iconAnimationAtEnd),
+						contentDescription = stringResource(R.string.cd_watch_icon)
+					)
+					iconAnimationAtEnd = true
+				}
 			} else {
-				Icon(
-					modifier = Modifier.size(70.dp).clickable { onIconClick() },
-					imageVector = ImageVector.vectorResource(R.drawable.watch),
-					tint = when(btStatus) {
-						DISCONNECTED, null -> colorScheme.onBackground.copy(alpha = 0.38f)
-						ERROR -> colorScheme.error
-						else -> colorScheme.onBackground
-					},
-					contentDescription = stringResource(R.string.cd_watch_icon)
-				)
+				IconButton(onIconClick, Modifier.fillMaxSize()) {
+					Icon(
+						imageVector = ImageVector.vectorResource(R.drawable.watch),
+						tint = when(btStatus) {
+							DISCONNECTED, null -> colorScheme.outline
+							ERROR -> colorScheme.error
+							else -> colorScheme.onBackground
+						},
+						contentDescription = stringResource(R.string.cd_watch_icon)
+					)
+				}
 			}
 			val colorOnBackground = colorScheme.onBackground
 			BasicText(
